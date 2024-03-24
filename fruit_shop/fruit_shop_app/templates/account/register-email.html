@@ -1,0 +1,36 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block heading_title %}REGISTER{% endblock heading_title %}
+{% block heading_sub_title %}Register{% endblock heading_sub_title %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="text-center">Enter your email to verify</h2>
+          </div>
+          <div class="card-body">
+            <form method='POST'>
+              {% csrf_token %}
+              {% if messages %}
+                <ul class="messages" >
+                  {% for message in messages %}
+                    <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+              
+              <div class="form-group">
+                <input type="email" class="form-control" id="name" placeholder="Enter your email" name="email" required>
+            </div>
+              <input type="submit" class="btn btn-primary btn-block" value='Submit'>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

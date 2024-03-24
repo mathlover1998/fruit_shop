@@ -1,0 +1,48 @@
+<!-- Your HTML template -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Save Data</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Get CSRF token from the cookie
+            var csrftoken = Cookies.get('csrftoken');
+    
+            $('#yourForm').submit(function(e){
+                e.preventDefault(); // Prevent form submission
+    
+                // Get form data
+                var formData = {
+                    'your_data_key': $('#yourInput').val()
+                };
+    
+                console.log('Form data:', formData); // Check form data
+    
+                // Send data to Django view using AJAX
+                $.ajax({
+                    type: 'POST',
+                    url: '/save_data/',
+                    headers: {'X-CSRFToken': csrftoken}, // Include CSRF token in headers
+                    data: formData,
+                    success: function(response) {
+                        console.log('Response:', response); // Check response
+                        console.log(response.message);
+                        // Optionally, show a success message to the user
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error); // Check error
+                        // Optionally, show an error message to the user
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <form id="yourForm">
+        <input type="text" id="yourInput">
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

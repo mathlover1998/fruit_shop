@@ -1,0 +1,83 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block heading_title %}REGISTER{% endblock heading_title %}
+{% block heading_sub_title %}Register{% endblock heading_sub_title %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-3">
+      <!-- Content for the new div can go here -->
+      <!-- For example, you can add some sidebar content -->
+      <div class="card">
+        <div class="card-body">
+          <h3>Sidebar Content</h3>
+          <a href="{% url 'update_password'%}" style="color:grey;">Update Password</a><br>
+          <a href="{% url 'notification_setting_view'%}" style="color:grey;">Notification Setting</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-start">My Profile</h2>
+          <h4 class= "text-start">Manage profile information for account security</h4>
+        </div>
+        <div class="card-body">
+          <form method='POST' enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if messages %}
+              <ul class="messages" >
+                {% for message in messages %}
+                  <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            <div class="mb-3">
+              <label  class="form-label">Username</label>
+              <input type="text" class="form-control" placeholder="{{current_user.username}}" disabled>
+            </div>
+            <div class="mb-3">
+              <label  class="form-label">Full Name</label>
+              <input type="text" class="form-control" name='full_name' value="{{ full_name }}">
+            </div>
+            <div class="mb-3">
+              <label  class="form-label">Email
+              <p>{{email}} <a href="{% url 'update_email'%}" style='color:blue'><u>Change </u></a></p>
+              </label>
+            </div>
+            <div class="mb-3">
+              <label  class="form-label">Phone Number
+              <p>{{phone}} <a href="{% url 'update_phone'%}" style='color:blue'><u>Change </u></a></p>
+              </label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="gender" id="inlineRadio1" value="male" {% if current_user.gender == 'male' %} checked {% endif %}>
+              <label class="form-check-label" for="inlineRadio1">Male</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="gender" id="inlineRadio2" value="female" {% if current_user.gender == 'female' %} checked {% endif %}>
+              <label class="form-check-label" for="inlineRadio2">Female</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="gender" id="inlineRadio3" value="other" {% if current_user.gender == 'other' %} checked {% endif %}>
+              <label class="form-check-label" for="inlineRadio3">Other</label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" class="form-control" name="dob" value="{{ dob|default:'' }}">
+          </div>
+            <div class="mb-3">
+              <img src="{{current_user.image.url}}" class="rounded-circle img-fluid" alt="Image" style="width: 200px; height: 200px;">
+              <input type="file" class="form-control" name='image' accept='image/*'>
+            </div>
+
+            <input type="submit" class="btn btn-primary btn-block" value='Submit'>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

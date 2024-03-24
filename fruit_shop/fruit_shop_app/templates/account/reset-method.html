@@ -1,0 +1,40 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block title_box %}{% endblock title_box %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header text-center">
+            <h2 class="text-start">Select Verification Method</h2>
+            <h4 class="text-start">Choose one of the methods below to send the verification code to:</h4>
+          </div>
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col left-content d-flex justify-content-center">
+                <!-- Left Content -->
+                <div>
+                    {% if user.phone %}
+                    <a href="{% url ''%}">Send code via phone {{ phone }}</h2>
+                    {% else %}
+
+                    {% endif %}
+                </div>
+              </div>
+              <hr class="my-0">
+              <div class="col right-content d-flex justify-content-center">
+                <!-- Right Content -->
+                <div>
+                  <h2>Send code via email {{user.email}}</h2>
+                  <p>This is the content on the right side of the split screen.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

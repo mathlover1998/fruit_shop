@@ -1,0 +1,54 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block heading_title %}REGISTER{% endblock heading_title %}
+{% block heading_sub_title %}Register{% endblock heading_sub_title %}
+{% block content %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const field = document.getElementById("check_filled_in");
+      
+      const submitButton = document.getElementById("submitButton");
+  
+      function checkFields() {
+        if (field.value.trim() !== "") {
+          submitButton.disabled = false;
+        } else {
+          submitButton.disabled = true;
+        }
+      }
+  
+      field.addEventListener("input", checkFields);
+      // Initial check
+      checkFields();
+    });
+  </script>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-start">Change Phone Number</h2>
+          
+        </div>
+        <div class="card-body">
+          <form method='POST' enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if messages %}
+              <ul class="messages" >
+                {% for message in messages %}
+                  <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            <div class="mb-3">
+              <input type="text" class="form-control" placeholder="Enter your new phone number" name ='phone' id='check_filled_in'>
+            </div>
+            <input type="submit" class="btn btn-primary btn-block" value='Next' id="submitButton">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,36 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block heading_title %}Reset Password{% endblock heading_title %}
+{% block heading_sub_title %}Reset Password{% endblock heading_sub_title %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-start">Reset Password</h2>
+          
+        </div>
+        <div class="card-body">
+          <form method='POST'>
+            {% csrf_token %}
+            {% if messages %}
+              <ul class="messages" >
+                {% for message in messages %}
+                  <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            <div class="mb-3">
+              
+              <input type="text" class="form-control" placeholder="Enter your current username" name ='username'>
+            </div>
+            <input type="submit" class="btn btn-primary btn-block" value='Next'>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,73 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block heading_title %}New address{% endblock heading_title %}
+{% block heading_sub_title %}New address{% endblock heading_sub_title %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-start">New address</h2>
+          
+        </div>
+        <div class="card-body">
+          <form method='POST' enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if messages %}
+              <ul class="messages" >
+                {% for message in messages %}
+                  <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+            <div class="mb-3">
+              <input type="text" class="form-control" placeholder="Full name" name='receiver_name'value="{{ address.receiver_name }}">
+            </div>
+            <div class="mb-3">
+              <input type="text" class="form-control" name='phone_number' placeholder="Phone Number" value="{{ address.phone_number }}">
+            </div>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Country" name='country'value="{{ address.country }}">
+              </div>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Province" name='province'value="{{ address.province }}">
+              </div>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="District" name='district'value="{{ address.district }}">
+              </div>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Ward" name='ward'value="{{ address.ward }}">
+            </div>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Commune" name='commune'value="{{ address.commune }}">
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Details" name='street'value="{{ address.street }}">
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Zipcode" name='zipcode'value="{{ address.zipcode }}">
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="type" id="inlineRadio1" value="home" {% if address.type == 'home' %} checked {% endif %}>
+                <label class="form-check-label" for="inlineRadio1">Home</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="type" id="inlineRadio2" value="office"{% if address.type == 'office' %} checked {% endif %}>
+                <label class="form-check-label" for="inlineRadio2">Office</label>
+              </div>
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="exampleCheck1" name='default_address'>
+                <label class="form-check-label" for="exampleCheck1">Set as default address</label>
+              </div>
+              <input type="submit" class="btn btn-primary btn-block" value='Submit'>
+            </form>
+            </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

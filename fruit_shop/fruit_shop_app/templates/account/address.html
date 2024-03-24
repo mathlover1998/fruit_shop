@@ -1,0 +1,43 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block heading_title %}REGISTER{% endblock heading_title %}
+{% block heading_sub_title %}Register{% endblock heading_sub_title %}
+{% block content %}
+
+<div class="container d-flex justify-content-between align-items-center py-3">
+    <h1>My Addresses</h1>
+    <a href="{% url 'create_address'%}" class="btn btn-primary">Add New Address</a>
+</div>
+<div class="container py-4">
+    <section class="address-list row row-cols-1 row-cols-md-2 g-4">
+        <article class="address-item col card shadow-sm">
+            <div class="card-body">
+                {% for address in address_list%}
+                <h2>Address {{forloop.counter}}</h2>
+                <p class="card-text">
+                    {{address.receiver_name}} | {{address.phone_number}}<br>
+                    {{address.street}}<br>
+                    {{address.commune}}, {{address.ward}},{{address.district}},{{address.province}},{{address.country}} {{address.zipcode}}<br>
+                    {% if address.default_address %}
+                    <span class="badge badge-pill badge-danger border border-danger">Default</span>
+                    {% endif %}
+                    <span class="badge badge-pill border">{{address.type}}</span>
+                </p>
+                <div class="address-actions d-flex justify-content-between">
+                    <a href ="{% url 'update_address' id=address.id %}" class="btn btn-sm btn-secondary">Edit</a>
+                    <a href = "{% url 'delete_address' id=address.id%}" class="btn btn-sm btn-danger">Delete</a>
+                </div>
+                {% if not forloop.last %}
+                    <hr> <!-- Add a line under each element except the last one -->
+                {% endif %}
+                {% endfor%}
+            </div>
+        </article>
+        </section>
+    </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVFQWrvVuHdBsCTSmEuIWNiPUgm9oMKs1nEiQz5sOCJv44rxCkOx" crossorigin="anonymous"></script>
+</div>
+{% endblock content %}

@@ -1,0 +1,41 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block heading_title %}Notification Setting{% endblock heading_title %}
+{% block heading_sub_title %}Notification Setting{% endblock heading_sub_title %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-body">
+            <form method='POST' enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if messages %}
+                  <ul class="messages" >
+                    {% for message in messages %}
+                      <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+            <div class="mb-9 d-flex align-items-center justify-content-between" style='font-size: 1.2rem;'>
+                <div>
+                    <label class="form-check-label">Email notification</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" style="transform: scale(1.5); vertical-align: text-bottom" id="exampleCheck1" name='email_notification' class="form-check-input" {% if receive_updates %}checked{% endif %}>
+                    <label class="form-check-label" for="exampleCheck1">Activate</label>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+              </div>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
