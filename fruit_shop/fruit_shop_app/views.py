@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from .models import Fruit,Supplier,SupplierProduct
 from fruit_shop.utils import send_code_via_phone,generate_verification_code
 from django.http import JsonResponse,HttpResponse
 
@@ -13,13 +12,6 @@ def about(request):
 def contact(request):
     return render(request,'pages/contact-us.html')
 
-def get_all_supplier_products(request):
-    products = SupplierProduct.objects.all()
-    return render(request,'shop/shop.html',{'products':products})
-
-def get_all_fruits(reuest):
-    fruits = Fruit.objects.all()
-    return render(reuest,'shop/fruits.html',{'fruits':fruits})
 
 def test(request):
     if request.method == 'POST' and request.headers.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
