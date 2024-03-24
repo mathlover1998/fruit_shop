@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'fruit_shop_app',
     'account',
-    'product',
+    'product_manager'
     # 'django_celery_beat'
 ]
 
