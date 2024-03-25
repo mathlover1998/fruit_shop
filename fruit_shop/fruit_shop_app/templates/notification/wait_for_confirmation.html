@@ -1,0 +1,25 @@
+{% extends "shared/base.html" %} {% load static %} {% block title_box %}{% endblock title_box %} {% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-center">Request has been sent</h2>
+        </div>
+        <div class="card-body text-center">
+          <h1>Thank you for registering your account.</h1>
+          <h2>The request has been sent to admin. Please check your email to receive your account name and password</h2>
+          <h4>Redirecting to home page in 5 seconds..., or <a href="{% url 'index'%}" style='color:red'>click here</a> to go to the home page immediately.</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  setTimeout(function () {
+    window.location.href = "{% url 'index'%}";
+  }, 5000); // 5000 milliseconds = 5 seconds
+</script>
+{% endblock content %}
+{% block instagram_feed %}{% endblock instagram_feed %}
