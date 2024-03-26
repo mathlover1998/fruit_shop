@@ -177,7 +177,7 @@ def update_email(request):
             send_mail(
                 subject, plain_message, from_email, [email], html_message=html_message
             )
-            
+
             return redirect(reverse("confirm_validation_code", kwargs={"email": email}))
     return render(request, "account/update-email.html")
 
@@ -222,6 +222,8 @@ def update_phone(request):
         else:
             verification_code = generate_verification_code()
             request.session["phone_verification_code"] = verification_code
+            # Set session expiry to 2 minutes from now
+            request.session.set_expiry(timedelta(minutes=2))
             if not phone_number.startswith("+"):
                 phone_number = "+84" + phone_number[1:]
             send_code_via_phone(verification_code, phone_number)
@@ -406,7 +408,7 @@ def supplier_register(request):
             supplier_name=supplier_name, email=email, phone=phone
         )
         new_supplier.save()
-        return redirect(reverse('confirmation_page'))
+        return redirect(reverse("confirmation_page"))
     return render(request, "account/supplier_register.html")
 
 
