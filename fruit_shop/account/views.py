@@ -67,7 +67,7 @@ def customer_register_email(request):
             user.save()
             login(request, user)
             return redirect("index")
-    return render(request, "account/register-email.html")
+    return render(request, "account/enter_verification_email.html")
 
 
 def signin(request):
@@ -82,7 +82,7 @@ def signin(request):
         else:
             messages.error(request, "Invalid login credentials.")
 
-    return render(request, "account/sign-in.html")
+    return render(request, "account/login.html")
 
 
 @login_required
@@ -94,7 +94,7 @@ def log_out(request):
 
 @login_required
 def profile(request):
-    return render(request, "account/my-account.html")
+    return render(request, "account/account.html")
 
 
 @login_required
@@ -135,7 +135,7 @@ def update_profile(request):
     dob_formatted = date(current_user.dob, "Y-m-d") if current_user.dob else None
     return render(
         request,
-        "account/update-profile.html",
+        "account/profile.html",
         {
             "current_user": current_user,
             "full_name": full_name,
@@ -179,7 +179,7 @@ def update_email(request):
             )
 
             return redirect(reverse("confirm_validation_code", kwargs={"email": email}))
-    return render(request, "account/update-email.html")
+    return render(request, "account/update_new_email.html")
 
 
 @login_required
@@ -202,7 +202,7 @@ def confirm_validation_code(request, email):
                 current_user.receive_updates = True
                 current_user.save()
                 return render(request, "pages/successfully.html")
-        return render(request, "account/verification-code.html")
+        return render(request, "account/enter_verification_code.html")
     else:
         return render(request, "pages/error.html")
 
@@ -232,7 +232,7 @@ def update_phone(request):
                     "confirm_phone_verification_code", kwargs={"phone": phone_number}
                 )
             )
-    return render(request, "account/update-phone.html")
+    return render(request, "account/enter_new_phone_number.html")
 
 
 @login_required
@@ -244,7 +244,7 @@ def confirm_phone_verification_code(request, phone):
             current_user.phone = phone
             current_user.save()
             return render(request, "pages/successfully.html")
-    return render(request, "account/verification-code.html")
+    return render(request, "account/enter_verification_code.html")
 
 
 @login_required
@@ -309,7 +309,7 @@ def create_address(request):
         else:
             messages.error(request, "Please provide at least one field to update.")
             return redirect("create_address")
-    return render(request, "account/address-manage.html")
+    return render(request, "account/address_manage.html")
 
 
 @login_required
@@ -339,7 +339,7 @@ def update_address(request, id):
             customer_addresses.update(default_address=False)
         address.save()
         return redirect(reverse("address_view"))
-    return render(request, "account/address-manage.html", {"address": address})
+    return render(request, "account/address_manage.html", {"address": address})
 
 
 @login_required
@@ -361,7 +361,7 @@ def update_password(request):
         else:
             messages.error(request, "Inccorect old password!")
             return redirect(reverse("update_password"))
-    return render(request, "account/update-password.html")
+    return render(request, "account/enter_current_password.html")
 
 
 @login_required
@@ -380,7 +380,7 @@ def confirm_new_password(request):
                 request, "New password must be different from the old password!"
             )
             return redirect(reverse("confirm_new_password"))
-    return render(request, "account/confirm-new-password.html")
+    return render(request, "account/enter_new_password.html")
 
 
 @login_required
@@ -394,7 +394,7 @@ def notification_setting_view(request):
             return redirect(reverse("update_profile"))
     return render(
         request,
-        "account/notification-setting.html",
+        "account/notification_setting.html",
         {"receive_updates": current_user.receive_updates},
     )
 
@@ -425,11 +425,11 @@ def confirmation_page(request):
 #         else:
 #             request.session['reset_username']=username
 #             return redirect(reverse('choose_reset_method'))
-#     return render(request,'account/reset.html')
+#     return render(request,'account/reset_password.html')
 
 # def choose_reset_method(request):
 #     username = request.session.get('reset_username')
 #     user = User.objects.filter(username=username).first()
 #     masked_phone = validate_mask_phone(user.phone)
 #     masked_email = mask_email(user.email)
-#     return render(request,'account/reset-method.html',{'phone':masked_phone,'email':masked_email})
+#     return render(request,'account/reset_method.html',{'phone':masked_phone,'email':masked_email})
