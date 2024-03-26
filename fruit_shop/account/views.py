@@ -1,6 +1,6 @@
 import os, asyncio
 from django.shortcuts import render, redirect, HttpResponse
-from fruit_shop_app.models import User, Customer, Address,Supplier
+from fruit_shop_app.models import User, Customer, Address, Supplier
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -395,17 +395,21 @@ def notification_setting_view(request):
 
 
 def supplier_register(request):
-    if request.method =='POST':
-        supplier_name = request.POST.get('supplier_name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        new_supplier = Supplier.objects.create(supplier_name=supplier_name,email=email,phone=phone)
+    if request.method == "POST":
+        supplier_name = request.POST.get("supplier_name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        new_supplier = Supplier.objects.create(
+            supplier_name=supplier_name, email=email, phone=phone
+        )
         new_supplier.save()
-        return render(request,'notification/wait_for_confirmation.html')
+        return redirect(reverse('confirmation_page'))
     return render(request, "account/supplier_register.html")
 
+
 def confirmation_page(request):
-    return render(request, 'notification/wait_for_confirmation.html')
+    return render(request, "notification/wait_for_confirmation.html")
+
 
 # def reset_password(request):
 #     if request.method=='POST':
