@@ -22,7 +22,7 @@ from django.http import JsonResponse
 from django.core.serializers import serialize
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
-
+from datetime import timedelta
 
 # Create your views here.
 
@@ -172,9 +172,12 @@ def update_email(request):
         else:
             code = generate_verification_code()
             request.session["email_validation_code"] = code
+            # Set session expiry to 10 minutes from now
+            request.session.set_expiry(timedelta(minutes=10))
             send_mail(
                 subject, plain_message, from_email, [email], html_message=html_message
             )
+            
             return redirect(reverse("confirm_validation_code", kwargs={"email": email}))
     return render(request, "account/update-email.html")
 
