@@ -19,7 +19,8 @@ urlpatterns= [
     path('change-password/',views.update_password,name='update_password'),
     path('confirm-password',views.confirm_new_password,name='confirm_new_password'),
     path('setting/notification/',views.notification_setting_view,name='notification_setting_view'),
-    path('supplier/register/',views.supplier_register,name='supplier_register')
+    path('supplier/register/',views.supplier_register,name='supplier_register'),
+    path('confirmation/', views.confirmation_page, name='confirmation_page')
     # path('reset/',views.reset_password,name='reset_password'),
     # path('reset/method/',views.choose_reset_method,name='choose_reset_method'),
 ]

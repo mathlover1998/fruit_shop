@@ -404,6 +404,8 @@ def supplier_register(request):
         return render(request,'notification/wait_for_confirmation.html')
     return render(request, "account/supplier_register.html")
 
+def confirmation_page(request):
+    return render(request, 'notification/wait_for_confirmation.html')
 
 # def reset_password(request):
 #     if request.method=='POST':
