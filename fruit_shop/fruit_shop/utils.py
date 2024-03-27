@@ -56,3 +56,8 @@ def validate_password(password):
         return False
     
     return True
+
+
+def generate_random_password(length=12):
+    characters = string.digits  # Only numbers
+    return ''.join(random.choice(characters) for _ in range(length))

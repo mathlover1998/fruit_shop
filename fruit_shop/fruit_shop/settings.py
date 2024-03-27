@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 'fruit_shop',
     'fruit_shop_app',
     'account',
     'product_manager'

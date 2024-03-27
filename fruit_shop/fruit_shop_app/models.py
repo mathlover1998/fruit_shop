@@ -39,13 +39,20 @@ RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
 class User(AbstractUser):
     phone = models.CharField(max_length=20, null=True)
-    middle_name = models.CharField(max_length=255, null=False, default="")
+    middle_name = models.CharField(max_length=255, null=False, default="", blank=True)
     gender = models.CharField(
         max_length=20, choices=GENDER, default="other", null=False
     )
     dob = models.DateField(default="2000-01-01")
     image = models.ImageField(upload_to="images/", default="images/default-avatar.png")
     receive_updates = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        # Set default password if password is not provided
+        if not self.pk and not self.password:
+            self.set_password("012198218")  # Default password
+        super().save(*args, **kwargs)
 
     def get_full_name(self):
         full_name = f"{self.first_name}"
@@ -195,7 +202,7 @@ class Order(models.Model):
 
 class Supplier(models.Model):
     supplier_name = models.CharField(max_length=100, null=False)
-    contact_person = models.CharField(max_length=100, null=False,default='')
+    contact_person = models.CharField(max_length=100, null=False, default="")
     email = models.EmailField(max_length=100, null=False)
     phone = models.CharField(max_length=15, help_text="Enter your phone number")
 

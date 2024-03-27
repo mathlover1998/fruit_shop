@@ -103,7 +103,7 @@ def signin(request):
 def log_out(request):
     logout(request)
     messages.success(request, "Logout Successfully")
-    return redirect(reverse("index"))
+    return redirect(reverse("sign_in"))
 
 
 @login_required
@@ -414,20 +414,25 @@ def notification_setting_view(request):
 
 def employee_register(request):
     if request.method =="POST":
+        username = request.POST.get('username')
         first_name = request.POST.get('first_name')
         middle_name = request.POST.get('middle_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
         phone = request.POST.get('phone')
-        if not (first_name and last_name and email and phone):
+        if not (first_name and last_name and email and phone and username):
             messages.error(request,'Please fill in all required information!')
             return redirect(reverse('employee_register'))
-        new_user = User.objects.create(first_name=first_name,last_name=last_name,email=email,phone=phone,is_active=False)
-        if middle_name is not None:
-            new_user.middle_name = middle_name
-        new_user.save()
-        Employee.objects.create(user=new_user).save()
-        return redirect(reverse("confirmation_page"))
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "This username is taken! Please log in instead!")
+            return redirect(reverse('employee_register'))
+        else:
+            new_user = User.objects.create(username=username,first_name=first_name,last_name=last_name,email=email,phone=phone,is_active=False)
+            if middle_name is not None:
+                new_user.middle_name = middle_name
+            new_user.save()
+            Employee.objects.create(user=new_user).save()
+            return redirect(reverse("confirmation_page"))
 
     return render(request,'account/employee_register.html')
 
