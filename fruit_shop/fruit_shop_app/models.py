@@ -70,7 +70,7 @@ class User(AbstractUser):
 
 
 class Employee(models.Model):
-    hire_date = models.DateField(null=False)
+    hire_date = models.DateField(null=True)
     salary = models.IntegerField(null=False, default=0)
     department = models.CharField(max_length=200, default="", null=False)
     position = models.CharField(

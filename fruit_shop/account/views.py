@@ -1,6 +1,6 @@
 import os, asyncio
 from django.shortcuts import render, redirect, HttpResponse
-from fruit_shop_app.models import User, Customer, Address, Supplier
+from fruit_shop_app.models import User, Customer, Address, Employee
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -18,14 +18,28 @@ from django.template.defaultfilters import date
 from django.utils.html import strip_tags
 from django.contrib.sessions.models import Session
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseForbidden
 from django.core.serializers import serialize
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
 from datetime import timedelta
+from functools import wraps
+
 
 # Create your views here.
-
+def role_required(allowed_roles=[]):
+    """
+    Decorator to restrict access to users with specific roles.
+    """
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated and request.user.groups.filter(name__in=allowed_roles).exists():
+                return view_func(request, *args, **kwargs)
+            else:
+                return HttpResponseForbidden("You don't have permission to access this page.")
+        return _wrapped_view
+    return decorator
 
 def customer_register(request):
     if request.method == "POST":
@@ -398,6 +412,28 @@ def notification_setting_view(request):
         {"receive_updates": current_user.receive_updates},
     )
 
+def employee_register(request):
+    if request.method =="POST":
+        first_name = request.POST.get('first_name')
+        middle_name = request.POST.get('middle_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        if not (first_name and last_name and email and phone):
+            messages.error(request,'Please fill in all required information!')
+            return redirect(reverse('employee_register'))
+        new_user = User.objects.create(first_name=first_name,last_name=last_name,email=email,phone=phone,is_active=False)
+        if middle_name is not None:
+            new_user.middle_name = middle_name
+        new_user.save()
+        Employee.objects.create(user=new_user).save()
+        return redirect(reverse("confirmation_page"))
+
+    return render(request,'account/employee_register.html')
+
+
+def approve_employee_account(request):
+    pass
 
 
 # def reset_password(request):

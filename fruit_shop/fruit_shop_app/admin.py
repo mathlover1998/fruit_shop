@@ -1,5 +1,20 @@
 from django.contrib import admin
-from .models import User,Category,Fruit,Employee,Customer,Order,OrderItem,Supplier,SupplierProduct,Transaction,Discount,StoreLocation,Address
+from django.contrib.auth.models import Group
+from .models import (
+    User,
+    Category,
+    Fruit,
+    Employee,
+    Customer,
+    Order,
+    OrderItem,
+    Supplier,
+    SupplierProduct,
+    Transaction,
+    Discount,
+    StoreLocation,
+    Address,
+)
 
 
 admin.site.register(User)
