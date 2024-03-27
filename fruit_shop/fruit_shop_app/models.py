@@ -12,10 +12,14 @@ GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
 POSITION = (
     ("employee", "Employee"),
-    ("seller", "Seller"),
-    ("store_manager", "Store Manager"),
-    ("assistant_manager", "Assistant Manager"),
-    ("cashier", "Cashier"),
+    ('inventory_manager', 'Inventory Manager'),
+    ('sales_associate', 'Sales Associate'),
+    ('cashier', 'Cashier'),
+    ('store_manager', 'Store Manager'),
+    ('assistant_manager', 'Assistant Manager'),
+    ('delivery_driver', 'Delivery Driver'),
+    ('produce_specialist', 'Produce Specialist'),
+    ('customer_service_representative', 'Customer Service Representative'),
 )
 PAYMENT_STATUS = (
     ("pending", "Pending"),
@@ -155,6 +159,8 @@ class Category(models.Model):
     category_name = models.CharField(max_length=255, null=False)
     description = models.TextField(null=False, default="")
 
+    def __str__(self):
+        return self.category_name
     class Meta:
         ordering = ["id"]
         db_table = "Categories"
@@ -175,6 +181,7 @@ class Fruit(models.Model):
     nutritional_information = models.TextField(null=True)
     create_date = models.DateField(auto_now_add=True)
     expiry_date = models.DateField(null=True)
+    inventory_manager = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_fruits')
 
     class Meta:
         ordering = ["id"]
