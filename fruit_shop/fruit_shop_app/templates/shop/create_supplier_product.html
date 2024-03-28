@@ -1,0 +1,37 @@
+{% extends "shared/base.html" %}
+{% load static %}
+
+{% block title_box %}
+{% endblock title_box %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="text-center">Create Product Form</h2>
+          </div>
+          <div class="card-body">
+            <form method='POST' enctype="multipart/form-data"> 
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                  {{ field.label_tag }} {{ field }} {% if field.errors %}
+                    <ul class="errors">
+                      {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                </div>
+              {% endfor %}
+              <input type="submit" class="btn btn-primary btn-block" value='Create'>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+{% endblock content %}

@@ -1,37 +1,57 @@
-{% extends "shared/base.html" %}
-{% load static %}
-
-{% block title_box %}
-{% endblock title_box %}
+{% extends "shared/base.html" %} {% load static %} {% block title_box %} {% endblock title_box %} 
 {% block content %}
 
 <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-header">
-            <h2 class="text-center">Fruit Form</h2>
-          </div>
-          <div class="card-body">
-            <form method='POST' enctype="multipart/form-data"> 
-                {% csrf_token %}
-                {% for field in form %}
-                <div class="form-group">
-                  {{ field.label_tag }} {{ field }} {% if field.errors %}
-                    <ul class="errors">
-                      {% for error in field.errors %}
-                        <li>{{ error }}</li>
-                      {% endfor %}
-                    </ul>
-                  {% endif %}
-                </div>
-              {% endfor %}
-              <input type="submit" class="btn btn-primary btn-block" value='Create'>
-            </form>
-          </div>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-center">Fruit Form</h2>
+        </div>
+        <div class="card-body">
+          <form id="createFruitForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %} {% for field in form %}
+            <div class="form-group">
+              {{ field.label_tag }} {{ field }} {% if field.errors %}
+              <ul class="errors">
+                {% for error in field.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+            {% endfor %}
+            <!-- Error message container -->
+            <div id="error-message" style="color: red"></div>
+            <input type="submit" class="btn btn-primary btn-block" value="Create" />
+          </form>
         </div>
       </div>
     </div>
   </div>
-  
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $("#id_fruit_name").on("blur", function () {
+      var fruitName = $(this).val();
+      $.ajax({
+        url: "/check_fruit_name/",
+        method: "GET",
+        data: {
+          fruit_name: fruitName,
+        },
+        success: function (response) {
+          if (response.exists) {
+            $("#error-message").text("Fruit name already exists");
+          } else {
+            $("#error-message").text("");
+          }
+        },
+      });
+    });
+  });
+</script>
+
 {% endblock content %}

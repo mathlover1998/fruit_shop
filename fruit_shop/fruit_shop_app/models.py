@@ -2,9 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MinValueValidator,
-    MaxValueValidator,
-    MaxLengthValidator,
-    MinLengthValidator,
+    MaxValueValidator
 )
 
 # Create your models here.
@@ -183,6 +181,8 @@ class Fruit(models.Model):
     expiry_date = models.DateField(null=True)
     inventory_manager = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_fruits')
 
+    def __str__(self):
+        return self.fruit_name
     class Meta:
         ordering = ["id"]
         db_table = "Fruits"
@@ -213,6 +213,9 @@ class Supplier(models.Model):
     email = models.EmailField(max_length=100, null=False)
     phone = models.CharField(max_length=15, help_text="Enter your phone number")
 
+    def __str__(self):
+        return self.supplier_name
+    
     class Meta:
         ordering = ["id"]
         db_table = "Suppliers"
@@ -290,7 +293,7 @@ class Address(models.Model):
     zipcode = models.IntegerField(null=False, default=0)
     type = models.CharField(choices=RECEIVER_TYPE, default="home", null=False)
     default_address = models.BooleanField(default=False)
-
+    
     # Tỉnh (Province), Quận (District):Phường (Ward):Xã (Commune):
     class Meta:
         ordering = ["id"]
