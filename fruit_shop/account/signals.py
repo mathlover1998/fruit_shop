@@ -8,12 +8,14 @@ from fruit_shop.utils import generate_random_password
 
 @receiver(pre_save,sender=User)
 def employee_approval_notification(sender,instance, **kwargs):
-    if instance.is_approved and Employee.objects.filter(user=instance).first():
+    if instance.is_approved and Employee.objects.filter(user=instance).first() and not instance.approval_email_sent:
         new_password = generate_random_password()
         instance.set_password(new_password)
         instance.is_active = True
+        instance.approval_email_sent = True
         send_mail(
             'Account Approved',
+            # 'Your account has been approved.',
             f'Your account has been approved.Your password is: {new_password}',
             settings.EMAIL_HOST_USER,  # sender's email
             [instance.email],  # recipient's email

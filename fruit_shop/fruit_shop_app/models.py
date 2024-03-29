@@ -1,23 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import (
-    MinValueValidator,
-    MaxValueValidator
-)
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
 POSITION = (
     ("employee", "Employee"),
-    ('inventory_manager', 'Inventory Manager'),
-    ('sales_associate', 'Sales Associate'),
-    ('cashier', 'Cashier'),
-    ('store_manager', 'Store Manager'),
-    ('assistant_manager', 'Assistant Manager'),
-    ('delivery_driver', 'Delivery Driver'),
-    ('produce_specialist', 'Produce Specialist'),
-    ('customer_service_representative', 'Customer Service Representative'),
+    ("inventory_manager", "Inventory Manager"),
+    ("sales_associate", "Sales Associate"),
+    ("cashier", "Cashier"),
+    ("store_manager", "Store Manager"),
+    ("assistant_manager", "Assistant Manager"),
+    ("delivery_driver", "Delivery Driver"),
+    ("produce_specialist", "Produce Specialist"),
+    ("customer_service_representative", "Customer Service Representative"),
 )
 PAYMENT_STATUS = (
     ("pending", "Pending"),
@@ -41,7 +38,6 @@ RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
 class User(AbstractUser):
     phone = models.CharField(max_length=20, null=True)
-    middle_name = models.CharField(max_length=255, null=False, default="", blank=True)
     gender = models.CharField(
         max_length=20, choices=GENDER, default="other", null=False
     )
@@ -49,6 +45,7 @@ class User(AbstractUser):
     image = models.ImageField(upload_to="images/", default="images/default-avatar.png")
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
+    approval_email_sent = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # Set default password if password is not provided
@@ -59,10 +56,6 @@ class User(AbstractUser):
     def get_full_name(self):
         full_name = f"{self.first_name}"
         full_name += " "
-        if self.middle_name:
-            full_name += " "
-            full_name += f"{self.middle_name}"
-            full_name += " "
         full_name += f"{self.last_name}"
         return full_name
 
@@ -73,7 +66,7 @@ class User(AbstractUser):
         verbose_name_plural = "Users Table"
         indexes = [
             models.Index(
-                fields=["first_name", "middle_name", "last_name"], name="full_name"
+                fields=["first_name", "last_name"], name="full_name"
             )
         ]
 
@@ -159,6 +152,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.category_name
+
     class Meta:
         ordering = ["id"]
         db_table = "Categories"
@@ -167,28 +161,53 @@ class Category(models.Model):
         verbose_name_plural = "Categories Table"
 
 
-class Fruit(models.Model):
-    fruit_name = models.CharField(max_length=255, null=False)
-    fruit_image = models.ImageField(
+class Supplier(models.Model):
+    supplier_name = models.CharField(max_length=100, null=False)
+    contact_person = models.CharField(max_length=100, null=False, default="")
+    email = models.EmailField(max_length=100, null=False)
+    phone = models.CharField(max_length=15, help_text="Enter your phone number")
+
+    def __str__(self):
+        return self.supplier_name
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "Suppliers"
+        managed = True
+        verbose_name = "Supplier Table"
+        verbose_name_plural = "Suppliers Table"
+
+
+class Product(models.Model):
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    product_name = models.CharField(max_length=255, null=False)
+    product_image = models.ImageField(
         upload_to="images/", default="images/default_fruit.jpg"
     )
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.IntegerField(null=False, default=0)
     stock_quantity = models.IntegerField(null=False, default=0)
     origin_country = models.CharField(max_length=40, default="")
-    nutritional_information = models.TextField(null=True)
+    information = models.TextField(null=True)
     create_date = models.DateField(auto_now_add=True)
     expiry_date = models.DateField(null=True)
-    inventory_manager = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_fruits')
+    inventory_manager = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="managed_product",
+    )
 
     def __str__(self):
         return self.fruit_name
+
     class Meta:
         ordering = ["id"]
-        db_table = "Fruits"
+        db_table = "Products"
         managed = True
-        verbose_name = "Fruit Table"
-        verbose_name_plural = "Fruits Table"
+        verbose_name = "Product Table"
+        verbose_name_plural = "Products Table"
 
 
 class Order(models.Model):
@@ -207,26 +226,9 @@ class Order(models.Model):
         verbose_name_plural = "Orders Table"
 
 
-class Supplier(models.Model):
-    supplier_name = models.CharField(max_length=100, null=False)
-    contact_person = models.CharField(max_length=100, null=False, default="")
-    email = models.EmailField(max_length=100, null=False)
-    phone = models.CharField(max_length=15, help_text="Enter your phone number")
-
-    def __str__(self):
-        return self.supplier_name
-    
-    class Meta:
-        ordering = ["id"]
-        db_table = "Suppliers"
-        managed = True
-        verbose_name = "Supplier Table"
-        verbose_name_plural = "Suppliers Table"
-
-
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
-    fruit = models.ForeignKey(Fruit, on_delete=models.CASCADE, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField(null=False, default=0)
     subtotal = models.IntegerField(null=False, default=0)
     discount_applied = models.CharField(max_length=30, default="", null=False)
@@ -237,24 +239,6 @@ class OrderItem(models.Model):
         managed = True
         verbose_name = "Order Item Table"
         verbose_name_plural = "Order Items Table"
-
-
-class SupplierProduct(models.Model):
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
-    fruit = models.ForeignKey(Fruit, on_delete=models.CASCADE)
-    supplier_product_image = models.ImageField(
-        upload_to="images/", default="images/default_can.jpg"
-    )
-    supply_price = models.FloatField(null=False, default=0.0)
-    last_supply_date = models.DateField(null=False)
-    quantity_supplied = models.IntegerField(null=False, default=0)
-
-    class Meta:
-        ordering = ["id"]
-        db_table = "SupplierProducts"
-        managed = True
-        verbose_name = "Supplier Product Table"
-        verbose_name_plural = "Supplier Products Table"
 
 
 class Transaction(models.Model):
@@ -293,7 +277,7 @@ class Address(models.Model):
     zipcode = models.IntegerField(null=False, default=0)
     type = models.CharField(choices=RECEIVER_TYPE, default="home", null=False)
     default_address = models.BooleanField(default=False)
-    
+
     # Tỉnh (Province), Quận (District):Phường (Ward):Xã (Commune):
     class Meta:
         ordering = ["id"]

@@ -136,9 +136,7 @@ def update_profile(request):
             current_user.first_name, current_user.last_name = full_name.split(
                 maxsplit=1
             )
-            current_user.middle_name = full_name.rsplit(" ", 1)[0][
-                len(current_user.first_name) + 1 :
-            ]
+            
         if gender:
             current_user.gender = gender
         if dob:
@@ -416,7 +414,7 @@ def employee_register(request):
     if request.method =="POST":
         username = request.POST.get('username')
         first_name = request.POST.get('first_name')
-        middle_name = request.POST.get('middle_name')
+        
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
         phone = request.POST.get('phone')
@@ -428,8 +426,6 @@ def employee_register(request):
             return redirect(reverse('employee_register'))
         else:
             new_user = User.objects.create(username=username,first_name=first_name,last_name=last_name,email=email,phone=phone,is_active=False)
-            if middle_name is not None:
-                new_user.middle_name = middle_name
             new_user.save()
             Employee.objects.create(user=new_user).save()
             return redirect(reverse("confirmation_page"))
