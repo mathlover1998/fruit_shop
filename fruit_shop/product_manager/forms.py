@@ -17,11 +17,12 @@ class CreateProductForm(forms.Form):
     product_image = forms.ImageField(
         label="Product Image",
         widget=forms.FileInput(attrs={"class": "form-control"}),
+        required=False,
     )
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
         label="Category",
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
     price = forms.IntegerField(
         label="Price", widget=forms.NumberInput(attrs={"class": "form-control"})

@@ -9,23 +9,6 @@ from django.http import JsonResponse
 # Create your views here.
 
 
-def supplier_register(request):
-    if request.method == "POST":
-        supplier_name = request.POST.get("supplier_name")
-        email = request.POST.get("email")
-        phone = request.POST.get("phone")
-        new_supplier = Supplier.objects.create(
-            supplier_name=supplier_name, email=email, phone=phone
-        )
-        new_supplier.save()
-        return redirect(reverse("confirmation_page"))
-    return render(request, "account/supplier_register.html")
-
-
-def confirmation_page(request):
-    return render(request, "notification/wait_for_confirmation.html")
-
-
 def product_view(request):
     product_list = Product.objects.all()
     return render(request, "shop/shop.html", {"products": product_list})
@@ -56,3 +39,7 @@ def create_product(request):
             return redirect(reverse("product_view"))
 
     return render(request, "shop/create_product.html", {"form": form})
+
+def product_detail(request,product_id):
+    product = Product.objects.filter(pk=product_id).first()
+    return render(request,'shop/product_detail.html',{'product':product})
