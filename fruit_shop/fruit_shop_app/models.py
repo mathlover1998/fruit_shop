@@ -208,7 +208,7 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to="images/product images/",default="images/default_fruit.jpg")
+    image = models.ImageField(upload_to="images/product_images/",default="images/default_fruit.jpg")
 
     class Meta:
         db_table = "ProductImages"
