@@ -181,9 +181,6 @@ class Supplier(models.Model):
 class Product(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     product_name = models.CharField(max_length=255, null=False)
-    product_image = models.ImageField(
-        upload_to="images/", default="images/default_fruit.jpg"
-    )
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.IntegerField(null=False, default=0)
     stock_quantity = models.IntegerField(null=False, default=0)
@@ -200,7 +197,7 @@ class Product(models.Model):
     )
 
     def __str__(self):
-        return self.fruit_name
+        return self.product_name
 
     class Meta:
         ordering = ["id"]
@@ -209,7 +206,15 @@ class Product(models.Model):
         verbose_name = "Product Table"
         verbose_name_plural = "Products Table"
 
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to="images/product images/",default="images/default_fruit.jpg")
 
+    class Meta:
+        db_table = "ProductImages"
+        managed = True
+        verbose_name = "ProductImage Table"
+        verbose_name_plural = "ProductImages Table"
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_date = models.DateField(auto_now=True)
