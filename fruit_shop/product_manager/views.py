@@ -44,3 +44,6 @@ def create_product(request):
 def product_detail(request,product_id):
     product = Product.objects.filter(pk=product_id).first()
     return render(request,'shop/product_detail.html',{'product':product})
+
+def best_seller(request):
+    return render(request,'shop/gallery.html')
