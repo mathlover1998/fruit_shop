@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product, Supplier
+from fruit_shop_app.models import Product, Supplier,ProductImage
 from django.urls import reverse
 from fruit_shop.utils import position_required
 from .forms import CreateProductForm
@@ -33,9 +33,10 @@ def create_product(request):
                 expiry_date=form.cleaned_data["expiry_date"],
                 inventory_manager=request.user.employee,
             )
-            if "product_image" in request.FILES:
-                product.product_image = (form.cleaned_data["product_image"],)
             product.save()
+            product_images = request.FILES.getlist('product_images')  # Get list of uploaded images
+            for img in product_images:
+                ProductImage.objects.create(product=product,image=img).save()
             return redirect(reverse("product_view"))
 
     return render(request, "shop/create_product.html", {"form": form})

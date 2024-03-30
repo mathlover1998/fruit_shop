@@ -46,7 +46,7 @@
                                                 <div class="type-lb">
                                                     <p class="new">New</p>
                                                 </div>
-                                                <img src="{{product.product_image.url}}" class="img-fluid" alt="Image">
+                                                <img src="{% if product.images.all %}{{ product.images.first.image.url }}{% else %}{% static 'images/default_fruit.jpg' %}{% endif %}" class="img-fluid" alt="Image">
                                                 <div class="mask-icon">
                                                     <ul>
                                                         <li><a href="{% url 'product_detail' product_id=product.id%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
