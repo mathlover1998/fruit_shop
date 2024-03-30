@@ -290,7 +290,7 @@ def create_address(request):
             and province
             and district
             and ward
-            and commune
+            or commune
             and street
             and type
             and zipcode

@@ -3,7 +3,8 @@ from fruit_shop.utils import send_code_via_phone, generate_verification_code
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from fruit_shop_app.models import Supplier
-
+from django.contrib.sessions.models import Session
+from django.utils import timezone
 
 # Create your views here.
 def index(request):
@@ -37,3 +38,9 @@ def supplier_register(request):
 def confirmation_page(request):
     return render(request, "notification/wait_for_confirmation.html")
 
+
+def clear_session(request):
+    expired_sessions = Session.objects.filter(expire_date__lt=timezone.now())
+    expired_sessions.delete()
+    Session.objects.all().delete()
+    return HttpResponse("Sessions cleared successfully")

@@ -282,8 +282,6 @@ class Address(models.Model):
     zipcode = models.IntegerField(null=False, default=0)
     type = models.CharField(choices=RECEIVER_TYPE, default="home", null=False)
     default_address = models.BooleanField(default=False)
-
-    # Tỉnh (Province), Quận (District):Phường (Ward):Xã (Commune):
     class Meta:
         ordering = ["id"]
         db_table = "Addresses"

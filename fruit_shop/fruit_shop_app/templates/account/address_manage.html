@@ -59,7 +59,7 @@
                 <label class="form-check-label" for="inlineRadio2">Office</label>
               </div>
               <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="exampleCheck1" name='default_address'>
+                <input type="checkbox" class="form-check-input" id="exampleCheck1" name='default_address' {% if address.default_address %} checked {% endif %}>
                 <label class="form-check-label" for="exampleCheck1">Set as default address</label>
               </div>
               <input type="submit" class="btn btn-primary btn-block" value='Submit'>
