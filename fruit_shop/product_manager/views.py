@@ -87,15 +87,18 @@ def cart_view(request):
 def checkout(request):
     cart = request.session.get("cart", {})
     addresses = Address.objects.filter(customer = request.user.customer).all()
+
     for address in addresses:
         address_dict = vars(address)
         for key,value in address_dict.items():
             print(f'{key}: {value}')
-    # order = Order.objects.create(
-    #     customer = request.user,
-    #     total_amount = 0,
-    #     payment_status = 'pending',
-    #     delivery_address = )
+    order = Order.objects.create(
+        customer = request.user.customer,
+        total_amount = 0,
+        payment_status = 'pending',
+        )
+    order.save()
+    
     return HttpResponse('Noob')
 
 
