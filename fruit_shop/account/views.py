@@ -49,14 +49,10 @@ def customer_register(request):
             return redirect("customer_register")
         else:
             password = request.POST.get("password")
-            user = User.objects.create_user(username=username, password=password)
-            user.is_active = False
-            user.save()
-            customer = Customer.objects.create(user=user)
-            customer.save()
-
+            request.session['username'] = username
+            request.session['password'] = password
             return redirect(
-                reverse("customer_register_email") + f"?username={username}"
+                reverse("customer_register_email")
             )
     return render(request, "account/register.html")
 
@@ -64,21 +60,24 @@ def customer_register(request):
 def customer_register_email(request):
     if request.method == "POST":
         email = request.POST.get("email")
-        username = request.GET.get("username")
+        username = request.session.get('username')
+        password = request.session.get('password')
+        if not username:
+      # Handle case where username is missing (e.g., redirect back)
+            return render(request, "pages/error.html")
         if User.objects.filter(email=email):
             messages.error(request, "This email is taken! Please enter another one!")
             return redirect(
                 reverse("customer_register_email") + f"?username={username}"
             )
         else:
-            user = User.objects.filter(username=username).first()
+            user = User.objects.create_user(username=username,password=password)
+            user.save()
+            Customer.objects.create(user=user).save()
             subject = "Welcome to fruitshop"
             message = "Congratulations on your successful registration"
             from_email = os.environ.get("EMAIL_HOST_USER")
             send_mail(subject, message, from_email, [email])
-            user.email = email
-            user.is_active = True
-            user.save()
             login(request, user)
             return redirect("index")
     return render(request, "account/enter_verification_email.html")

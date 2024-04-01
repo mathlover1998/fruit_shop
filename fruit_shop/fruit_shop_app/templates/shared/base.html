@@ -187,16 +187,15 @@
           <a href="#" class="close-side"><i class="fa fa-times"></i></a>
           <li class="cart-box">
             <ul class="cart-list">
-              {% for item_id, item_data in cart_items.items %} 
-              {% with product=item_data.product %}
+              {% for item in cart_items %}
               <li>
                 <a href="#" class="photo">
-                  <img src="{{ product.images.first.image.url }}" class="cart-thumb" alt="" />
+                  <img src="{{ item.product.image }}" class="cart-thumb" alt="" />
                 </a>
-                <h6><a href="#">{{ product.product_name }}</a></h6>
-                <p>{{ item_data.quantity }}x - <span class="price">${{ product.price }}</span></p>
+                <h6><a href="#">{{ item.product.name }}</a></h6>
+                <p>{{ item.quantity }}x - <span class="price">${{ item.product.price }}</span></p>
               </li>
-              {% endwith %} {% endfor %}
+             {% endfor %}
               <li class="total">
                 <a href="#" class="btn btn-default hvr-hover btn-cart">VIEW CART</a>
                 <span class="float-right"><strong>Total</strong>: $180.00</span>

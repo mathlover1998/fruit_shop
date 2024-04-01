@@ -52,14 +52,16 @@ def product_detail(request, product_id):
 
 
 def add_to_cart(request, product_id, quantity=1):
+    product_id_ = str(product_id)
     cart = request.session.get("cart", {})
+    print(cart)
     product = get_object_or_404(Product, pk=product_id)
-    if product.id in cart:
-        cart[product_id]["quantity"] += quantity
+    if str(product.id) in cart:
+        cart[product_id_]["quantity"] += quantity
     else:
-        cart[product_id] = {"quantity": quantity}
+        cart[product_id_] = {"quantity": quantity}
     request.session["cart"] = cart
-    print(cart[product_id]["quantity"])
+    print(cart[product_id_]["quantity"])
     print(cart)
     return redirect(reverse("product_view"))
 
