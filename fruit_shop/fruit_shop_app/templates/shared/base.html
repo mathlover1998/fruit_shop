@@ -153,7 +153,7 @@
                 <ul class="dropdown-menu">
                   <li><a href="{% url 'product_view' %}">Shop</a></li>
                   <li><a href="#">Recently viewed</a></li>
-                  <li><a href="cart.html">Cart</a></li>
+                  <li><a href="{% url 'cart_view' %}">Cart</a></li>
                   <li><a href="checkout.html">Checkout</a></li>
                   <li><a href="{% url 'profile' %}">My Account</a></li>
                   <li><a href="#">Wishlist</a></li>
@@ -172,9 +172,9 @@
                 <a href="#"><i class="fa fa-search"></i></a>
               </li>
               <li class="side-menu">
-                <a href="{% url 'cart_view' %}">
+                <a href="#">
                   <i class="fa fa-shopping-bag"></i>
-                  <span class="badge">{{cart_item_count}}</span>
+                  <span class="badge">{{cart_items_count}}</span>
                   <p>My Cart</p>
                 </a>
               </li>
@@ -190,15 +190,15 @@
               {% for item in cart_items %}
               <li>
                 <a href="#" class="photo">
-                  <img src="{{ item.product.image }}" class="cart-thumb" alt="" />
+                  <img src="{{ item.product.images.first.image.url }}" class="cart-thumb" alt="" />
                 </a>
-                <h6><a href="#">{{ item.product.name }}</a></h6>
-                <p>{{ item.quantity }}x - <span class="price">${{ item.product.price }}</span></p>
+                <h6><a href="#">{{ item.product.product_name }}</a></h6>
+                <p>{{ item.quantity }}x - <span class="price">{{ item.product.price }}đ</span></p>
               </li>
              {% endfor %}
               <li class="total">
-                <a href="#" class="btn btn-default hvr-hover btn-cart">VIEW CART</a>
-                <span class="float-right"><strong>Total</strong>: $180.00</span>
+                <a href="{% url 'cart_view'%}" class="btn btn-default hvr-hover btn-cart">VIEW CART</a>
+                <span class="float-right"><strong>Total</strong>: {{total_price}}đ</span>
               </li>
             </ul>
           </li>

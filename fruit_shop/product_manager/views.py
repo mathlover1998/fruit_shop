@@ -54,15 +54,12 @@ def product_detail(request, product_id):
 def add_to_cart(request, product_id, quantity=1):
     product_id_ = str(product_id)
     cart = request.session.get("cart", {})
-    print(cart)
     product = get_object_or_404(Product, pk=product_id)
     if str(product.id) in cart:
         cart[product_id_]["quantity"] += quantity
     else:
-        cart[product_id_] = {"quantity": quantity}
+        cart[product_id_] = {"product_id":product_id_,"quantity": quantity}
     request.session["cart"] = cart
-    print(cart[product_id_]["quantity"])
-    print(cart)
     return redirect(reverse("product_view"))
 
 
@@ -70,7 +67,6 @@ def cart_view(request):
     cart = request.session.get("cart", {})
     cart_items = []
     total_price = 0
-
     # Retrieve product details for items in the cart
     for item_id, item_data in cart.items():
         product = get_object_or_404(Product, pk=item_id)
