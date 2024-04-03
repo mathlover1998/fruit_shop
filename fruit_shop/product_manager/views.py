@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product, ProductImage, Order, OrderItem,Address
+from fruit_shop_app.models import Product, ProductImage, Order, OrderItem, Address
 from django.urls import reverse
 from fruit_shop.utils import position_required
 from .forms import CreateProductForm
@@ -7,9 +7,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from PIL import Image
+from PIL import Image, ImageOps
 import os
 from django.conf import settings
+from uuid import uuid4
+
 # Create your views here.
 
 
@@ -25,9 +27,11 @@ def create_product(request):
     if request.method == "POST":
         form = CreateProductForm(request.POST, request.FILES)
         if form.is_valid():
+            product_name = form.cleaned_data["product_name"]
+
             product = Product(
                 supplier=form.cleaned_data["supplier"],
-                product_name=form.cleaned_data["product_name"],
+                product_name=product_name,
                 price=form.cleaned_data["price"],
                 stock_quantity=form.cleaned_data["stock_quantity"],
                 origin_country=form.cleaned_data["origin_country"],
@@ -44,10 +48,37 @@ def create_product(request):
             )  # Get list of uploaded images
             for img in product_images:
                 image = Image.open(img)
-                resized_image = image.resize((255, 241))
-                resized_image_path = os.path.join(settings.MEDIA_ROOT, 'images/product_images/', f"resized_{img.name}")
-                resized_image.save(resized_image_path)
-                ProductImage.objects.create(product=product, image=resized_image_path).save()
+
+                # Get dimensions and calculate center coordinates
+                width, height = image.size
+                center_x = width // 2
+                center_y = height // 2
+
+                # Determine the desired size for the centered crop
+                desired_width = 255
+                desired_height = 241
+                half_width = desired_width // 2
+                half_height = desired_height // 2
+
+                # Calculate the cropping box coordinates
+                left = center_x - half_width
+                top = center_y - half_height
+                right = center_x + half_width
+                bottom = center_y + half_height
+
+                # Crop the image to the center
+                cropped_image = image.crop((left, top, right, bottom))
+
+                # Save the cropped image
+                cropped_image_path = os.path.join(
+                    settings.MEDIA_ROOT, "images/product_images/", f"{uuid4().hex}.jpg"
+                )
+                cropped_image.save(cropped_image_path)
+
+                ProductImage.objects.create(
+                    product=product, image=cropped_image_path
+                ).save()
+
             return redirect(reverse("product_view"))
 
     return render(request, "shop/create_product.html", {"form": form})
@@ -65,7 +96,7 @@ def add_to_cart(request, product_id, quantity=1):
     if str(product.id) in cart:
         cart[product_id_]["quantity"] += quantity
     else:
-        cart[product_id_] = {"product_id":product_id_,"quantity": quantity}
+        cart[product_id_] = {"product_id": product_id_, "quantity": quantity}
     request.session["cart"] = cart
     return redirect(reverse("product_view"))
 
@@ -91,18 +122,17 @@ def cart_view(request):
 @login_required
 def checkout(request):
     cart = request.session.get("cart", {})
-    addresses = Address.objects.filter(customer = request.user.customer).all()
+    addresses = Address.objects.filter(customer=request.user.customer).all()
 
     for address in addresses:
         address_dict = vars(address)
-        for key,value in address_dict.items():
-            print(f'{key}: {value}')
+        for key, value in address_dict.items():
+            print(f"{key}: {value}")
     order = Order.objects.create(
-        customer = request.user.customer,
-        total_amount = 0,
-        payment_status = 'pending',
-        )
+        customer=request.user.customer,
+        total_amount=0,
+        payment_status="pending",
+    )
     order.save()
-    
-    return HttpResponse('Noob')
 
+    return HttpResponse("Noob")

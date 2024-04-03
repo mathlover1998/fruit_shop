@@ -1,5 +1,6 @@
 from fruit_shop_app.models import Product, Category
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 
 
 def cart_item_count(request):
@@ -27,16 +28,47 @@ def cart_item_count(request):
 
 
 def product_filtered(request):
-    products = Product.objects.all()[:10]
-    exclusive = Product.objects.filter(categories__category_name="Exclusive")
-    plant_based = Product.objects.filter(
-        categories__category_name="Plant-based Produce"
+    exclusive = (
+        Product.objects.filter(categories__category_name="Exclusive")
+        .annotate(category_count=Count("categories"))
+        .filter(category_count=1)[:2]
     )
-    sea_food = Product.objects.filter(categories__category_name="Seafood")
-    meat = Product.objects.filter(categories__category_name="Meat")
-    dairy_products = Product.objects.filter(categories__category_name="Dairy Product")
-    processed_foods = Product.objects.filter(categories__category_name="Processed food")
-    essential_ingredients = Product.objects.filter(
-        categories__category_name="Essential Ingredient"
+    plant_based = (
+        Product.objects.filter(categories__category_name="Plant-based Produce")
+        .annotate(category_count=Count("categories"))
+        .filter(category_count=1)[:2]
     )
-    return {"global_products":products,"global_exclusive":exclusive,"global_plant_based":plant_based}
+    sea_food = (
+        Product.objects.filter(categories__category_name="Seafood")
+        .annotate(category_count=Count("categories"))
+        .filter(category_count=1)[:2]
+    )
+    meat = (
+        Product.objects.filter(categories__category_name="Meat")
+        .annotate(category_count=Count("categories"))
+        .filter(category_count=1)[:2]
+    )
+    dairy_products = (
+        Product.objects.filter(categories__category_name="Dairy Product")
+        .annotate(category_count=Count("categories"))
+        .filter(category_count=1)[:2]
+    )
+    processed_foods = (
+        Product.objects.filter(categories__category_name="Processed Food")
+        .annotate(category_count=Count("categories"))
+        .filter(category_count=1)[:2]
+    )
+    essential_ingredients = (
+        Product.objects.filter(categories__category_name="Essential Ingredient")
+        .annotate(category_count=Count("categories"))
+        .filter(category_count=1)[:2]
+    )
+    return {
+        "global_exclusive": exclusive,
+        "global_plant_based": plant_based,
+        "global_sea_food": sea_food,
+        "global_meat": meat,
+        "global_dairy_products": dairy_products,
+        "global_processed_foods": processed_foods,
+        "global_essential_ingredients": essential_ingredients,
+    }

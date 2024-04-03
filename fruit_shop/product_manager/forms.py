@@ -40,7 +40,7 @@ class CreateProductForm(forms.Form):
         widget=forms.SelectMultiple(attrs={"class": "form-control"})
     )
     price = forms.IntegerField(
-        label="Price", widget=forms.NumberInput(attrs={"class": "form-control"})
+        label="Price (VND)", widget=forms.NumberInput(attrs={"class": "form-control"})
     )
     stock_quantity = forms.IntegerField(
         label="Stock Quantity",
