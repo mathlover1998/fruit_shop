@@ -179,7 +179,7 @@ class Supplier(models.Model):
 class Product(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     product_name = models.CharField(max_length=255, null=False)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category, related_name='products')
     price = models.IntegerField(null=False, default=0)
     stock_quantity = models.IntegerField(null=False, default=0)
     origin_country = models.CharField(max_length=40, default="")

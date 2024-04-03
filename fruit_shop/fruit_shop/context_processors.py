@@ -17,7 +17,6 @@ def cart_item_count(request):
         )
         total_price = 0
         for item in cart_items:
-            print(item['total_price'])
             total_price+= item['total_price']
         
     return {"global_cart_items": cart_items,'global_cart_items_count':len(cart),'global_total_price':total_price}
