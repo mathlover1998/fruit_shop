@@ -34,10 +34,10 @@ class CreateProductForm(forms.Form):
         label="Product Images",
         required=False,
     )
-    category = forms.ModelChoiceField(
+    category = forms.ModelMultipleChoiceField(
         queryset=Category.objects.all(),
-        label="Category",
-        widget=forms.Select(attrs={"class": "form-control"})
+        label="Categories",
+        widget=forms.SelectMultiple(attrs={"class": "form-control"})
     )
     price = forms.IntegerField(
         label="Price", widget=forms.NumberInput(attrs={"class": "form-control"})

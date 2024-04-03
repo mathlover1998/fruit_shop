@@ -7,7 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-
+from PIL import Image
+import os
+from django.conf import settings
 # Create your views here.
 
 
@@ -26,7 +28,6 @@ def create_product(request):
             product = Product(
                 supplier=form.cleaned_data["supplier"],
                 product_name=form.cleaned_data["product_name"],
-                category=form.cleaned_data["category"],
                 price=form.cleaned_data["price"],
                 stock_quantity=form.cleaned_data["stock_quantity"],
                 origin_country=form.cleaned_data["origin_country"],
@@ -36,11 +37,17 @@ def create_product(request):
                 inventory_manager=request.user.employee,
             )
             product.save()
+            category_ids = form.cleaned_data["category"]
+            product.categories.set(category_ids)
             product_images = request.FILES.getlist(
                 "product_images"
             )  # Get list of uploaded images
             for img in product_images:
-                ProductImage.objects.create(product=product, image=img).save()
+                image = Image.open(img)
+                resized_image = image.resize((255, 241))
+                resized_image_path = os.path.join(settings.MEDIA_ROOT, 'images/product_images/', f"resized_{img.name}")
+                resized_image.save(resized_image_path)
+                ProductImage.objects.create(product=product, image=resized_image_path).save()
             return redirect(reverse("product_view"))
 
     return render(request, "shop/create_product.html", {"form": form})
@@ -76,7 +83,7 @@ def cart_view(request):
         cart_items.append(
             {"product": product, "quantity": quantity, "total_price": item_total_price}
         )
-
+    print(settings.MEDIA_ROOT)
     context = {"cart_items": cart_items, "total_price": total_price}
     return render(request, "shop/cart.html", context)
 
@@ -99,6 +106,3 @@ def checkout(request):
     
     return HttpResponse('Noob')
 
-
-# def best_seller(request):
-#     return render(request,'shop/gallery.html')

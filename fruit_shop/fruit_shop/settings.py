@@ -80,7 +80,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'fruit_shop.context_processors.cart_item_count'
+                'fruit_shop.context_processors.cart_item_count',
+                'fruit_shop.context_processors.product_filtered'
             ],
         },
     },

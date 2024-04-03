@@ -99,8 +99,8 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="title-all text-center">
-                        <h1>Fruits & Vegetables</h1>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet lacus enim.</p>
+                        <h1>Our Products</h1>
+                        <p>Always providing fresh food every day for you</p>
                     </div>
                 </div>
             </div>
@@ -108,22 +108,23 @@
                 <div class="col-lg-12">
                     <div class="special-menu text-center">
                         <div class="button-group filter-button-group">
-                            <button class="active" data-filter="*">All</button>
-                            <button data-filter=".top-featured">Top featured</button>
-                            <button data-filter=".best-seller">Best seller</button>
+                            <button class="active" data-filter=".all-products">All</button>
+                            <button data-filter=".top-featured">Exclusive</button>
+                            <button data-filter=".best-seller">Plant-based produce</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="row special-list">
-                <div class="col-lg-3 col-md-6 special-grid best-seller">
+                {% for product in global_products %}
+                <div class="col-lg-3 col-md-6 special-grid all-products">
                     <div class="products-single fix">
                         <div class="box-img-hover">
                             <div class="type-lb">
                                 <p class="sale">Sale</p>
                             </div>
-                            <img src=" {% static 'images/img-pro-01.jpg' %} " class="img-fluid" alt="Image">
+                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
                             <div class="mask-icon">
                                 <ul>
                                     <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
@@ -134,12 +135,13 @@
                             </div>
                         </div>
                         <div class="why-text">
-                            <h4>Lorem ipsum dolor sit amet</h4>
-                            <h5> $7.79</h5>
+                            <h4>{{product.product_name}}</h4>
+                            <h5> {{product.price}}đ</h5>
                         </div>
                     </div>
                 </div>
-
+                {% endfor %}
+                
                 <div class="col-lg-3 col-md-6 special-grid top-featured">
                     <div class="products-single fix">
                         <div class="box-img-hover">
@@ -162,7 +164,7 @@
                         </div>
                     </div>
                 </div>
-
+<!-- 
                 <div class="col-lg-3 col-md-6 special-grid top-featured">
                     <div class="products-single fix">
                         <div class="box-img-hover">
@@ -207,7 +209,7 @@
                             <h5> $15.79</h5>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
