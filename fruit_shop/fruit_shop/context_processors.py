@@ -20,4 +20,4 @@ def cart_item_count(request):
             print(item['total_price'])
             total_price+= item['total_price']
         
-    return {"cart_items": cart_items,'cart_items_count':len(cart),'total_price':total_price}
+    return {"global_cart_items": cart_items,'global_cart_items_count':len(cart),'global_total_price':total_price}
