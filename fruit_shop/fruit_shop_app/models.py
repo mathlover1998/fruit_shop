@@ -28,9 +28,7 @@ PAYMENT_STATUS = (
 
 PAYMENT_METHOD = (
     ("cash", "Cash"),
-    ("momo", "Momo"),
-    ("apple_pay", "Apple Pay"),
-    ("mobile_banking", "Mobile Banking"),
+    ("momo", "Momo")
 )
 
 RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
