@@ -1,5 +1,6 @@
 {% extends "shared/base.html" %}
 {% load static %}
+{% load custom_filters %}
 {% block title_box %}{% endblock title_box %}
 {% block content %}
     <!-- Start Slider -->
@@ -110,11 +111,11 @@
                         <div class="button-group filter-button-group">
                             <button class="active" data-filter="*">All</button>
                             <button data-filter=".exclusive">Exclusive</button>
-                            <button data-filter=".plant_based">Plant-based</button>
+                            <button data-filter=".plant_based_produce">Plant-based</button>
                             <button data-filter=".sea_food">Seafood</button>
                             <button data-filter=".meat">Meat</button>
-                            <button data-filter=".dairy_products">Dairy Product</button>
-                            <button data-filter=".processed_foods">Processed Food</button>
+                            <button data-filter=".dairy_product">Dairy Product</button>
+                            <button data-filter=".processed_food">Processed Food</button>
                             <button data-filter=".essential_ingredient">Ingredient</button>
                             
                         </div>
@@ -123,174 +124,32 @@
             </div>
 
             <div class="row special-list">
-                {% for product in global_exclusive %}
-                <div class="col-lg-3 col-md-6 special-grid exclusive">
-                    <div class="products-single fix">
-                        <div class="box-img-hover">
-                            <div class="type-lb">
-                                <p class="sale">Sale</p>
-                            </div>
-                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
-                            <div class="mask-icon">
-                                <ul>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
-                                </ul>
-                                <a class="cart" href="#">Add to Cart</a>
-                            </div>
-                        </div>
-                        <div class="why-text">
-                            <h4>{{product.product_name}}</h4>
-                            <h5> {{product.price}}đ</h5>
-                        </div>
+                {% for category, products in global_category.items %}
+    {% for product in products %}
+        <div class="col-lg-3 col-md-6 special-grid {{ category|snake_case_filter }}">
+            <div class="products-single fix">
+                <div class="box-img-hover">
+                    <div class="type-lb">
+                        <p class="sale">Sale</p>
+                    </div>
+                    <img src="{{ product.images.first.image.url }}" class="img-fluid" alt="Image">
+                    <div class="mask-icon">
+                        <ul>
+                            <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
+                            <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
+                            <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
+                        </ul>
+                        <a class="cart" href="#">Add to Cart</a>
                     </div>
                 </div>
-                {% endfor %}
-                {% for product in global_plant_based %}
-                <div class="col-lg-3 col-md-6 special-grid plant_based">
-                    <div class="products-single fix">
-                        <div class="box-img-hover">
-                            <div class="type-lb">
-                                <p class="sale">Sale</p>
-                            </div>
-                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
-                            <div class="mask-icon">
-                                <ul>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
-                                </ul>
-                                <a class="cart" href="#">Add to Cart</a>
-                            </div>
-                        </div>
-                        <div class="why-text">
-                            <h4>{{product.product_name}}</h4>
-                            <h5> {{product.price}}đ</h5>
-                        </div>
-                    </div>
+                <div class="why-text">
+                    <h4>{{ product.product_name }}</h4>
+                    <h5>{{ product.price }}đ</h5>
                 </div>
-                {% endfor %}
-                {% for product in global_sea_food %}
-                <div class="col-lg-3 col-md-6 special-grid sea_food">
-                    <div class="products-single fix">
-                        <div class="box-img-hover">
-                            <div class="type-lb">
-                                <p class="sale">Sale</p>
-                            </div>
-                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
-                            <div class="mask-icon">
-                                <ul>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
-                                </ul>
-                                <a class="cart" href="#">Add to Cart</a>
-                            </div>
-                        </div>
-                        <div class="why-text">
-                            <h4>{{product.product_name}}</h4>
-                            <h5> {{product.price}}đ</h5>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-                {% for product in global_meat %}
-                <div class="col-lg-3 col-md-6 special-grid meat">
-                    <div class="products-single fix">
-                        <div class="box-img-hover">
-                            <div class="type-lb">
-                                <p class="sale">Sale</p>
-                            </div>
-                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
-                            <div class="mask-icon">
-                                <ul>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
-                                </ul>
-                                <a class="cart" href="#">Add to Cart</a>
-                            </div>
-                        </div>
-                        <div class="why-text">
-                            <h4>{{product.product_name}}</h4>
-                            <h5> {{product.price}}đ</h5>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-                {% for product in global_dairy_products %}
-                <div class="col-lg-3 col-md-6 special-grid dairy_products">
-                    <div class="products-single fix">
-                        <div class="box-img-hover">
-                            <div class="type-lb">
-                                <p class="sale">Sale</p>
-                            </div>
-                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
-                            <div class="mask-icon">
-                                <ul>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
-                                </ul>
-                                <a class="cart" href="#">Add to Cart</a>
-                            </div>
-                        </div>
-                        <div class="why-text">
-                            <h4>{{product.product_name}}</h4>
-                            <h5> {{product.price}}đ</h5>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-                {% for product in global_processed_foods %}
-                <div class="col-lg-3 col-md-6 special-grid processed_foods">
-                    <div class="products-single fix">
-                        <div class="box-img-hover">
-                            <div class="type-lb">
-                                <p class="sale">Sale</p>
-                            </div>
-                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
-                            <div class="mask-icon">
-                                <ul>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
-                                </ul>
-                                <a class="cart" href="#">Add to Cart</a>
-                            </div>
-                        </div>
-                        <div class="why-text">
-                            <h4>{{product.product_name}}</h4>
-                            <h5> {{product.price}}đ</h5>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-                {% for product in global_essential_ingredients %}
-                <div class="col-lg-3 col-md-6 special-grid essential_ingredients">
-                    <div class="products-single fix">
-                        <div class="box-img-hover">
-                            <div class="type-lb">
-                                <p class="sale">Sale</p>
-                            </div>
-                            <img src=" {{product.images.first.image.url}} " class="img-fluid" alt="Image">
-                            <div class="mask-icon">
-                                <ul>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a></li>
-                                    <li><a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a></li>
-                                </ul>
-                                <a class="cart" href="#">Add to Cart</a>
-                            </div>
-                        </div>
-                        <div class="why-text">
-                            <h4>{{product.product_name}}</h4>
-                            <h5> {{product.price}}đ</h5>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endfor %}
                 
                 
                 

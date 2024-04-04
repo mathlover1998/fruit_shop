@@ -1,7 +1,7 @@
 from django.shortcuts import render, HttpResponse, redirect
 from fruit_shop_app.models import Product, ProductImage, Order, OrderItem, Address
 from django.urls import reverse
-from fruit_shop.utils import position_required
+from fruit_shop.utils import position_required,replace_string
 from .forms import CreateProductForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -11,6 +11,7 @@ from PIL import Image, ImageOps
 import os
 from django.conf import settings
 from uuid import uuid4
+from django.db.models import Count
 
 # Create your views here.
 
@@ -18,6 +19,11 @@ from uuid import uuid4
 def product_view(request):
     product_list = Product.objects.all()
     return render(request, "shop/shop.html", {"products": product_list})
+
+def category_filtered_view(request,category):
+    print(category)
+    product_list = Product.objects.filter(categories__category_name=category)
+    return render (request, "shop/shop.html",{"products": product_list})
 
 
 @login_required

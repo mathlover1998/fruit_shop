@@ -78,3 +78,8 @@ def position_required(*positions):
             return HttpResponseForbidden("You don't have permission to access this page.")
         return _wrapped_view
     return decorator
+
+def replace_string(value, new):
+    new_words = value.replace('_count', new)
+    words = new_words.split('_')
+    return ' '.join(word.capitalize() for word in words)

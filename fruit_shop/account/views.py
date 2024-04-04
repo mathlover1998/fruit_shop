@@ -18,7 +18,7 @@ from django.template.defaultfilters import date
 from django.utils.html import strip_tags
 from django.contrib.sessions.models import Session
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse,HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden
 from django.core.serializers import serialize
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
@@ -31,15 +31,24 @@ def role_required(allowed_roles=[]):
     """
     Decorator to restrict access to users with specific roles.
     """
+
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            if request.user.is_authenticated and request.user.groups.filter(name__in=allowed_roles).exists():
+            if (
+                request.user.is_authenticated
+                and request.user.groups.filter(name__in=allowed_roles).exists()
+            ):
                 return view_func(request, *args, **kwargs)
             else:
-                return HttpResponseForbidden("You don't have permission to access this page.")
+                return HttpResponseForbidden(
+                    "You don't have permission to access this page."
+                )
+
         return _wrapped_view
+
     return decorator
+
 
 def customer_register(request):
     if request.method == "POST":
@@ -49,21 +58,19 @@ def customer_register(request):
             return redirect("customer_register")
         else:
             password = request.POST.get("password")
-            request.session['username'] = username
-            request.session['password'] = password
-            return redirect(
-                reverse("customer_register_email")
-            )
+            request.session["username"] = username
+            request.session["password"] = password
+            return redirect(reverse("customer_register_email"))
     return render(request, "account/register.html")
 
 
 def customer_register_email(request):
     if request.method == "POST":
         email = request.POST.get("email")
-        username = request.session.get('username')
-        password = request.session.get('password')
+        username = request.session.get("username")
+        password = request.session.get("password")
         if not username:
-      # Handle case where username is missing (e.g., redirect back)
+            # Handle case where username is missing (e.g., redirect back)
             return render(request, "pages/error.html")
         if User.objects.filter(email=email):
             messages.error(request, "This email is taken! Please enter another one!")
@@ -71,7 +78,7 @@ def customer_register_email(request):
                 reverse("customer_register_email") + f"?username={username}"
             )
         else:
-            user = User.objects.create_user(username=username,password=password)
+            user = User.objects.create_user(username=username, password=password)
             user.save()
             Customer.objects.create(user=user).save()
             subject = "Welcome to fruitshop"
@@ -135,7 +142,7 @@ def update_profile(request):
             current_user.first_name, current_user.last_name = full_name.split(
                 maxsplit=1
             )
-            
+
         if gender:
             current_user.gender = gender
         if dob:
@@ -409,27 +416,35 @@ def notification_setting_view(request):
         {"receive_updates": current_user.receive_updates},
     )
 
+
 def employee_register(request):
-    if request.method =="POST":
-        username = request.POST.get('username')
-        first_name = request.POST.get('first_name')
-        
-        last_name = request.POST.get('last_name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
+    if request.method == "POST":
+        username = request.POST.get("username")
+        first_name = request.POST.get("first_name")
+
+        last_name = request.POST.get("last_name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
         if not (first_name and last_name and email and phone and username):
-            messages.error(request,'Please fill in all required information!')
-            return redirect(reverse('employee_register'))
+            messages.error(request, "Please fill in all required information!")
+            return redirect(reverse("employee_register"))
         if User.objects.filter(username=username).exists():
             messages.error(request, "This username is taken! Please log in instead!")
-            return redirect(reverse('employee_register'))
+            return redirect(reverse("employee_register"))
         else:
-            new_user = User.objects.create(username=username,first_name=first_name,last_name=last_name,email=email,phone=phone,is_active=False)
+            new_user = User.objects.create(
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                is_active=False,
+            )
             new_user.save()
             Employee.objects.create(user=new_user).save()
             return redirect(reverse("confirmation_page"))
 
-    return render(request,'account/employee_register.html')
+    return render(request, "account/employee_register.html")
 
 
 def approve_employee_account(request):
