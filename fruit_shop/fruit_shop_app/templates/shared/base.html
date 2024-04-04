@@ -17,8 +17,8 @@
     <meta name="author" content="" />
 
     <!-- Site Icons -->
-    <link rel="shortcut icon" href=" {% static 'images/favicon.ico' %} " type="image/x-icon" />
-    <link rel="apple-touch-icon" href=" {% static 'images/apple-touch-icon.png' %} " />
+    <link rel="shortcut icon" href=" {% static 'images/favicon/favicon.ico' %} " type="image/x-icon" />
+    <link rel="apple-touch-icon" href=" {% static 'images/favicon/apple-touch-icon.png' %} " />
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
@@ -112,14 +112,9 @@
             <div class="text-slid-box">
               <div id="offer-box" class="carouselTicker">
                 <ul class="offer-box">
-                  <li><i class="fab fa-opencart"></i> 20% off Entire Purchase Promo code: offT80</li>
-                  <li><i class="fab fa-opencart"></i> 50% - 80% off on Vegetables</li>
-                  <li><i class="fab fa-opencart"></i> Off 10%! Shop Vegetables</li>
-                  <li><i class="fab fa-opencart"></i> Off 50%! Shop Now</li>
-                  <li><i class="fab fa-opencart"></i> Off 10%! Shop Vegetables</li>
-                  <li><i class="fab fa-opencart"></i> 50% - 80% off on Vegetables</li>
-                  <li><i class="fab fa-opencart"></i> 20% off Entire Purchase Promo code: offT30</li>
-                  <li><i class="fab fa-opencart"></i> Off 50%! Shop Now</li>
+                  {% for discount in discount_list %}
+                  <li><i class="fab fa-opencart"></i> {{discount.discount_percentage}}% off {{discount.discount_code}}</li>
+                  {% endfor %}
                 </ul>
               </div>
             </div>
@@ -152,9 +147,8 @@
                 <a href="{% url 'product_view' %}" class="nav-link dropdown-toggle arrow" data-toggle="dropdown">SHOP</a>
                 <ul class="dropdown-menu">
                   <li><a href="{% url 'product_view' %}">Shop</a></li>
-                  <li><a href="#">Recently viewed</a></li>
                   <li><a href="{% url 'cart_view' %}">Cart</a></li>
-                  <li><a href="checkout.html">Checkout</a></li>
+                  <li><a href="#">Checkout</a></li>
                   <li><a href="{% url 'profile' %}">My Account</a></li>
                   <li><a href="#">Wishlist</a></li>
                 </ul>

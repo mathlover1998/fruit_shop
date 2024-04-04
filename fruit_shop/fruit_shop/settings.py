@@ -83,7 +83,8 @@ TEMPLATES = [
                 'fruit_shop.context_processors.cart_item_count',
                 'fruit_shop.context_processors.product_filtered',
                 'fruit_shop.context_processors.category_count',
-                'fruit_shop.context_processors.recently_viewed_product'
+                'fruit_shop.context_processors.recently_viewed_product',
+                'fruit_shop.context_processors.display_discount'
             ],
             'libraries':{
                 'custom_filters': 'product_manager.custom_filters'

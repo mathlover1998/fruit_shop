@@ -1,4 +1,4 @@
-from fruit_shop_app.models import Product, Category
+from fruit_shop_app.models import Product, Category,Discount
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 
@@ -68,3 +68,9 @@ def recently_viewed_product(request):
         )
     print(recently_view)
     return {'recently_viewed_products':recently_view}
+
+def display_discount(request):
+    largest_discount_list = Discount.objects.order_by('-discount_percentage')[:5]
+    if not largest_discount_list:
+        return {'discount_list':[]}
+    return {'discount_list':largest_discount_list}
