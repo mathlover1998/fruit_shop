@@ -40,7 +40,7 @@ class User(AbstractUser):
         max_length=20, choices=GENDER, default="other", null=False
     )
     dob = models.DateField(default="2000-01-01")
-    image = models.ImageField(upload_to="images/", default="images/default-avatar.png")
+    image = models.ImageField(upload_to="images/user_images", default="images/default-avatar.png")
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
     approval_email_sent = models.BooleanField(default=False)
