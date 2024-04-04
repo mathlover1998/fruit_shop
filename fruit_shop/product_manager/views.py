@@ -21,7 +21,6 @@ def product_view(request):
     return render(request, "shop/shop.html", {"products": product_list})
 
 def category_filtered_view(request,category):
-    print(category)
     product_list = Product.objects.filter(categories__category_name=category)
     return render (request, "shop/shop.html",{"products": product_list})
 
@@ -91,7 +90,13 @@ def create_product(request):
 
 
 def product_detail(request, product_id):
-    product = Product.objects.filter(pk=product_id).first()
+    product_id_ = str(product_id)
+    recently_viewed = request.session.get('recently_viewed', {})
+    product = get_object_or_404(Product, pk=product_id)
+    if str(product.id) not in recently_viewed:
+        recently_viewed[product_id_] = product_id
+    print(recently_viewed)
+    request.session['recently_viewed'] = recently_viewed
     return render(request, "shop/product_detail.html", {"product": product})
 
 
@@ -120,9 +125,9 @@ def cart_view(request):
         cart_items.append(
             {"product": product, "quantity": quantity, "total_price": item_total_price}
         )
-    print(settings.MEDIA_ROOT)
     context = {"cart_items": cart_items, "total_price": total_price}
     return render(request, "shop/cart.html", context)
+
 
 
 @login_required

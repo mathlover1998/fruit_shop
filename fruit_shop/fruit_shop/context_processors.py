@@ -16,7 +16,7 @@ def cart_item_count(request):
     cart = request.session.get("cart", {})
     cart_items = []
     if not cart:
-        return {"cart_items": [], "cart_items_count": 0, "total_price": 0}
+        return {"global_cart_items": [], "global_cart_items_count": 0, "global_total_price": 0}
     for key, value in cart.items():
         product = get_object_or_404(Product, pk=key)
         quantity = value["quantity"]
@@ -53,3 +53,18 @@ def category_count(request):
         )
         data[f"{category.replace(' ', '_').lower()}_count"] = len(products)
     return {'category_count': data}
+
+def recently_viewed_product(request):
+    products = request.session.get('recently_viewed',{})
+    recently_view = []
+    if not products:
+        return {"cart_items": [], "cart_items_count": 0, "total_price": 0}
+    for key, value in products.items():
+        
+        product = get_object_or_404(Product, pk=value)
+        
+        recently_view.append(
+            {"product": product}
+        )
+    print(recently_view)
+    return {'recently_viewed_products':recently_view}
