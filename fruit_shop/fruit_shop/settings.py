@@ -107,12 +107,22 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # }
 
 DATABASES = {
+    # local postgresql database
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'fruit_shop_db',
+    #     'USER': 'admin',
+    #     'PASSWORD': '1234',
+    #     'HOST':'localhost',
+    #     'PORT':'5432' 
+    # }
+    # live database
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fruit_shop_db',
-        'USER': 'admin',
-        'PASSWORD': '1234',
-        'HOST':'localhost',
+        'NAME': 'cole_fruit_shop_db',
+        'USER': 'coletran',
+        'PASSWORD': 'Bunnie123',
+        'HOST':'database-2.clbdt0uzsyg9.ap-southeast-2.rds.amazonaws.com',
         'PORT':'5432' 
     }
 }
