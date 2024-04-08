@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
+import random
 
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
@@ -26,10 +27,7 @@ PAYMENT_STATUS = (
     ("cancelled", "Cancelled"),
 )
 
-PAYMENT_METHOD = (
-    ("cash", "Cash"),
-    ("momo", "Momo")
-)
+PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
 
 RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
@@ -40,7 +38,9 @@ class User(AbstractUser):
         max_length=20, choices=GENDER, default="other", null=False
     )
     dob = models.DateField(default="2000-01-01")
-    image = models.ImageField(upload_to="images/user_images", default="images/default-avatar.png")
+    image = models.ImageField(
+        upload_to="images/user_images", default="images/default-avatar.png"
+    )
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
     approval_email_sent = models.BooleanField(default=False)
@@ -62,11 +62,7 @@ class User(AbstractUser):
         db_table = "Users"
         verbose_name = "User Table"
         verbose_name_plural = "Users Table"
-        indexes = [
-            models.Index(
-                fields=["first_name", "last_name"], name="full_name"
-            )
-        ]
+        indexes = [models.Index(fields=["first_name", "last_name"], name="full_name")]
 
 
 class Employee(models.Model):
@@ -179,13 +175,14 @@ class Supplier(models.Model):
 class Product(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     product_name = models.CharField(max_length=255, null=False)
-    categories = models.ManyToManyField(Category, related_name='products')
+    categories = models.ManyToManyField(Category, related_name="products")
     price = models.IntegerField(null=False, default=0)
     stock_quantity = models.IntegerField(null=False, default=0)
     origin_country = models.CharField(max_length=40, default="")
     information = models.TextField(null=True)
     create_date = models.DateField(auto_now_add=True)
     expiry_date = models.DateField(null=True)
+    sku = models.CharField(max_length=10, unique=True)
     inventory_manager = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
@@ -197,6 +194,22 @@ class Product(models.Model):
     def __str__(self):
         return self.product_name
 
+    def generate_unique_sku(self):
+        while True:
+            sku = random.randint(
+                1, 999999
+            )  # Generate random integer between 000001 and 999999 (inclusive)
+            sku = (
+                f"{sku:06}"  # Format the integer with leading zeros to ensure 6 digits
+            )
+            # Check if SKU already exists in the database (replace with your actual check)
+            if not Product.objects.filter(sku=sku).exists():
+                return sku
+
+    def save(self, *args, **kwargs):
+        self.sku = self.generate_unique_sku()
+        super().save(*args, **kwargs)
+
     class Meta:
         ordering = ["id"]
         db_table = "Products"
@@ -204,15 +217,22 @@ class Product(models.Model):
         verbose_name = "Product Table"
         verbose_name_plural = "Products Table"
 
+
 class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to="images/product_images/",default="images/default_fruit.jpg")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="images"
+    )
+    image = models.ImageField(
+        upload_to="images/product_images/", default="images/default_fruit.jpg"
+    )
 
     class Meta:
         db_table = "ProductImages"
         managed = True
         verbose_name = "ProductImage Table"
         verbose_name_plural = "ProductImages Table"
+
+
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_date = models.DateField(auto_now=True)
@@ -280,6 +300,7 @@ class Address(models.Model):
     zipcode = models.IntegerField(null=False, default=0)
     type = models.CharField(choices=RECEIVER_TYPE, default="home", null=False)
     default_address = models.BooleanField(default=False)
+
     class Meta:
         ordering = ["id"]
         db_table = "Addresses"
