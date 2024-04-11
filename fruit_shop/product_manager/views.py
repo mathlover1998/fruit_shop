@@ -157,7 +157,24 @@ def wishlist_view(request):
         wishlist_items.append(
             {"product": product}
         )
+
     return render(request,'shop/wishlist.html',{'wishlist_items':wishlist_items})
+
+
+@login_required
+def remove_from_wishlist(request, product_id):
+    wishlist = request.session.get("wishlist", {})
+    
+    # Check if the product_id exists in the wishlist
+    if str(product_id) in wishlist:
+        # Remove the product_id from the wishlist
+        del wishlist[str(product_id)]
+        
+        # Update the session data
+        request.session["wishlist"] = wishlist
+        request.session.modified = True  # Make sure to mark the session as modified
+        
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
 @login_required

@@ -42,7 +42,7 @@
                                         <a class="btn hvr-hover" href="{% url 'add_to_cart' product_id=wishlist.product.id quantity=1 %}">Add to Cart</a>
                                     </td>
                                     <td class="remove-pr">
-                                        <a href="#">
+                                        <a href="{% url 'remove_from_wishlist' product_id=wishlist.product.id %}">
 									<i class="fas fa-times"></i>
 								</a>
                                     </td>
