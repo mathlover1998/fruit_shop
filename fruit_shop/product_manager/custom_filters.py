@@ -31,6 +31,11 @@ def snake_case_filter(s):
         result += char.lower()
     return result
 
+@register.filter
+def snake_case_to_title_case(string):
+    return string.replace('_', ' ').title()
+
 register.filter('is_recent', is_recent)
 register.filter('replace',replace_filter)
 register.filter('snake_case_filter',snake_case_filter)
+register.filter('snake_case_to_title_case',snake_case_to_title_case)

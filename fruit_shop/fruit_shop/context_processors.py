@@ -2,15 +2,6 @@ from fruit_shop_app.models import Product, Category,Discount
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 
-categories = [
-        "Exclusive",
-        "Plant-based Produce",
-        "Seafood",
-        "Meat",
-        "Dairy Product",
-        "Processed Food",
-        "Essential Ingredient"
-    ]
 
 def cart_item_count(request):
     cart = request.session.get("cart", {})
@@ -38,6 +29,7 @@ def cart_item_count(request):
 
 def product_filtered(request):
     global_categories = {}
+    categories = Category.objects.all().values_list('category_name',flat=True)
     for category in categories:
         products = Product.objects.filter(categories__category_name=category).annotate(
             category_count=Count("categories")
@@ -46,6 +38,7 @@ def product_filtered(request):
     return {'global_category':global_categories}
 
 def category_count(request):
+    categories = Category.objects.all().values_list('category_name',flat=True)
     data = {}
     for category in categories:
         products = Product.objects.filter(categories__category_name=category).annotate(

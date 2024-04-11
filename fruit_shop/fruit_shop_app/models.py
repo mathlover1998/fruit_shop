@@ -26,7 +26,13 @@ PAYMENT_STATUS = (
     ("on_hold", "On Hold"),
     ("cancelled", "Cancelled"),
 )
-
+UNIT = (
+    ('kg','Kilogram'),
+    ('gr','Gram'),
+    ('set','Set'),
+    ('pack','Pack'),
+    ('unit','Unit')
+)
 PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
 
 RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
@@ -182,7 +188,8 @@ class Product(models.Model):
     information = models.TextField(null=True)
     create_date = models.DateField(auto_now_add=True)
     expiry_date = models.DateField(null=True)
-    sku = models.CharField(max_length=10, unique=True)
+    sku = models.CharField(max_length=10, unique=True,default='')
+    unit = models.CharField(choices=UNIT,default='unit')
     inventory_manager = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
@@ -196,16 +203,12 @@ class Product(models.Model):
 
     def generate_unique_sku(self):
         while True:
-            sku = random.randint(
-                1, 999999
-            )  # Generate random integer between 000001 and 999999 (inclusive)
-            sku = (
-                f"{sku:06}"  # Format the integer with leading zeros to ensure 6 digits
-            )
-            # Check if SKU already exists in the database (replace with your actual check)
+            sku = random.randint(1, 999999)
+            sku = f"{sku:06}"
+            sku = "SP"+sku
             if not Product.objects.filter(sku=sku).exists():
                 return sku
-
+        
     def save(self, *args, **kwargs):
         self.sku = self.generate_unique_sku()
         super().save(*args, **kwargs)

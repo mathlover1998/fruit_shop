@@ -110,14 +110,10 @@
                     <div class="special-menu text-center">
                         <div class="button-group filter-button-group">
                             <button class="active" data-filter="*">All</button>
-                            <button data-filter=".exclusive">Exclusive</button>
-                            <button data-filter=".plant_based_produce">Plant-based</button>
-                            <button data-filter=".sea_food">Seafood</button>
-                            <button data-filter=".meat">Meat</button>
-                            <button data-filter=".dairy_product">Dairy Product</button>
-                            <button data-filter=".processed_food">Processed Food</button>
-                            <button data-filter=".essential_ingredient">Ingredient</button>
+                            {% for category, products in global_category.items %}
+                            <button data-filter=".{{ category|snake_case_filter }}">{{category|snake_case_to_title_case}}</button>
                             
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
