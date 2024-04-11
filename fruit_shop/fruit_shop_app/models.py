@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 import random
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
@@ -149,9 +150,19 @@ class Discount(models.Model):
 class Category(models.Model):
     category_name = models.CharField(max_length=255, null=False)
     description = models.TextField(null=False, default="")
+    parent_category = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='sub_categories')
 
     def __str__(self):
         return self.category_name
+    def clean(self):
+        # Check if the parent category is a subcategory
+        if self.parent_category:
+            if self.parent_category.parent_category:
+                raise ValidationError("Subcategories cannot have subcategories as parent categories.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Validate the instance before saving
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["id"]

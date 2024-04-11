@@ -27,9 +27,9 @@ def cart_item_count(request):
     }
 
 
-def product_filtered(request):
+def category_displayed(request):
     global_categories = {}
-    categories = Category.objects.all().values_list('category_name',flat=True)
+    categories = Category.objects.filter(parent_category__isnull=True).values_list('category_name',flat=True)
     for category in categories:
         products = Product.objects.filter(categories__category_name=category).annotate(
             category_count=Count("categories")
