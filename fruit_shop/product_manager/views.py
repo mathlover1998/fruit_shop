@@ -17,11 +17,11 @@ from django.db.models import Count
 
 
 def product_view(request):
-    product_list = Product.objects.all()
+    product_list = Product.objects.filter(is_active=True)
     return render(request, "shop/shop.html", {"products": product_list})
 
 def category_filtered_view(request,category):
-    product_list = Product.objects.filter(categories__category_name=category)
+    product_list = Product.objects.filter(categories__category_name=category,is_active=True)
     return render (request, "shop/shop.html",{"products": product_list})
 
 

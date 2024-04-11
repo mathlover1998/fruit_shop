@@ -39,6 +39,7 @@ PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
 RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
 
+
 class User(AbstractUser):
     phone = models.CharField(max_length=20, null=True)
     gender = models.CharField(
@@ -201,6 +202,8 @@ class Product(models.Model):
     expiry_date = models.DateField(null=True)
     sku = models.CharField(max_length=10, unique=True,default='')
     unit = models.CharField(choices=UNIT,default='unit')
+    is_active = models.BooleanField(default=True)
+    
     inventory_manager = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
@@ -219,7 +222,7 @@ class Product(models.Model):
             sku = "SP"+sku
             if not Product.objects.filter(sku=sku).exists():
                 return sku
-        
+    
     def save(self, *args, **kwargs):
         self.sku = self.generate_unique_sku()
         super().save(*args, **kwargs)

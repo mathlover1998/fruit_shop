@@ -31,7 +31,7 @@ def category_displayed(request):
     global_categories = {}
     categories = Category.objects.filter(parent_category__isnull=True).values_list('category_name',flat=True)
     for category in categories:
-        products = Product.objects.filter(categories__category_name=category).annotate(
+        products = Product.objects.filter(categories__category_name=category,is_active=True).annotate(
             category_count=Count("categories")
         )
         global_categories[f"{category.replace(' ', '_').lower()}"] = products.filter(category_count=1)[:2]
@@ -41,7 +41,7 @@ def category_count(request):
     categories = Category.objects.all().values_list('category_name',flat=True)
     data = {}
     for category in categories:
-        products = Product.objects.filter(categories__category_name=category).annotate(
+        products = Product.objects.filter(categories__category_name=category,is_active=True).annotate(
             category_count=Count("categories")
         )
         data[f"{category.replace(' ', '_').lower()}_count"] = len(products)
