@@ -1,5 +1,5 @@
 from django import forms
-from fruit_shop_app.models import Category, Supplier, Employee
+from fruit_shop_app.models import Category, Supplier, Employee,UNIT
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
@@ -42,6 +42,12 @@ class CreateProductForm(forms.Form):
     price = forms.IntegerField(
         label="Price (VND)", widget=forms.NumberInput(attrs={"class": "form-control"})
     )
+    unit = forms.ChoiceField(
+        choices=UNIT,
+        label="Unit",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
     stock_quantity = forms.IntegerField(
         label="Stock Quantity",
         widget=forms.NumberInput(attrs={"class": "form-control"}),

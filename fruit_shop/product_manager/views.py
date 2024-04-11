@@ -39,6 +39,7 @@ def create_product(request):
                 product_name=product_name,
                 price=form.cleaned_data["price"],
                 stock_quantity=form.cleaned_data["stock_quantity"],
+                unit = form.cleaned_data["unit"],
                 origin_country=form.cleaned_data["origin_country"],
                 information=form.cleaned_data["information"],
                 create_date=form.cleaned_data["create_date"],
