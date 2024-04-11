@@ -129,7 +129,23 @@ def cart_view(request):
             {"product": product, "quantity": quantity, "total_price": item_total_price}
         )
     context = {"cart_items": cart_items, "total_price": total_price}
+
     return render(request, "shop/cart.html", context)
+
+@login_required
+def remove_from_cart(request, product_id):
+    cart = request.session.get("cart", {})
+    
+    # Check if the product_id exists in the wishlist
+    if str(product_id) in cart:
+        # Remove the product_id from the wishlist
+        del cart[str(product_id)]
+        
+        # Update the session data
+        request.session["cart"] = cart
+        request.session.modified = True  # Make sure to mark the session as modified
+        
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
 @login_required

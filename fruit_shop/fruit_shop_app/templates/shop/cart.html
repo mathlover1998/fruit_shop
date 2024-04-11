@@ -42,7 +42,7 @@
                                         <p>{{ item.total_price }}đ</p>
                                     </td>
                                     <td class="remove-pr">
-                                        <a href="#"><i class="fas fa-times"></i></a>
+                                        <a href="{% url 'remove_from_cart' product_id=item.product.id %}"><i class="fas fa-times"></i></a>
                                     </td>
                                 </tr>
                                 {% endfor %}
