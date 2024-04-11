@@ -123,7 +123,7 @@ def update_profile(request):
     full_name = current_user.get_full_name()
     email = mask_email(current_user.email)
     phone = validate_mask_phone(current_user.phone)
-    print(current_user.dob)
+
     if request.method == "POST":
         image = request.FILES.get("image")
         full_name = request.POST.get("full_name")

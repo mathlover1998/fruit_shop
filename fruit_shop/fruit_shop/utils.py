@@ -36,7 +36,7 @@ def send_code_via_phone(code, receiver):
         from_=os.environ.get("TWILIO_SENDER_PHONE"),
         to=f"{receiver}",
     )
-    print("Message SID:", message.sid)
+
 
 
 def validate_password(password):

@@ -96,7 +96,7 @@ def product_detail(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     if str(product.id) not in recently_viewed:
         recently_viewed[product_id_] = product_id
-    print(recently_viewed)
+
     request.session['recently_viewed'] = recently_viewed
     return render(request, "shop/product_detail.html", {"product": product})
 

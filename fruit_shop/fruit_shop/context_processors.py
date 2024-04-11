@@ -59,7 +59,7 @@ def recently_viewed_product(request):
         recently_view.append(
             {"product": product}
         )
-    print(recently_view)
+
     return {'recently_viewed_products':recently_view}
 
 def display_discount(request):
