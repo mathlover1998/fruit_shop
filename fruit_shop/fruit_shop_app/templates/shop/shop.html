@@ -55,7 +55,7 @@
                               <a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a>
                             </li>
                             <li>
-                              <a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a>
+                              <a href="{% url 'add_to_wishlist' product_id=product.id %}" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a>
                             </li>
                           </ul>
                           <a class="cart" href="{% url 'add_to_cart' product_id=product.id quantity=1 %}">Add to Cart</a>
@@ -105,7 +105,7 @@
                         <h4>{{product.product_name}}</h4>
                         <h5><del>$ {{product.price}}</del> ${{product.price}}</h5>
                         <p>{{product.information}}</p>
-                        <a class="btn hvr-hover" href="#">Add to Cart</a>
+                        <a class="btn hvr-hover" href="{% url 'add_to_cart' product_id=product.id quantity=1 %}">Add to Cart</a>
                       </div>
                     </div>
                   </div>

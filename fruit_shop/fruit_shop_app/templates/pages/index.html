@@ -158,7 +158,7 @@
                         <a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a>
                       </li>
                 </ul>
-                <a class="cart" href="#">Add to Cart</a>
+                <a class="cart" href="{% url 'add_to_cart' product_id=product.id quantity=1 %}">Add to Cart</a>
               </div>
             </div>
             <div class="why-text">
@@ -198,7 +198,7 @@
                                 <a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a>
                               </li>
                         </ul>
-                        <a class="cart" href="#">Add to Cart</a>
+                        <a class="cart" href="{% url 'add_to_cart' product_id=product.product.id quantity=1 %}">Add to Cart</a>
                       </div>
                     </div>
                     <div class="why-text">

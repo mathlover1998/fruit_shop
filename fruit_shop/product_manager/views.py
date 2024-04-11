@@ -4,7 +4,7 @@ from django.urls import reverse
 from fruit_shop.utils import position_required,replace_string
 from .forms import CreateProductForm
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from PIL import Image, ImageOps
@@ -12,6 +12,7 @@ import os
 from django.conf import settings
 from uuid import uuid4
 from django.db.models import Count
+from datetime import timedelta
 
 # Create your views here.
 
@@ -98,6 +99,7 @@ def product_detail(request, product_id):
         recently_viewed[product_id_] = product_id
 
     request.session['recently_viewed'] = recently_viewed
+    request.session.set_expiry(timedelta(days=7))
     return render(request, "shop/product_detail.html", {"product": product})
 
 
@@ -110,7 +112,7 @@ def add_to_cart(request, product_id, quantity=1):
     else:
         cart[product_id_] = {"product_id": product_id_, "quantity": quantity}
     request.session["cart"] = cart
-    return redirect(reverse("product_view"))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
 def cart_view(request):
@@ -129,6 +131,33 @@ def cart_view(request):
     context = {"cart_items": cart_items, "total_price": total_price}
     return render(request, "shop/cart.html", context)
 
+
+@login_required
+def add_to_wishlist(request, product_id):
+    product_id_ = str(product_id)
+    wishlist = request.session.get("wishlist", {})
+    if product_id_ not in wishlist:
+        # Use dynamic keys for each product instead of 'product_id'
+        wishlist[product_id_] = product_id_
+        
+    request.session["wishlist"] = wishlist
+    request.session.set_expiry(timedelta(days=30))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+
+@login_required
+def wishlist_view(request):
+    wishlist = request.session.get("wishlist", {})
+    wishlist_items = []
+    if not wishlist:
+        return 'NOob'
+    for key, value in wishlist.items():
+        
+        product = get_object_or_404(Product, pk=value)
+        
+        wishlist_items.append(
+            {"product": product}
+        )
+    return render(request,'shop/wishlist.html',{'wishlist_items':wishlist_items})
 
 
 @login_required
