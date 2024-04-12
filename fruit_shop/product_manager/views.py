@@ -8,7 +8,7 @@ from django.http import JsonResponse,HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from PIL import Image, ImageOps
-import os
+import os,json
 from django.conf import settings
 from uuid import uuid4
 from django.db.models import Count
@@ -151,47 +151,36 @@ def remove_from_cart(request, product_id):
 @login_required
 def add_to_wishlist(request, product_id):
     product_id_ = str(product_id)
-    wishlist = request.session.get("wishlist", {})
+    wishlist = json.loads(request.COOKIES.get('wishlist','{}'))
     if product_id_ not in wishlist:
         # Use dynamic keys for each product instead of 'product_id'
         wishlist[product_id_] = product_id_
         
-    request.session["wishlist"] = wishlist
-    request.session.set_expiry(timedelta(days=30))
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+    response = HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    response.set_cookie('wishlist', json.dumps(wishlist), max_age=timedelta(days=30))
+    return response
 
 @login_required
 def wishlist_view(request):
-    wishlist = request.session.get("wishlist", {})
+    wishlist = json.loads(request.COOKIES.get('wishlist', '{}'))
     wishlist_items = []
-    if not wishlist:
-        return 'NOob'
+
     for key, value in wishlist.items():
-        
         product = get_object_or_404(Product, pk=value)
-        
-        wishlist_items.append(
-            {"product": product}
-        )
+        wishlist_items.append({"product": product})
 
-    return render(request,'shop/wishlist.html',{'wishlist_items':wishlist_items})
-
+    return render(request, 'shop/wishlist.html', {'wishlist_items': wishlist_items})
 
 @login_required
 def remove_from_wishlist(request, product_id):
-    wishlist = request.session.get("wishlist", {})
-    
-    # Check if the product_id exists in the wishlist
-    if str(product_id) in wishlist:
-        # Remove the product_id from the wishlist
-        del wishlist[str(product_id)]
-        
-        # Update the session data
-        request.session["wishlist"] = wishlist
-        request.session.modified = True  # Make sure to mark the session as modified
-        
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+  wishlist = json.loads(request.COOKIES.get('wishlist', '{}'))
 
+  if str(product_id) in wishlist:
+    del wishlist[str(product_id)]
+
+  response = HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+  response.set_cookie('wishlist', json.dumps(wishlist), max_age=timedelta(days=30))
+  return response
 
 @login_required
 def checkout(request):
