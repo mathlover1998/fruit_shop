@@ -297,11 +297,8 @@ class Transaction(models.Model):
 
 
 class Address(models.Model):
-    customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, null=True, blank=True
-    )
-    employee = models.ForeignKey(
-        Employee, on_delete=models.CASCADE, null=True, blank=True
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True
     )
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, null=True, blank=True

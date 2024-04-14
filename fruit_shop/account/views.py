@@ -268,15 +268,15 @@ def confirm_phone_verification_code(request, phone):
 @login_required
 def address_view(request):
     current_user = request.user
-    customer = current_user.customer
-    address_list = Address.objects.filter(customer=customer).all()
+    
+    address_list = Address.objects.filter(user=current_user).all()
     return render(request, "account/address.html", {"address_list": address_list})
 
 
 @login_required
 def create_address(request):
     current_user = request.user
-    current_customer = current_user.customer
+    
     if request.method == "POST":
         receiver_name = request.POST.get("receiver_name")
         phone_number = request.POST.get("phone_number")
@@ -302,7 +302,7 @@ def create_address(request):
             and zipcode
         ):
             new_address = Address.objects.create(
-                customer=current_customer,
+                user=current_user,
                 receiver_name=receiver_name,
                 phone_number=phone_number,
                 country=country,
@@ -318,7 +318,7 @@ def create_address(request):
                 new_address.default_address = True
                 customer_addresses = (
                     Address.objects.exclude(id=new_address.id)
-                    .filter(customer=current_customer)
+                    .filter(user=current_user)
                     .all()
                 )
                 customer_addresses.update(default_address=False)
@@ -333,7 +333,7 @@ def create_address(request):
 @login_required
 def update_address(request, id):
     current_user = request.user
-    current_customer = current_user.customer
+    
     address = Address.objects.filter(customer=current_customer, pk=id).first()
     if request.method == "POST":
         address.receiver_name = request.POST.get("receiver_name")
@@ -351,7 +351,7 @@ def update_address(request, id):
             address.default_address = True
             customer_addresses = (
                 Address.objects.exclude(id=address.id)
-                .filter(customer=current_customer)
+                .filter(user=current_user)
                 .all()
             )
             customer_addresses.update(default_address=False)
@@ -362,8 +362,8 @@ def update_address(request, id):
 
 @login_required
 def delete_address(request, id):
-    current_customer = request.user.customer
-    address = Address.objects.filter(customer=current_customer, pk=id).first()
+    current_user = request.user
+    address = Address.objects.filter(user=current_user, pk=id).first()
     address.delete()
     return redirect(reverse("address_view"))
 
