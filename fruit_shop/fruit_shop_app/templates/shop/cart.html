@@ -1,99 +1,105 @@
-{% extends "shared/base.html" %}
-{% load static %}
-
-{% block heading_title %}Cart{% endblock heading_title %}
-{% block heading_sub_title %}Cart{% endblock heading_sub_title %}
+{% extends "shared/base.html" %} {% load static %} {% block heading_title %}Cart{% endblock heading_title %} {% block heading_sub_title %}Cart{% endblock heading_sub_title %} 
 {% block content %}
-    <!-- Start Cart  -->
-    <div class="cart-box-main">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="table-main table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Images</th>
-                                    <th>Product Name</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Total</th>
-                                    <th>Remove</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in cart_items %}
-                                <tr>
-                                    <td class="thumbnail-img">
-                                        <a href="#">
-                                            <img class="img-fluid" src="{{ item.product.images.first.image.url }}" alt="Product Image" />
-                                        </a>
-                                    </td>
-                                    <td class="name-pr">
-                                        <a href="#">{{ item.product.product_name }}</a>
-                                    </td>
-                                    <td class="price-pr">
-                                        <p>{{ item.product.price }}đ</p>
-                                    </td>
-                                    <td class="quantity-box">
-                                        <input type="number" size="4" value="{{ item.quantity }}" min="1" step="1" class="c-input-text qty text" readonly>
-                                    </td>
-                                    <td class="total-pr">
-                                        <p>{{ item.total_price }}đ</p>
-                                    </td>
-                                    <td class="remove-pr">
-                                        <a href="{% url 'remove_from_cart' product_id=item.product.id %}"><i class="fas fa-times"></i></a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+<!-- Start Cart  -->
 
-            <div class="row my-5">
-                <div class="col-lg-6 col-sm-6">
-                    <div class="coupon-box">
-                        <div class="input-group input-group-sm">
-                            <input class="form-control" placeholder="Enter your coupon code" aria-label="Coupon code" type="text">
-                            <div class="input-group-append">
-                                <button class="btn btn-theme" type="button">Apply Coupon</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6 col-sm-6">
-                    <div class="update-box">
-                        <input value="Update Cart" type="submit">
-                    </div>
-                </div>
-            </div>
-
-            <div class="row my-5">
-                <div class="col-lg-8 col-sm-12"></div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="order-box">
-                        <h3>Order summary</h3>
-                        <div class="d-flex">
-                            <h4>Sub Total</h4>
-                            <div class="ml-auto font-weight-bold">{{ total_price }}đ</div>
-                        </div>
-                        <!-- You can include additional order summary details here -->
-                        <!-- For example: Discount, Tax, Shipping Cost -->
-                        <hr>
-                        <div class="d-flex gr-total">
-                            <h5>Grand Total</h5>
-                            <div class="ml-auto h5">{{ total_price }}đ</div>
-                        </div>
-                        <hr>
-                    </div>
-                </div>
-                <div class="col-12 d-flex shopping-box">
-                    <a href="checkout.html" class="ml-auto btn hvr-hover">Checkout</a>
-                </div>
-            </div>
-        </div>
+<div class="cart-box-main">
+  <div class="container">
+    {% if cart_items.items|length == 0 %}
+    <div class="empty-cart-message">
+      <h2>Your cart is currently empty!</h2>
+      <p>Start adding products to your cart to experience the awesomeness.</p>
+      <p><a class="btn hvr-hover" href="{% url 'product_view'%}">Shop Now</a></p>
     </div>
-    <!-- End Cart -->
+    {% else %}
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="table-main table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Images</th>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Remove</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in cart_items %}
+              <tr>
+                <td class="thumbnail-img">
+                  <a href="#">
+                    <img class="img-fluid" src="{{ item.product.images.first.image.url }}" alt="Product Image" />
+                  </a>
+                </td>
+                <td class="name-pr">
+                  <a href="#">{{ item.product.product_name }}</a>
+                </td>
+                <td class="price-pr">
+                  <p>{{ item.product.price }}đ</p>
+                </td>
+                <td class="quantity-box">
+                  <input type="number" size="4" value="{{ item.quantity }}" min="1" step="1" class="c-input-text qty text" readonly />
+                </td>
+                <td class="total-pr">
+                  <p>{{ item.total_price }}đ</p>
+                </td>
+                <td class="remove-pr">
+                  <a href="{% url 'remove_from_cart' product_id=item.product.id %}"><i class="fas fa-times"></i></a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="row my-5">
+      <div class="col-lg-6 col-sm-6">
+        <div class="coupon-box">
+          <div class="input-group input-group-sm">
+            <input class="form-control" placeholder="Enter your coupon code" aria-label="Coupon code" type="text" />
+            <div class="input-group-append">
+              <button class="btn btn-theme" type="button">Apply Coupon</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 col-sm-6">
+        <div class="update-box">
+          <input value="Update Cart" type="submit" />
+        </div>
+      </div>
+    </div>
+
+    <div class="row my-5">
+      <div class="col-lg-8 col-sm-12"></div>
+      <div class="col-lg-4 col-sm-12">
+        <div class="order-box">
+          <h3>Order summary</h3>
+          <div class="d-flex">
+            <h4>Sub Total</h4>
+            <div class="ml-auto font-weight-bold">{{ total_price }}đ</div>
+          </div>
+          <!-- You can include additional order summary details here -->
+          <!-- For example: Discount, Tax, Shipping Cost -->
+          <hr />
+          <div class="d-flex gr-total">
+            <h5>Grand Total</h5>
+            <div class="ml-auto h5">{{ total_price }}đ</div>
+          </div>
+          <hr />
+        </div>
+      </div>
+      <div class="col-12 d-flex shopping-box">
+        <a href="checkout.html" class="ml-auto btn hvr-hover">Checkout</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- End Cart -->
 {% endblock content %}
