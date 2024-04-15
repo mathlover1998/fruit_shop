@@ -334,7 +334,7 @@ def create_address(request):
 def update_address(request, id):
     current_user = request.user
     
-    address = Address.objects.filter(customer=current_customer, pk=id).first()
+    address = Address.objects.filter(user=current_user, pk=id).first()
     if request.method == "POST":
         address.receiver_name = request.POST.get("receiver_name")
         address.phone_number = request.POST.get("phone_number")

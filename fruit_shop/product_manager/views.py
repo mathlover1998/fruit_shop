@@ -15,6 +15,16 @@ from django.db.models import Count
 from datetime import timedelta
 
 # Create your views here.
+def calculate_total_price(cart):
+    total_price = 0
+
+    for product_id, item_data in cart.items():
+        product = get_object_or_404(Product, pk=product_id)
+        quantity = item_data["quantity"]
+        total_price += product.price * quantity
+
+    return total_price
+
 
 
 def product_view(request):
@@ -151,6 +161,26 @@ def remove_from_cart(request, product_id):
 
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
+def update_cart(request):
+    if request.method == 'POST' and request.is_ajax():
+        product_id = request.POST.get('productId')
+        quantity = int(request.POST.get('quantity'))
+        cart = request.session.get("cart", {})
+
+        if product_id in cart:
+            cart[product_id]["quantity"] = quantity
+
+        # Calculate total price
+        total_price = calculate_total_price(cart)
+
+        # Update session data
+        request.session["cart"] = cart
+        request.session.modified = True
+
+        return JsonResponse({'success': True, 'total_price': total_price})
+
+    return JsonResponse({'success': False})
+
 
 @login_required
 def add_to_wishlist(request, product_id):
@@ -198,7 +228,7 @@ def checkout(request):
         # Check if payment method is cash on delivery
         if payment_method == 'cash':
             # Retrieve cart items from session
-            cart = request.session.get('cart', {})
+            
             # Create an order
             order = Order.objects.create(
                 customer=request.user.customer,
@@ -241,6 +271,18 @@ def checkout(request):
             # Handle other payment methods if needed
             pass
     else:
-        customer = request.user.customer
-        address_list = Address.objects.filter(customer=customer)
-        return render(request,'shop/checkout.html',{'address_list':address_list})
+        current_user = request.user
+        address_list = Address.objects.filter(user=current_user)
+        cart = request.session.get("cart", {})
+        cart_items = []
+        total_price = 0
+        # Retrieve product details for items in the cart
+        for item_id, item_data in cart.items():
+            product = get_object_or_404(Product, pk=item_id)
+            quantity = item_data["quantity"]
+            item_total_price = product.price * quantity
+            total_price += item_total_price
+            cart_items.append(
+                {"product": product, "quantity": quantity, "total_price": item_total_price}
+            )
+        return render(request,'shop/checkout.html',{'address_list':address_list,"cart_items": cart_items, "total_price": total_price})

@@ -38,7 +38,7 @@ PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
 
 RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
-
+DISCOUNT_TYPE = (("percentage","Percentage"), ("fixed_discount","Fixed Discount"))
 
 class User(AbstractUser):
     phone = models.CharField(max_length=20, null=True)
@@ -131,13 +131,17 @@ class ConfirmationToken(models.Model):
 
 
 class Discount(models.Model):
-    discount_code = models.CharField(max_length=20, null=False)
-    discount_percentage = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)], null=False
-    )
-    valid_from = models.DateField(null=False)
-    valid_to = models.DateField(null=False)
     min_purchase_amount = models.IntegerField(null=False, default=0)
+    is_active = models.BooleanField(default=True)
+    discount_type = models.CharField(choices=DISCOUNT_TYPE,default='percentage',null=False)
+    amount_of_use = models.IntegerField(null=False,validators=[MinValueValidator(1)],default=1)
+    discount_code = models.CharField(max_length=20, null=True)
+    discount_percentage = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)], null=True
+    )
+    max_value_discount = models.FloatField(null=False,default=0)
+    valid_from = models.DateField(null=True)
+    valid_to = models.DateField(null=True)
 
     class Meta:
         ordering = ["id"]

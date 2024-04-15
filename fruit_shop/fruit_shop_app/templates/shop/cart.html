@@ -4,13 +4,7 @@
 
 <div class="cart-box-main">
   <div class="container">
-    {% if cart_items.items|length == 0 %}
-    <div class="empty-cart-message">
-      <h2>Your cart is currently empty!</h2>
-      <p>Start adding products to your cart to experience the awesomeness.</p>
-      <p><a class="btn hvr-hover" href="{% url 'product_view'%}">Shop Now</a></p>
-    </div>
-    {% else %}
+    {% if cart_items %}
     <div class="row">
       <div class="col-lg-12">
         <div class="table-main table-responsive">
@@ -29,18 +23,18 @@
               {% for item in cart_items %}
               <tr>
                 <td class="thumbnail-img">
-                  <a href="#">
+                  <a href="{% url 'product_detail' product_id=item.product.id%}">
                     <img class="img-fluid" src="{{ item.product.images.first.image.url }}" alt="Product Image" />
                   </a>
                 </td>
                 <td class="name-pr">
-                  <a href="#">{{ item.product.product_name }}</a>
+                  <a href="{% url 'product_detail' product_id=item.product.id%}">{{ item.product.product_name }}</a>
                 </td>
                 <td class="price-pr">
                   <p>{{ item.product.price }}đ</p>
                 </td>
                 <td class="quantity-box">
-                  <input type="number" size="4" value="{{ item.quantity }}" min="1" step="1" class="c-input-text qty text" readonly />
+                  <input type="number" data-product-id="{{ item.product.id }}" value="{{ item.quantity }}" min="1" step="1" class="c-input-text qty text" readonly/>
                 </td>
                 <td class="total-pr">
                   <p>{{ item.total_price }}đ</p>
@@ -69,7 +63,7 @@
       </div>
       <div class="col-lg-6 col-sm-6">
         <div class="update-box">
-          <input value="Update Cart" type="submit" />
+          <input value="Update Cart" type="button"/>
         </div>
       </div>
     </div>
@@ -83,8 +77,6 @@
             <h4>Sub Total</h4>
             <div class="ml-auto font-weight-bold">{{ total_price }}đ</div>
           </div>
-          <!-- You can include additional order summary details here -->
-          <!-- For example: Discount, Tax, Shipping Cost -->
           <hr />
           <div class="d-flex gr-total">
             <h5>Grand Total</h5>
@@ -97,6 +89,13 @@
         <a href="checkout.html" class="ml-auto btn hvr-hover">Checkout</a>
       </div>
     </div>
+    {% else %}
+    <div class="empty-cart-message">
+      <h2>Your cart is currently empty!</h2>
+      <p>Start adding products to your cart to experience the awesomeness.</p>
+      <p><a class="btn hvr-hover" href="{% url 'product_view'%}">Shop Now</a></p>
+    </div>
+    
     {% endif %}
   </div>
 </div>

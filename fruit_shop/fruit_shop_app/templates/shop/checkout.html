@@ -11,13 +11,18 @@
                         </div>
                         <form class="needs-validation" novalidate>
                             <div class="mb-3">
-                                <label for="billingAddress">Select billing address</label>
-                                <select class="form-control" id="billingAddress" required>
-                                  <option value="" selected>Choose...</option>
-                                  <option value="address1">Address 1</option>
-                                  <option value="address2">Address 2</option>
+                                
+                                {% if address_list %}
+                                <select class="form-control" id="address" required>
+                                  {% for address in address_list %}
+                                  <option value="">{{address.receiver_name}}  |  {{address.phone_number}}</option>
+                                  {% endfor %}
                                   </select>
+                                  {% else %}
+                                  <p>No addresses available. Create new adddress <a href="{% url 'create_address' %}" style='color:red'>here</a></p>
+                                  {% endif %}
                                 <div class="invalid-feedback">Please select a billing address.</div>
+                                
                               </div>
                             <!-- <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -97,8 +102,9 @@
                                     <label class="custom-control-label" for="momo">Momo e-wallet</label>
                                 </div>
                                 
+                                
                             </div>
-                            <div class="row">
+                            <!-- <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="cc-name">Name on card</label>
                                     <input type="text" class="form-control" id="cc-name" placeholder="" required> <small class="text-muted">Full name as displayed on card</small>
@@ -132,7 +138,7 @@
                                         </ul>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                             <hr class="mb-1"> </form>
                     </div>
                 </div>
@@ -164,21 +170,14 @@
                                     <h3>Shopping cart</h3>
                                 </div>
                                 <div class="rounded p-2 bg-light">
+                                    {% for item in cart_items %}
                                     <div class="media mb-2 border-bottom">
-                                        <div class="media-body"> <a href="detail.html"> Lorem ipsum dolor sit amet</a>
-                                            <div class="small text-muted">Price: $80.00 <span class="mx-2">|</span> Qty: 1 <span class="mx-2">|</span> Subtotal: $80.00</div>
+                                        <div class="media-body"> <a href="{% url 'product_detail' product_id=item.product.id%}">{{ item.product.product_name }}</a>
+                                            <div class="small text-muted">Price: {{ item.product.price }}đ <span class="mx-2">|</span> Qty: {{ item.quantity }} <span class="mx-2">|</span> Subtotal: {{ item.product.price }}đ</div>
                                         </div>
                                     </div>
-                                    <div class="media mb-2 border-bottom">
-                                        <div class="media-body"> <a href="detail.html"> Lorem ipsum dolor sit amet</a>
-                                            <div class="small text-muted">Price: $60.00 <span class="mx-2">|</span> Qty: 1 <span class="mx-2">|</span> Subtotal: $60.00</div>
-                                        </div>
-                                    </div>
-                                    <div class="media mb-2">
-                                        <div class="media-body"> <a href="detail.html"> Lorem ipsum dolor sit amet</a>
-                                            <div class="small text-muted">Price: $40.00 <span class="mx-2">|</span> Qty: 1 <span class="mx-2">|</span> Subtotal: $40.00</div>
-                                        </div>
-                                    </div>
+                                    {% endfor %}
+
                                 </div>
                             </div>
                         </div>
@@ -194,7 +193,7 @@
                                 <hr class="my-1">
                                 <div class="d-flex">
                                     <h4>Sub Total</h4>
-                                    <div class="ml-auto font-weight-bold"> $ 440 </div>
+                                    <div class="ml-auto font-weight-bold"> {{total_price}} đ </div>
                                 </div>
                                 <div class="d-flex">
                                     <h4>Discount</h4>
@@ -227,5 +226,6 @@
 
         </div>
     </div>
+    
     <!-- End Cart -->
     {% endblock content %}

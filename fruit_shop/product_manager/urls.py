@@ -13,6 +13,6 @@ urlpatterns = [
     path('wishlist',views.wishlist_view,name='wishlist_view'),
     path('remove-wishlist/<int:product_id>/',views.remove_from_wishlist,name='remove_from_wishlist'),
     path('remove-cart/<int:product_id>/',views.remove_from_cart,name='remove_from_cart'),
-    
+    path('update-cart/', views.update_cart, name='update_cart'),
 
 ]
