@@ -19,6 +19,13 @@ from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+
+admin.site.site_header = 'Your Site Administration'
+admin.site.site_title = 'Your Site Admin'
+admin.site.index_title = 'Your Site Admin'
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('fruit_shop_app.urls')),
