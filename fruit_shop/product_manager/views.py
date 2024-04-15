@@ -7,12 +7,16 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from PIL import Image, ImageOps
+from PIL import Image
 import os, json
 from django.conf import settings
 from uuid import uuid4
-from django.db.models import Count
 from datetime import timedelta
+from django.contrib.auth.decorators import permission_required
+
+
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 
 # Create your views here.
 def calculate_total_price(cart):
@@ -39,8 +43,7 @@ def category_filtered_view(request, category):
     return render(request, "shop/shop.html", {"products": product_list})
 
 
-@login_required
-@position_required("inventory_manager", "store_manager")
+# @permission_required('fruit_shop_app.add_product', raise_exception=True)
 def create_product(request):
     form = CreateProductForm()
     if request.method == "POST":
@@ -286,3 +289,15 @@ def checkout(request):
                 {"product": product, "quantity": quantity, "total_price": item_total_price}
             )
         return render(request,'shop/checkout.html',{'address_list':address_list,"cart_items": cart_items, "total_price": total_price})
+    
+
+def test(request):
+    content_type = ContentType.objects.get_for_model(Product)
+
+    # Get permissions for the content type
+    permissions = Permission.objects.filter(content_type=content_type)
+
+    # Print permission codenames
+    for permission in permissions:
+        print(permission.codename)
+    return HttpResponse('Dog')

@@ -432,6 +432,7 @@ def employee_register(request):
             messages.error(request, "This username is taken! Please log in instead!")
             return redirect(reverse("employee_register"))
         else:
+            
             new_user = User.objects.create(
                 username=username,
                 first_name=first_name,

@@ -16,7 +16,9 @@ from .models import (
     StoreLocation,
     Address,
     ProductImage,
-    DISCOUNT_TYPE
+    DISCOUNT_TYPE,
+    Position
+
 )
 
 
@@ -30,6 +32,9 @@ admin.site.register(Supplier)
 admin.site.register(Transaction)
 admin.site.register(StoreLocation)
 admin.site.register(Address)
+admin.site.register(Position)
+
+
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage

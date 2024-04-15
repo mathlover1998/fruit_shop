@@ -3,21 +3,23 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 import random
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Permission
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
-POSITION = (
-    ("employee", "Employee"),
-    ("inventory_manager", "Inventory Manager"),
-    ("sales_associate", "Sales Associate"),
-    ("cashier", "Cashier"),
-    ("store_manager", "Store Manager"),
-    ("assistant_manager", "Assistant Manager"),
-    ("delivery_driver", "Delivery Driver"),
-    ("produce_specialist", "Produce Specialist"),
-    ("customer_service_representative", "Customer Service Representative"),
-)
+# POSITION = (
+#     ("employee", "Employee"),
+#     ("inventory_manager", "Inventory Manager"),
+#     ("sales_associate", "Sales Associate"),
+#     ("cashier", "Cashier"),
+#     ("store_manager", "Store Manager"),
+#     ("assistant_manager", "Assistant Manager"),
+#     ("delivery_driver", "Delivery Driver"),
+#     ("produce_specialist", "Produce Specialist"),
+#     ("customer_service_representative", "Customer Service Representative"),
+# )
 PAYMENT_STATUS = (
     ("pending", "Pending"),
     ("complete", "Complete"),
@@ -72,14 +74,22 @@ class User(AbstractUser):
         verbose_name_plural = "Users Table"
         indexes = [models.Index(fields=["first_name", "last_name"], name="full_name")]
 
+class Position(models.Model):
+    name = models.CharField(_("Name"), max_length=100, unique=True)
+    permissions = models.ManyToManyField(Permission, blank=True)
+
+    class Meta:
+        verbose_name = _("Position")
+        verbose_name_plural = _("Positions")
+
+    def __str__(self):
+        return self.name
 
 class Employee(models.Model):
     hire_date = models.DateField(null=True)
     salary = models.IntegerField(null=False, default=0)
     department = models.CharField(max_length=200, default="", null=False)
-    position = models.CharField(
-        max_length=200, choices=POSITION, default="employee", null=False
-    )
+    position = models.ForeignKey(Position, on_delete=models.CASCADE,null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="employee")
 
     class Meta:

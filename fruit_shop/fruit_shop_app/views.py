@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect
 from fruit_shop.utils import send_code_via_phone, generate_verification_code
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
-from fruit_shop_app.models import Supplier
+from fruit_shop_app.models import Supplier,Product
 from django.contrib.sessions.models import Session
 from django.utils import timezone
+
 
 # Create your views here.
 def index(request):

@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'fruit_shop_app',
     'account',
     'product_manager',
-    'payment'
     # 'django_celery_beat'
 ]
 
