@@ -102,7 +102,7 @@ def signin(request):
         else:
             messages.error(request, "Invalid login credentials.")
 
-    return render(request, "account/login.html")
+    return render(request, "account/log_in.html")
 
 
 @login_required
@@ -448,8 +448,6 @@ def employee_register(request):
     return render(request, "account/employee_register.html")
 
 
-def approve_employee_account(request):
-    pass
 
 
 # def reset_password(request):

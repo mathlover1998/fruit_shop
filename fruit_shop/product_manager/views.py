@@ -1,5 +1,12 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product, ProductImage, Order, OrderItem, Address,Transaction
+from fruit_shop_app.models import (
+    Product,
+    ProductImage,
+    Order,
+    OrderItem,
+    Address,
+    Transaction,
+)
 from django.urls import reverse
 from fruit_shop.utils import position_required, replace_string
 from .forms import CreateProductForm
@@ -18,6 +25,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 
+
 # Create your views here.
 def calculate_total_price(cart):
     total_price = 0
@@ -28,7 +36,6 @@ def calculate_total_price(cart):
         total_price += product.price * quantity
 
     return total_price
-
 
 
 def product_view(request):
@@ -164,10 +171,11 @@ def remove_from_cart(request, product_id):
 
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
+
 def update_cart(request):
-    if request.method == 'POST' and request.is_ajax():
-        product_id = request.POST.get('productId')
-        quantity = int(request.POST.get('quantity'))
+    if request.method == "POST" and request.is_ajax():
+        product_id = request.POST.get("productId")
+        quantity = int(request.POST.get("quantity"))
         cart = request.session.get("cart", {})
 
         if product_id in cart:
@@ -180,9 +188,9 @@ def update_cart(request):
         request.session["cart"] = cart
         request.session.modified = True
 
-        return JsonResponse({'success': True, 'total_price': total_price})
+        return JsonResponse({"success": True, "total_price": total_price})
 
-    return JsonResponse({'success': False})
+    return JsonResponse({"success": False})
 
 
 @login_required
@@ -225,53 +233,49 @@ def remove_from_wishlist(request, product_id):
 @login_required
 @transaction.atomic
 def checkout(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         # Assuming you have a form submission with necessary checkout details
-        payment_method = request.POST.get('payment_method')
+        payment_method = request.POST.get("payment_method")
         # Check if payment method is cash on delivery
-        if payment_method == 'cash':
-            # Retrieve cart items from session
-            
-            # Create an order
+        if payment_method == "cash":
+
             order = Order.objects.create(
                 customer=request.user.customer,
-                total_amount=0,  # Set initial total amount to 0
-                payment_status='pending',  # Set payment status to pending
-                delivery_address=request.POST.get('delivery_address'),  # Assuming you have delivery address in the form
-                # Add other necessary order details
+                total_amount=0,
+                payment_status="pending",
+                delivery_address=request.POST.get("address"),
             )
-            total_amount = 0  # Initialize total amount
-            # Process each item in the cart
+            total_amount = 0
             for item_id, item_data in cart.items():
                 product = Product.objects.get(pk=item_id)
-                quantity = item_data['quantity']
+                quantity = item_data["quantity"]
                 subtotal = product.price * quantity
                 total_amount += subtotal
-                # Create order item
+
                 OrderItem.objects.create(
                     order=order,
                     product=product,
                     quantity=quantity,
                     subtotal=subtotal,
                 )
-                # Update product stock quantity
+
                 product.stock_quantity -= quantity
                 product.save()
-            # Update the total amount in the order
+
             order.total_amount = total_amount
             order.save()
-            # Create a transaction record
+
             Transaction.objects.create(
                 order=order,
                 payment_method=payment_method,
-                amount_paid=0,  # Assuming amount paid is 0 for COD orders initially
+                amount_paid=0,
             )
-            # Clear the cart
-            request.session['cart'] = {}
-            # Redirect to a confirmation page
-            return redirect('confirmation_page')  # Replace 'confirmation_page' with the actual URL name of your confirmation page
+
+            request.session["cart"] = {}
+
+            return redirect("confirmation_page")
         else:
-            # Handle other payment methods if needed
+
             pass
     else:
         current_user = request.user
@@ -279,17 +283,29 @@ def checkout(request):
         cart = request.session.get("cart", {})
         cart_items = []
         total_price = 0
-        # Retrieve product details for items in the cart
+
         for item_id, item_data in cart.items():
             product = get_object_or_404(Product, pk=item_id)
             quantity = item_data["quantity"]
             item_total_price = product.price * quantity
             total_price += item_total_price
             cart_items.append(
-                {"product": product, "quantity": quantity, "total_price": item_total_price}
+                {
+                    "product": product,
+                    "quantity": quantity,
+                    "total_price": item_total_price,
+                }
             )
-        return render(request,'shop/checkout.html',{'address_list':address_list,"cart_items": cart_items, "total_price": total_price})
-    
+        return render(
+            request,
+            "shop/checkout.html",
+            {
+                "address_list": address_list,
+                "cart_items": cart_items,
+                "total_price": total_price,
+            },
+        )
+
 
 def test(request):
     content_type = ContentType.objects.get_for_model(Product)
@@ -300,4 +316,4 @@ def test(request):
     # Print permission codenames
     for permission in permissions:
         print(permission.codename)
-    return HttpResponse('Dog')
+    return HttpResponse("Dog")
