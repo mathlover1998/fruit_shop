@@ -3,19 +3,21 @@
     <!-- Start Cart  -->
     <div class="cart-box-main">
         <div class="container">
+            <form class="needs-validation" method="POST">
+                {% csrf_token %}
             <div class="row">
                 <div class="col-sm-6 col-lg-6 mb-3">
                     <div class="checkout-address">
                         <div class="title-left">
                             <h3>Billing address</h3>
                         </div>
-                        <form class="needs-validation" novalidate>
+                        
                             <div class="mb-3">
                                 
                                 {% if address_list %}
-                                <select class="form-control" id="address" required>
+                                <select class="form-control" id="address" name='address' required>
                                   {% for address in address_list %}
-                                  <option value="">{{address.receiver_name}}  |  {{address.phone_number}}</option>
+                                  <option value="{{ address.pk }}">{{address.receiver_name}}  |  {{address.phone_number}}</option>
                                   {% endfor %}
                                   </select>
                                   {% else %}
@@ -94,11 +96,11 @@
                             <div class="title"> <span>Payment</span> </div>
                             <div class="d-block my-3">
                                 <div class="custom-control custom-radio">
-                                    <input id="cod" name="payment_method" type="radio" class="custom-control-input" checked required>
+                                    <input id="cod" name="payment_method" type="radio" class="custom-control-input" value="cash"checked required>
                                     <label class="custom-control-label" for="cod">COD</label>
                                 </div>
                                 <div class="custom-control custom-radio">
-                                    <input id="momo" name="payment_method" type="radio" class="custom-control-input" disabled>
+                                    <input id="momo" name="payment_method" type="radio" class="custom-control-input" value="momo"disabled>
                                     <label class="custom-control-label" for="momo">Momo e-wallet</label>
                                 </div>
                                 
@@ -139,7 +141,7 @@
                                     </div>
                                 </div>
                             </div> -->
-                            <hr class="mb-1"> </form>
+                            <hr class="mb-1">
                     </div>
                 </div>
                 <div class="col-sm-6 col-lg-6 mb-3">
@@ -219,11 +221,11 @@
                                 </div>
                                 <hr> </div>
                         </div>
-                        <div class="col-12 d-flex shopping-box"> <a href="checkout.html" class="ml-auto btn hvr-hover">Place Order</a> </div>
+                        <div class="col-12 d-flex shopping-box"> <input type="submit" class="ml-auto btn hvr-hover" value="Place Order"> </div>
                     </div>
                 </div>
             </div>
-
+        </form>
         </div>
     </div>
     

@@ -233,9 +233,28 @@ def remove_from_wishlist(request, product_id):
 @login_required
 @transaction.atomic
 def checkout(request):
+    current_user = request.user
+    address_list = Address.objects.filter(user=current_user)
+    cart = request.session.get("cart", {})
+    cart_items = []
+    total_price = 0
+
+    for item_id, item_data in cart.items():
+        product = get_object_or_404(Product, pk=item_id)
+        quantity = item_data["quantity"]
+        item_total_price = product.price * quantity
+        total_price += item_total_price
+        cart_items.append(
+            {
+                "product": product,
+                "quantity": quantity,
+                "total_price": item_total_price,
+            }
+        )
     if request.method == "POST":
         # Assuming you have a form submission with necessary checkout details
         payment_method = request.POST.get("payment_method")
+        print(payment_method)
         # Check if payment method is cash on delivery
         if payment_method == "cash":
 
@@ -275,36 +294,17 @@ def checkout(request):
 
             return redirect("confirmation_page")
         else:
+            return HttpResponse("Payment method not supported yet.")
 
-            pass
-    else:
-        current_user = request.user
-        address_list = Address.objects.filter(user=current_user)
-        cart = request.session.get("cart", {})
-        cart_items = []
-        total_price = 0
-
-        for item_id, item_data in cart.items():
-            product = get_object_or_404(Product, pk=item_id)
-            quantity = item_data["quantity"]
-            item_total_price = product.price * quantity
-            total_price += item_total_price
-            cart_items.append(
-                {
-                    "product": product,
-                    "quantity": quantity,
-                    "total_price": item_total_price,
-                }
-            )
-        return render(
-            request,
-            "shop/checkout.html",
-            {
-                "address_list": address_list,
-                "cart_items": cart_items,
-                "total_price": total_price,
-            },
-        )
+    return render(
+        request,
+        "shop/checkout.html",
+        {
+            "address_list": address_list,
+            "cart_items": cart_items,
+            "total_price": total_price,
+        },
+    )
 
 
 def test(request):
