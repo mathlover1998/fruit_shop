@@ -1,5 +1,6 @@
 import random, string, os
 from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 from django.core.mail import send_mail
 import re
 from functools import wraps
@@ -56,12 +57,16 @@ def is_real_phone_number(phone_number, account_sid, auth_token):
 
 def send_code_via_phone(code, receiver,account_sid,auth_token):
     client = Client(account_sid, auth_token)
-    message = client.messages.create(
-        body=f"Fruitshop: Your verification code is:{code}",
-        from_=os.environ.get("TWILIO_SENDER_PHONE"),
-        to=f"{receiver}",
-    )
-        
+    if phone_number.startswith('0'):
+            phone_number = "+84" + phone_number[1:]
+    try:
+        message = client.messages.create(
+            body=f"Fruitshop: Your verification code is:{code}",
+            from_=os.environ.get("TWILIO_SENDER_PHONE"),
+            to=f"{receiver}",
+        )
+    except TwilioRestException as e:
+        print('An error was orcured: ',e)
 
 
 def send_specific_email(request, choice: int, email_list, code=""):

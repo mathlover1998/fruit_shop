@@ -13,7 +13,7 @@ from django.template.defaultfilters import date
 from django.utils.html import strip_tags
 from django.contrib.sessions.models import Session
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.core.serializers import serialize
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
@@ -53,9 +53,13 @@ def customer_register(request):
             return redirect("customer_register")
         else:
             password = request.POST.get("password")
-            request.session["username"] = username
-            request.session["password"] = password
-            return redirect(reverse("customer_register_email"))
+            re_password = request.POST.get("re_password")
+            if password == re_password:
+                request.session["username"] = username
+                request.session["password"] = password
+                return redirect(reverse("customer_register_email"))
+            messages.error(request, "Passwords don't match. Please try again.")
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
     return render(request, "account/register.html")
 
 
@@ -69,9 +73,7 @@ def customer_register_email(request):
             return render(request, "pages/error.html")
         if User.objects.filter(email=email):
             messages.error(request, "This email is taken! Please enter another one!")
-            return redirect(
-                reverse("customer_register_email") + f"?username={username}"
-            )
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         else:
             user = User.objects.create_user(username=username, password=password)
             user.email = email
@@ -79,7 +81,7 @@ def customer_register_email(request):
             Customer.objects.create(user=user).save()
             send_specific_email(request=request, choice=1, email_list=[email])
             login(request, user)
-            return redirect("index")
+            return redirect(reverse("index"))
     return render(request, "account/enter_verification_email.html")
 
 
@@ -94,6 +96,7 @@ def signin(request):
             return redirect(reverse("index"))
         else:
             messages.error(request, "Invalid login credentials.")
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
     return render(request, "account/log_in.html")
 
@@ -101,8 +104,7 @@ def signin(request):
 @login_required
 def log_out(request):
     logout(request)
-    messages.success(request, "Logout Successfully")
-    return redirect(reverse("sign_in"))
+    return redirect(reverse("index"))
 
 
 @login_required
@@ -116,7 +118,7 @@ def update_profile(request):
     full_name = current_user.get_full_name()
     email = mask_email(current_user.email)
     phone = validate_mask_phone(current_user.phone)
-
+    dob_formatted = date(current_user.dob, "Y-m-d") if current_user.dob else None
     if request.method == "POST":
         image = request.FILES.get("image")
         full_name = request.POST.get("full_name")
@@ -126,7 +128,6 @@ def update_profile(request):
         # Validate form data
         if not (image or full_name or gender or dob):
             messages.error(request, "Please provide at least one field to update.")
-            return redirect("update_profile")
 
         # Update user profile
         if image:
@@ -142,8 +143,7 @@ def update_profile(request):
             current_user.dob = dob
         current_user.save()
         messages.success(request, "Profile updated successfully.")
-        return redirect(reverse("update_profile"))
-    dob_formatted = date(current_user.dob, "Y-m-d") if current_user.dob else None
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
     return render(
         request,
         "account/profile.html",
@@ -214,12 +214,13 @@ def update_phone(request):
         verification_code = generate_verification_code()
         request.session["phone_verification_code"] = verification_code
         request.session.set_expiry(timedelta(minutes=2))
-        if phone_number.startswith('0'):
-            phone_number = "+84" + phone_number[1:]
         send_code_via_phone(verification_code, phone_number)
-        
         # Redirect to the verification page
-        return redirect(reverse("confirm_verification_code", kwargs={"email_or_phone": phone_number}))
+        return redirect(
+            reverse(
+                "confirm_verification_code", kwargs={"email_or_phone": phone_number}
+            )
+        )
 
     return render(request, "account/enter_new_phone_number.html")
 
@@ -427,7 +428,7 @@ def reset_password(request):
                 request,
                 "Please provide your email or phone number to reset your password",
             )
-            return redirect(reverse("reset_password"))
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         else:
             if is_phone_number(email_or_phone):
                 if User.objects.filter(phone=email_or_phone).first():

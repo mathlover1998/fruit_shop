@@ -18,5 +18,6 @@ urlpatterns= [
     path('change-password/',views.update_password,name='update_password'),
     path('confirm-password',views.confirm_new_password,name='confirm_new_password'),
     path('setting/notification/',views.notification_setting_view,name='notification_setting_view'),
-    path('employee/register',views.employee_register,name='employee_register')
+    path('employee/register',views.employee_register,name='employee_register'),
+    path('reset-password/',views.reset_password,name='reset_password')
 ]

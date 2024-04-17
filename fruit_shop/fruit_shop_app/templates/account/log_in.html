@@ -27,7 +27,11 @@
               </div>
               <div class="form-group">
                 <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password" required>
-            </div>
+              </div>
+              <div class="reset-password-link" style="display: flex; justify-content: space-between; align-items: center;">
+                <p>Forgot your password? Reset it <a href="{% url 'reset_password' %}" style='color:red'>here</a>.</p>
+                <p style="margin-left: auto;">Register <a href="{% url 'customer_register' %}" style='color:blue;'>here</a>.</p>
+              </div>
               <input type="submit" class="btn btn-primary btn-block" value='Submit'>
             </form>
           </div>
