@@ -5,6 +5,21 @@ import re
 from functools import wraps
 from django.http import HttpResponseForbidden
 from fruit_shop_app.models import Employee
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from datetime import timedelta
+
+
+def is_phone_number(input_str):
+
+    pattern = r"^(\+\d{1,2}\s?)?(\d{3}|\(\d{3}\))([\s.-]?\d{3}[\s.-]?\d{4})$"
+
+    return re.match(pattern, input_str) is not None
+
+
+def is_email(input_str):
+    pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    return re.match(pattern, input_str) is not None
 
 
 def mask_email(email):
@@ -27,16 +42,60 @@ def generate_verification_code():
     return "".join(random.choices(string.digits, k=6))
 
 
-def send_code_via_phone(code, receiver):
-    account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
-    auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+def is_real_phone_number(phone_number, account_sid, auth_token):
+    client = Client(account_sid, auth_token)
+    if phone_number.startswith('0'):
+        phone_number = '+84' + phone_number[1:]
+    try:
+        number = client.lookups.phone_numbers(phone_number).fetch()
+        return True
+    except Exception as e:
+        print("Error:", e)
+        return False
+
+
+def send_code_via_phone(code, receiver,account_sid,auth_token):
     client = Client(account_sid, auth_token)
     message = client.messages.create(
         body=f"Fruitshop: Your verification code is:{code}",
         from_=os.environ.get("TWILIO_SENDER_PHONE"),
         to=f"{receiver}",
     )
+        
 
+
+def send_specific_email(request, choice: int, email_list, code=""):
+    subject, message = "", ""
+    from_email = os.environ.get("EMAIL_HOST_USER")
+    # welcome mail
+    if choice == 1:
+        subject = "Cole's Fruitshop: Welcome to fruitshop"
+        message = "Congratulations on your successful registration"
+    # receive updates mail
+    elif choice == 2:
+        subject = (
+            "Cole's Fruitshop: Thank you for subscribing to the Fruitshop newsletter"
+        )
+        html_message = render_to_string(
+            "letters/receive_updates.html", {"user": request.user.username}
+        )
+        message = strip_tags(html_message)
+    # mail with 6-digits verification code
+    elif choice == 3:
+        subject = "Cole's Fruitshop: Verification Code"
+        html_message = render_to_string(
+            "letters/verification_email.html",
+            {"user": request.user.username, "code": code},
+        )
+        message = strip_tags(html_message)
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=from_email,
+        recipient_list=email_list,
+        fail_silently=True,
+    )
 
 
 def validate_password(password):
@@ -60,7 +119,7 @@ def validate_password(password):
 
 
 def generate_random_password(length=12):
-    characters = string.ascii_letters + string.digits + string.punctuation
+    characters = string.ascii_letters + string.digits
     return "".join(random.choice(characters) for _ in range(length))
 
 
@@ -72,14 +131,21 @@ def position_required(*positions):
                 try:
                     employee = request.user.employee
                 except Employee.DoesNotExist:
-                    return HttpResponseForbidden("You don't have permission to access this page.")
+                    return HttpResponseForbidden(
+                        "You don't have permission to access this page."
+                    )
                 if employee.position in positions:
                     return view_func(request, *args, **kwargs)
-            return HttpResponseForbidden("You don't have permission to access this page.")
+            return HttpResponseForbidden(
+                "You don't have permission to access this page."
+            )
+
         return _wrapped_view
+
     return decorator
 
+
 def replace_string(value, new):
-    new_words = value.replace('_count', new)
-    words = new_words.split('_')
-    return ' '.join(word.capitalize() for word in words)
+    new_words = value.replace("_count", new)
+    words = new_words.split("_")
+    return " ".join(word.capitalize() for word in words)

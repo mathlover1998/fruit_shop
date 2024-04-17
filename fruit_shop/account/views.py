@@ -8,12 +8,7 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model, login, logout, authenticate
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.decorators import login_required, user_passes_test
-from fruit_shop.utils import (
-    mask_email,
-    validate_mask_phone,
-    generate_verification_code,
-    send_code_via_phone,
-)
+from fruit_shop.utils import *
 from django.template.defaultfilters import date
 from django.utils.html import strip_tags
 from django.contrib.sessions.models import Session
@@ -79,12 +74,10 @@ def customer_register_email(request):
             )
         else:
             user = User.objects.create_user(username=username, password=password)
+            user.email = email
             user.save()
             Customer.objects.create(user=user).save()
-            subject = "Welcome to fruitshop"
-            message = "Congratulations on your successful registration"
-            from_email = os.environ.get("EMAIL_HOST_USER")
-            send_mail(subject, message, from_email, [email])
+            send_specific_email(request=request, choice=1, email_list=[email])
             login(request, user)
             return redirect("index")
     return render(request, "account/enter_verification_email.html")
@@ -170,17 +163,11 @@ def update_email(request):
         current_user = request.user
         email = request.POST.get("email")
         receive_updates = request.POST.get("receive_updates", False)
-        subject, plain_message, from_email, html_message = "", "", "", ""
+
         if receive_updates:
-            subject = "Thank you for subscribing to the Fruitshop newsletter"
-            html_message = render_to_string(
-                "letters/receive_updates.html", {"user": current_user.username}
-            )
-            plain_message = strip_tags(html_message)
-            from_email = os.environ.get("EMAIL_HOST_USER")
-            send_mail(
-                subject, plain_message, from_email, [email], html_message=html_message
-            )
+            send_specific_email(request=request, choice=2, email_list=[email])
+            current_user.receive_updates = True
+            current_user.save()
         if (
             not email
             or User.objects.exclude(pk=current_user.id).filter(email=email).exists()
@@ -189,86 +176,72 @@ def update_email(request):
             return redirect(reverse("update_email"))
         else:
             code = generate_verification_code()
-            request.session["email_validation_code"] = code
+            request.session["email_verification_code"] = code
             # Set session expiry to 10 minutes from now
             request.session.set_expiry(timedelta(minutes=10))
-            send_mail(
-                subject, plain_message, from_email, [email], html_message=html_message
+            send_specific_email(
+                request=request, choice=3, email_list=[email], code=code
             )
-
-            return redirect(reverse("confirm_validation_code", kwargs={"email": email}))
+            return redirect(
+                reverse("confirm_verification_code", kwargs={"email_or_phone": email})
+            )
     return render(request, "account/update_new_email.html")
-
-
-@login_required
-def confirm_validation_code(request, email):
-    code = request.session["email_validation_code"]
-    if code is not None:
-        subject = "Fruitshop: OTP code to authenticate account"
-        html_message = render_to_string(
-            "letters/verification_email.html", {"code": code}
-        )
-        plain_message = strip_tags(html_message)
-        from_email = os.environ.get("EMAIL_HOST_USER")
-        send_mail(
-            subject, plain_message, from_email, [email], html_message=html_message
-        )
-        if request.method == "POST":
-            if request.POST.get("code") == code:
-                current_user = request.user
-                current_user.email = email
-                current_user.receive_updates = True
-                current_user.save()
-                return render(request, "pages/successfully.html")
-        return render(request, "account/enter_verification_code.html")
-    else:
-        return render(request, "pages/error.html")
 
 
 @login_required
 def update_phone(request):
     if request.method == "POST":
         phone_number = request.POST.get("phone")
-        if (
-            not phone_number
-            and User.objects.exclude(pk=request.user.id)
-            .filter(phone=phone_number)
-            .exists()
-        ):
-            messages.error(request, "This phone has been taken!")
+
+        # Check if the phone number is valid
+        if not is_phone_number(phone_number):
+            messages.error(request, "Invalid phone number format!")
             return redirect(reverse("update_phone"))
-        else:
-            verification_code = generate_verification_code()
-            request.session["phone_verification_code"] = verification_code
-            # Set session expiry to 2 minutes from now
-            request.session.set_expiry(timedelta(minutes=2))
-            if not phone_number.startswith("+"):
-                phone_number = "+84" + phone_number[1:]
-            send_code_via_phone(verification_code, phone_number)
-            return redirect(
-                reverse(
-                    "confirm_phone_verification_code", kwargs={"phone": phone_number}
-                )
-            )
+
+        # Check if the phone number is already taken
+        if User.objects.exclude(pk=request.user.id).filter(phone=phone_number).exists():
+            messages.error(request, "This phone number has already been taken!")
+            return redirect(reverse("update_phone"))
+
+        # Validate the phone number using Twilio's lookup
+        account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+        auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+        if not is_real_phone_number(phone_number, account_sid, auth_token):
+            messages.error(request, "Invalid phone number!")
+            return redirect(reverse("update_phone"))
+
+        # Generate verification code and send it via SMS
+        verification_code = generate_verification_code()
+        request.session["phone_verification_code"] = verification_code
+        request.session.set_expiry(timedelta(minutes=2))
+        if phone_number.startswith('0'):
+            phone_number = "+84" + phone_number[1:]
+        send_code_via_phone(verification_code, phone_number)
+        
+        # Redirect to the verification page
+        return redirect(reverse("confirm_verification_code", kwargs={"email_or_phone": phone_number}))
+
     return render(request, "account/enter_new_phone_number.html")
 
 
 @login_required
-def confirm_phone_verification_code(request, phone):
-    code = request.session["phone_verification_code"]
+def confirm_verification_code(request, email_or_phone):
     if request.method == "POST":
-        if request.POST.get("code") == code:
-            current_user = request.user
-            current_user.phone = phone
-            current_user.save()
-            return render(request, "pages/successfully.html")
-    return render(request, "account/enter_verification_code.html")
+        current_user = request.user
+        if request.POST.get("code") == request.session.get("phone_verification_code"):
+            current_user.phone = email_or_phone
+        elif request.POST.get("code") == request.session.get("email_verification_code"):
+            current_user.email = email_or_phone
+        current_user.save()
+        return render(request, "pages/successfully.html")
+    else:
+        return render(request, "account/enter_verification_code.html")
 
 
 @login_required
 def address_view(request):
     current_user = request.user
-    
+
     address_list = Address.objects.filter(user=current_user).all()
     return render(request, "account/address.html", {"address_list": address_list})
 
@@ -276,7 +249,7 @@ def address_view(request):
 @login_required
 def create_address(request):
     current_user = request.user
-    
+
     if request.method == "POST":
         receiver_name = request.POST.get("receiver_name")
         phone_number = request.POST.get("phone_number")
@@ -333,7 +306,7 @@ def create_address(request):
 @login_required
 def update_address(request, id):
     current_user = request.user
-    
+
     address = Address.objects.filter(user=current_user, pk=id).first()
     if request.method == "POST":
         address.receiver_name = request.POST.get("receiver_name")
@@ -350,9 +323,7 @@ def update_address(request, id):
         if default_address:
             address.default_address = True
             customer_addresses = (
-                Address.objects.exclude(id=address.id)
-                .filter(user=current_user)
-                .all()
+                Address.objects.exclude(id=address.id).filter(user=current_user).all()
             )
             customer_addresses.update(default_address=False)
         address.save()
@@ -432,7 +403,7 @@ def employee_register(request):
             messages.error(request, "This username is taken! Please log in instead!")
             return redirect(reverse("employee_register"))
         else:
-            
+
             new_user = User.objects.create(
                 username=username,
                 first_name=first_name,
@@ -448,22 +419,51 @@ def employee_register(request):
     return render(request, "account/employee_register.html")
 
 
-
-
-# def reset_password(request):
-#     if request.method=='POST':
-#         username = request.POST.get('username')
-#         if not (username and User.objects.filter(username=username).first()):
-#             messages.error(request,'Invalid username!')
-#             return redirect(reverse('reset_password'))
-#         else:
-#             request.session['reset_username']=username
-#             return redirect(reverse('choose_reset_method'))
-#     return render(request,'account/reset_password.html')
-
-# def choose_reset_method(request):
-#     username = request.session.get('reset_username')
-#     user = User.objects.filter(username=username).first()
-#     masked_phone = validate_mask_phone(user.phone)
-#     masked_email = mask_email(user.email)
-#     return render(request,'account/reset_method.html',{'phone':masked_phone,'email':masked_email})
+def reset_password(request):
+    if request.method == "POST":
+        email_or_phone = request.POST.get("email_or_phone")
+        if not email_or_phone:
+            messages.error(
+                request,
+                "Please provide your email or phone number to reset your password",
+            )
+            return redirect(reverse("reset_password"))
+        else:
+            if is_phone_number(email_or_phone):
+                if User.objects.filter(phone=email_or_phone).first():
+                    verification_code = generate_verification_code()
+                    request.session["phone_verification_code"] = verification_code
+                    # Set session expiry to 2 minutes from now
+                    request.session.set_expiry(timedelta(minutes=2))
+                    if not phone_number.startswith("+"):
+                        phone_number = "+84" + phone_number[1:]
+                    send_code_via_phone(verification_code, phone_number)
+                    return redirect(
+                        reverse(
+                            "confirm_verification_code",
+                            kwargs={"email_or_phone": email_or_phone},
+                        )
+                    )
+                messages.error(request, "Phone number not recognized!")
+                return redirect(reverse("reset_password"))
+            if is_email(email_or_phone):
+                if User.objects.filter(email=email_or_phone).first():
+                    code = generate_verification_code()
+                    request.session["email_verification_code"] = code
+                    # Set session expiry to 10 minutes from now
+                    request.session.set_expiry(timedelta(minutes=10))
+                    send_specific_email(
+                        request=request,
+                        choice=3,
+                        email_list=[email_or_phone],
+                        code=code,
+                    )
+                    return redirect(
+                        reverse(
+                            "confirm_verification_code",
+                            kwargs={"email_or_phone": email_or_phone},
+                        )
+                    )
+            return redirect(reverse("choose_reset_method"))
+    else:
+        return render(request, "account/reset_password.html")
