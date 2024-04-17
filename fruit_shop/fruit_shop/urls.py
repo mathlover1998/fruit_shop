@@ -31,6 +31,7 @@ urlpatterns = [
     path('',include('fruit_shop_app.urls')),
     path('account/',include('account.urls')),
     path('product/',include('product_manager.urls')),
+    path('blog/',include('blog.urls'))
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

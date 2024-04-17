@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
 
+
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
@@ -30,17 +31,18 @@ PAYMENT_STATUS = (
     ("cancelled", "Cancelled"),
 )
 UNIT = (
-    ('kg','Kilogram'),
-    ('gr','Gram'),
-    ('set','Set'),
-    ('pack','Pack'),
-    ('unit','Unit')
+    ("kg", "Kilogram"),
+    ("gr", "Gram"),
+    ("set", "Set"),
+    ("pack", "Pack"),
+    ("unit", "Unit"),
 )
 PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
 
 RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
-DISCOUNT_TYPE = (("percentage","Percentage"), ("fixed_discount","Fixed Discount"))
+DISCOUNT_TYPE = (("percentage", "Percentage"), ("fixed_discount", "Fixed Discount"))
+
 
 class User(AbstractUser):
     phone = models.CharField(max_length=20, null=True)
@@ -49,7 +51,7 @@ class User(AbstractUser):
     )
     dob = models.DateField(default="2000-01-01")
     image = models.ImageField(
-        upload_to="images/user_images", default="images/default-avatar.png"
+        upload_to="images/user_images", default="images/default/default_avatar.png"
     )
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
@@ -74,6 +76,7 @@ class User(AbstractUser):
         verbose_name_plural = "Users Table"
         indexes = [models.Index(fields=["first_name", "last_name"], name="full_name")]
 
+
 class Position(models.Model):
     name = models.CharField(_("Name"), max_length=100, unique=True)
     permissions = models.ManyToManyField(Permission, blank=True)
@@ -85,11 +88,12 @@ class Position(models.Model):
     def __str__(self):
         return self.name
 
+
 class Employee(models.Model):
     hire_date = models.DateField(null=True)
     salary = models.IntegerField(null=False, default=0)
     department = models.CharField(max_length=200, default="", null=False)
-    position = models.ForeignKey(Position, on_delete=models.CASCADE,null=True)
+    position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="employee")
 
     class Meta:
@@ -143,13 +147,17 @@ class ConfirmationToken(models.Model):
 class Discount(models.Model):
     min_purchase_amount = models.IntegerField(null=False, default=0)
     is_active = models.BooleanField(default=True)
-    discount_type = models.CharField(choices=DISCOUNT_TYPE,default='percentage',null=False)
-    amount_of_use = models.IntegerField(null=False,validators=[MinValueValidator(1)],default=1)
+    discount_type = models.CharField(
+        choices=DISCOUNT_TYPE, default="percentage", null=False
+    )
+    amount_of_use = models.IntegerField(
+        null=False, validators=[MinValueValidator(1)], default=1
+    )
     discount_code = models.CharField(max_length=20, null=True)
     discount_percentage = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(100)], null=True
     )
-    max_value_discount = models.FloatField(null=False,default=0)
+    max_value_discount = models.FloatField(null=False, default=0)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
 
@@ -165,15 +173,24 @@ class Discount(models.Model):
 class Category(models.Model):
     category_name = models.CharField(max_length=255, null=False)
     description = models.TextField(null=False, default="")
-    parent_category = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='sub_categories')
+    parent_category = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="sub_categories",
+    )
 
     def __str__(self):
         return self.category_name
+
     def clean(self):
         # Check if the parent category is a subcategory
         if self.parent_category:
             if self.parent_category.parent_category:
-                raise ValidationError("Subcategories cannot have subcategories as parent categories.")
+                raise ValidationError(
+                    "Subcategories cannot have subcategories as parent categories."
+                )
 
     def save(self, *args, **kwargs):
         self.full_clean()  # Validate the instance before saving
@@ -214,10 +231,10 @@ class Product(models.Model):
     information = models.TextField(null=True)
     create_date = models.DateField(auto_now_add=True)
     expiry_date = models.DateField(null=True)
-    sku = models.CharField(max_length=10, unique=True,default='')
-    unit = models.CharField(choices=UNIT,default='unit')
+    sku = models.CharField(max_length=10, unique=True, default="")
+    unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
-    
+
     inventory_manager = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
@@ -233,10 +250,10 @@ class Product(models.Model):
         while True:
             sku = random.randint(1, 999999)
             sku = f"{sku:06}"
-            sku = "SP"+sku
+            sku = "SP" + sku
             if not Product.objects.filter(sku=sku).exists():
                 return sku
-    
+
     def save(self, *args, **kwargs):
         self.sku = self.generate_unique_sku()
         super().save(*args, **kwargs)
@@ -254,7 +271,7 @@ class ProductImage(models.Model):
         Product, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField(
-        upload_to="images/product_images/", default="images/default_fruit.jpg"
+        upload_to="images/product_images/", default="images/default/default_fruit.jpg"
     )
 
     class Meta:
@@ -311,9 +328,7 @@ class Transaction(models.Model):
 
 
 class Address(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=True, blank=True
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, null=True, blank=True
     )
