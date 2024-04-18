@@ -4,10 +4,9 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('',views.index,name='index'),
-    path('about-us/',views.about_us,name='about_us'),
-    path('contact/',views.contact,name='contact_us'),
-    path('location/',views.location,name='location'),
-    path('supplier/register/',views.supplier_register,name='supplier_register'),
-    path('confirmation/', views.confirmation_page, name='confirmation_page'),
-    path('clear-session/',views.clear_session,name='clear_session'),
+    path('about-us/',views.view_about_us ,name='view_about_us '),
+    path('contact-us/',views.handle_contact_us,name='handle_contact_us'),
+    path('location/',views.view_location,name='view_location'),
+    path('confirmation/', views.view_confirmation_page, name='view_confirmation_page'),
+    path('clear/',views.clear_session,name='clear_session'),
 ]

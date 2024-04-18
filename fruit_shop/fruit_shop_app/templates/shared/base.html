@@ -28,26 +28,7 @@
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}" />
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
-    {% comment %}
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-    {% endcomment %}
 
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js' %} "></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js' %} "></script>
-    <![endif]-->
-    {% comment %}
-    <script>
-      const select = document.getElementById("basic");
-      select.addEventListener("change", (e) => {
-        if (e.target.value === "register") {
-          window.location.href = "/register";
-        } else if (e.target.value === "signin") {
-          window.location.href = "/signin";
-        }
-      });
-    </script>
-    {% endcomment %}
     <script>
       function redirect() {
         var selectedOption = document.getElementById("basic").value;
@@ -81,9 +62,11 @@
                   <a href="{% url 'view_user_account' %}"><i class="fa fa-user s_color"></i> My Account</a>
                 </li>
                 <li>
-                  <a href="{% url 'location' %}"><i class="fas fa-location-arrow"></i> Our location</a>
+                  <a href="{% url 'view_location' %}"><i class="fas fa-location-arrow"></i> Our location</a>
                 </li>
-                
+                <li>
+                  <a href="{% url 'register_employee' %}"><i class="fas fa-regular fa-registered"></i> Register for employee</a>
+                </li>
               </ul>
             </div>
           </div>
@@ -101,7 +84,7 @@
                   <img src="{{user.image.url}}" alt="Avatar" class="rounded-circle img-fluid" style="height:15px;width=15px" /> Welcome, {{user.username}}
                 </button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                  <a class="dropdown-item" href="{% url 'profile'%}">Your Profile</a>
+                  <a class="dropdown-item" href="{% url 'view_user_account'%}">Your Account</a>
                   <a class="dropdown-item" href="{% url 'handle_logout'%}">Logout</a>
                 </div>
                 {% endif%}
@@ -143,8 +126,8 @@
               <li class="nav-item"><a class="nav-link" href="{% url 'product_view' %}">Shop</a></li>
               <li class="nav-item"><a class="nav-link" href=" {% url 'wishlist_view'%}">Wishlist</a></li>
               <li class="nav-item"><a class="nav-link" href="#">Gallery</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'about_us' %}">About Us</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'contact_us' %}">Contact Us</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'view_about_us ' %}">About Us</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'handle_contact_us' %}">Contact Us</a></li>
             </ul>
           </div>
           <!-- /.navbar-collapse -->
@@ -383,16 +366,24 @@
               </div>
             </div>
             <div class="col-lg-4 col-md-12 col-sm-12">
-              <div class="footer-link">
+              <div class="footer-link-contact">
                 <h4>Information</h4>
                 <ul>
-                  <li><a href="#target-section">About Us</a></li>
-                  <li><a href="#">Customer Service</a></li>
-                  <li><a href="#">Our Sitemap</a></li>
-                  <li><a href="#">Terms &amp; Conditions</a></li>
-                  <li><a href="#">Privacy Policy</a></li>
-                  <li><a href="#">Delivery Information</a></li>
+                  <li>
+                    <p><i class="fas fa-regular fa-address-card"></i><a href="{% url 'view_about_us '%}">About Us</a></p>
+                  </li>
+                  <li>
+                    <p><i class="fas fa-location-arrow"></i><a href="#">Our Location</a></p>
+                  </li>
+                  <li>
+                    <p><i class="fas fa-greater-than"></i><a href="#">Terms &amp; Conditions</a></p>
+                  </li>
+                  <li>
+                    <p><i class="fas fa-greater-than"></i><a href="#">Privacy Policy</a></p>
+                  </li>          
                 </ul>
+                  
+                
               </div>
             </div>
             <div class="col-lg-4 col-md-12 col-sm-12">
@@ -422,7 +413,7 @@
 
     <!-- Start copyright  -->
     <div class="footer-copyright">
-      <p class="footer-company">All Rights Reserved. &copy; 2018 <a href="#">ThewayShop</a> Design By : <a href="https://html.design/">html design</a></p>
+      <p class="footer-company">All Rights Reserved. &copy; 2018 <a href="#">Cole's Fruitshop</a> Design By : <a href="https://html.design/">html design</a></p>
     </div>
     <!-- End copyright  -->
 

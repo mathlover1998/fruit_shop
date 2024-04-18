@@ -12,14 +12,14 @@ def index(request):
     return render(request, "pages/index.html")
 
 
-def about_us(request):
+def view_about_us (request):
     return render(request, "pages/about.html")
 
 
-def contact(request):
+def handle_contact_us(request):
     return render(request, "pages/contact_us.html")
 
-def location(request):
+def view_location(request):
     return render(request,'pages/location.html')
 
 
@@ -32,11 +32,11 @@ def supplier_register(request):
             supplier_name=supplier_name, email=email, phone=phone
         )
         new_supplier.save()
-        return redirect(reverse("confirmation_page"))
+        return redirect(reverse("view_confirmation_page"))
     return render(request, "account/supplier_register.html")
 
 
-def confirmation_page(request):
+def view_confirmation_page(request):
     return render(request, "notification/wait_for_confirmation.html")
 
 

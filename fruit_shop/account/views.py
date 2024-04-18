@@ -394,7 +394,7 @@ def register_employee(request):
             )
             new_user.save()
             Employee.objects.create(user=new_user).save()
-            return redirect(reverse("confirmation_page"))
+            return redirect(reverse("view_confirmation_page"))
 
     return render(request, "account/register_employee.html")
 

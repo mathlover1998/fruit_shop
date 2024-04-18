@@ -292,7 +292,7 @@ def checkout(request):
 
             request.session["cart"] = {}
 
-            return redirect("confirmation_page")
+            return redirect(reverse('view_confirmation_page'))
         else:
             return HttpResponse("Payment method not supported yet.")
 

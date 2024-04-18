@@ -51,7 +51,7 @@ class User(AbstractUser):
     )
     dob = models.DateField(default="2000-01-01")
     image = models.ImageField(
-        upload_to="images/user_images", default="images/default/default_avatar.png"
+        upload_to="images/user_images/", default="images/default/default_avatar.png"
     )
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
