@@ -22,48 +22,27 @@ from functools import wraps
 
 
 # Create your views here.
-def role_required(allowed_roles=[]):
-    """
-    Decorator to restrict access to users with specific roles.
-    """
-
-    def decorator(view_func):
-        @wraps(view_func)
-        def _wrapped_view(request, *args, **kwargs):
-            if (
-                request.user.is_authenticated
-                and request.user.groups.filter(name__in=allowed_roles).exists()
-            ):
-                return view_func(request, *args, **kwargs)
-            else:
-                return HttpResponseForbidden(
-                    "You don't have permission to access this page."
-                )
-
-        return _wrapped_view
-
-    return decorator
 
 
-def customer_register(request):
+def register_customer(request):
     if request.method == "POST":
         username = request.POST.get("username")
         if User.objects.filter(username=username).exists():
             messages.error(request, "This username is taken! Please log in instead!")
-            return redirect("customer_register")
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         else:
             password = request.POST.get("password")
             re_password = request.POST.get("re_password")
             if password == re_password:
                 request.session["username"] = username
                 request.session["password"] = password
-                return redirect(reverse("customer_register_email"))
+                return redirect(reverse("collect_customer_registration_email"))
             messages.error(request, "Passwords don't match. Please try again.")
             return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
     return render(request, "account/register.html")
 
 
-def customer_register_email(request):
+def collect_customer_registration_email(request):
     if request.method == "POST":
         email = request.POST.get("email")
         username = request.session.get("username")
@@ -85,7 +64,7 @@ def customer_register_email(request):
     return render(request, "account/enter_verification_email.html")
 
 
-def signin(request):
+def handle_login(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -102,13 +81,13 @@ def signin(request):
 
 
 @login_required
-def log_out(request):
+def handle_logout(request):
     logout(request)
     return redirect(reverse("index"))
 
 
 @login_required
-def profile(request):
+def view_user_account(request):
     return render(request, "account/account.html")
 
 
@@ -183,7 +162,7 @@ def update_email(request):
                 request=request, choice=3, email_list=[email], code=code
             )
             return redirect(
-                reverse("confirm_verification_code", kwargs={"email_or_phone": email})
+                reverse("handle_verification_code", kwargs={"email_or_phone": email})
             )
     return render(request, "account/update_new_email.html")
 
@@ -218,7 +197,7 @@ def update_phone(request):
         # Redirect to the verification page
         return redirect(
             reverse(
-                "confirm_verification_code", kwargs={"email_or_phone": phone_number}
+                "handle_verification_code", kwargs={"email_or_phone": phone_number}
             )
         )
 
@@ -226,7 +205,7 @@ def update_phone(request):
 
 
 @login_required
-def confirm_verification_code(request, email_or_phone):
+def handle_verification_code(request, email_or_phone):
     if request.method == "POST":
         current_user = request.user
         if request.POST.get("code") == request.session.get("phone_verification_code"):
@@ -240,7 +219,7 @@ def confirm_verification_code(request, email_or_phone):
 
 
 @login_required
-def address_view(request):
+def view_address(request):
     current_user = request.user
 
     address_list = Address.objects.filter(user=current_user).all()
@@ -297,7 +276,7 @@ def create_address(request):
                 )
                 customer_addresses.update(default_address=False)
             new_address.save()
-            return redirect(reverse("address_view"))
+            return redirect(reverse("view_address"))
         else:
             messages.error(request, "Please provide at least one field to update.")
             return redirect("create_address")
@@ -328,7 +307,7 @@ def update_address(request, id):
             )
             customer_addresses.update(default_address=False)
         address.save()
-        return redirect(reverse("address_view"))
+        return redirect(reverse("view_address"))
     return render(request, "account/address_manage.html", {"address": address})
 
 
@@ -337,25 +316,25 @@ def delete_address(request, id):
     current_user = request.user
     address = Address.objects.filter(user=current_user, pk=id).first()
     address.delete()
-    return redirect(reverse("address_view"))
+    return redirect(reverse("view_address"))
 
 
 @login_required
-def update_password(request):
+def change_password(request):
     current_user = request.user
     current_password = current_user.password
     if request.method == "POST":
         password = request.POST.get("password")
         if password and check_password(password, current_password):
-            return redirect(reverse("confirm_new_password"))
+            return redirect(reverse("set_new_password"))
         else:
             messages.error(request, "Inccorect old password!")
-            return redirect(reverse("update_password"))
+            return redirect(reverse("change_password"))
     return render(request, "account/enter_current_password.html")
 
 
 @login_required
-def confirm_new_password(request):
+def set_new_password(request):
     current_user = request.user
     if request.method == "POST":
         new_password = request.POST.get("password")
@@ -369,12 +348,12 @@ def confirm_new_password(request):
             messages.error(
                 request, "New password must be different from the old password!"
             )
-            return redirect(reverse("confirm_new_password"))
+            return redirect(reverse("set_new_password"))
     return render(request, "account/enter_new_password.html")
 
 
 @login_required
-def notification_setting_view(request):
+def view_account_notifications(request):
     current_user = request.user
     if request.method == "POST":
         checked = request.POST.get("email_notification", False)
@@ -389,7 +368,7 @@ def notification_setting_view(request):
     )
 
 
-def employee_register(request):
+def register_employee(request):
     if request.method == "POST":
         username = request.POST.get("username")
         first_name = request.POST.get("first_name")
@@ -399,10 +378,10 @@ def employee_register(request):
         phone = request.POST.get("phone")
         if not (first_name and last_name and email and phone and username):
             messages.error(request, "Please fill in all required information!")
-            return redirect(reverse("employee_register"))
+            return redirect(reverse("register_employee"))
         if User.objects.filter(username=username).exists():
             messages.error(request, "This username is taken! Please log in instead!")
-            return redirect(reverse("employee_register"))
+            return redirect(reverse("register_employee"))
         else:
 
             new_user = User.objects.create(
@@ -417,7 +396,7 @@ def employee_register(request):
             Employee.objects.create(user=new_user).save()
             return redirect(reverse("confirmation_page"))
 
-    return render(request, "account/employee_register.html")
+    return render(request, "account/register_employee.html")
 
 
 def reset_password(request):
@@ -441,7 +420,7 @@ def reset_password(request):
                     send_code_via_phone(verification_code, phone_number)
                     return redirect(
                         reverse(
-                            "confirm_verification_code",
+                            "handle_verification_code",
                             kwargs={"email_or_phone": email_or_phone},
                         )
                     )
@@ -461,7 +440,7 @@ def reset_password(request):
                     )
                     return redirect(
                         reverse(
-                            "confirm_verification_code",
+                            "handle_verification_code",
                             kwargs={"email_or_phone": email_or_phone},
                         )
                     )

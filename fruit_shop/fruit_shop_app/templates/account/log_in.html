@@ -1,8 +1,8 @@
 {% extends "shared/base.html" %}
 {% load static %}
 
-{% block heading_title %}Sign In{% endblock heading_title %}
-{% block heading_sub_title %}Sign In{% endblock heading_sub_title %}
+{% block heading_title %}Login{% endblock heading_title %}
+{% block heading_sub_title %}Login{% endblock heading_sub_title %}
 {% block content %}
 
 <div class="container mt-5">
@@ -10,7 +10,7 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h2 class="text-center">Sign in</h2>
+            <h2 class="text-center">Login</h2>
           </div>
           <div class="card-body">
             <form method='POST'>
@@ -30,7 +30,7 @@
               </div>
               <div class="reset-password-link" style="display: flex; justify-content: space-between; align-items: center;">
                 <p>Forgot your password? Reset it <a href="{% url 'reset_password' %}" style='color:red'>here</a>.</p>
-                <p style="margin-left: auto;">Register <a href="{% url 'customer_register' %}" style='color:blue;'>here</a>.</p>
+                <p style="margin-left: auto;">Register <a href="{% url 'register_customer' %}" style='color:blue;'>here</a>.</p>
               </div>
               <input type="submit" class="btn btn-primary btn-block" value='Submit'>
             </form>

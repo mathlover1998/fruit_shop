@@ -2,22 +2,22 @@ from django.urls import path
 from . import views
 
 urlpatterns= [
-    path('profile/',views.profile,name='profile'),
-    path('register/',views.customer_register,name='customer_register'),
-    path('register-email/',views.customer_register_email,name='customer_register_email'),
-    path('sign-in/',views.signin,name='sign_in'),
-    path('logout/',views.log_out,name='logout'),
-    path('update-profile/',views.update_profile,name='update_profile'),
-    path('update-email/',views.update_email,name='update_email'),
-    path('confirm-code/<str:email_or_phone>/',views.confirm_verification_code,name='confirm_verification_code'),
-    path('update-phone/',views.update_phone,name='update_phone'),
-    path('address/',views.address_view,name='address_view'),
-    path('address/add/',views.create_address,name='create_address'),
+    path('',views.view_user_account,name='view_user_account'),
+    path('register/',views.register_customer,name='register_customer'),
+    path('register/email/',views.collect_customer_registration_email,name='collect_customer_registration_email'),
+    path('login/',views.handle_login,name='handle_login'),
+    path('logout/',views.handle_logout,name='handle_logout'),
+    path('profile/',views.update_profile,name='update_profile'),
+    path('email/',views.update_email,name='update_email'),#
+    path('phone/',views.update_phone,name='update_phone'),
+    path('address/',views.view_address,name='view_address'),
+    path('address/create/',views.create_address,name='create_address'),
     path('address/update/<int:id>',views.update_address,name='update_address'),
     path('address/delete/<int:id>',views.delete_address,name='delete_address'),
-    path('change-password/',views.update_password,name='update_password'),
-    path('confirm-password',views.confirm_new_password,name='confirm_new_password'),
-    path('setting/notification/',views.notification_setting_view,name='notification_setting_view'),
-    path('employee/register',views.employee_register,name='employee_register'),
-    path('reset-password/',views.reset_password,name='reset_password')
+    path('change-password/',views.change_password,name='change_password'),
+    path('change-password/confirm/',views.set_new_password,name='set_new_password'),#
+    path('notification/',views.view_account_notifications,name='view_account_notifications'),
+    path('register/employee/',views.register_employee,name='register_employee'),
+    path('reset-password/',views.reset_password,name='reset_password'),
+    path('verification-code/<str:email_or_phone>/',views.handle_verification_code,name='handle_verification_code'),#
 ]

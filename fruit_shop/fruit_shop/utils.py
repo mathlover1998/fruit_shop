@@ -45,8 +45,8 @@ def generate_verification_code():
 
 def is_real_phone_number(phone_number, account_sid, auth_token):
     client = Client(account_sid, auth_token)
-    if phone_number.startswith('0'):
-        phone_number = '+84' + phone_number[1:]
+    if phone_number.startswith("0"):
+        phone_number = "+84" + phone_number[1:]
     try:
         number = client.lookups.phone_numbers(phone_number).fetch()
         return True
@@ -55,10 +55,10 @@ def is_real_phone_number(phone_number, account_sid, auth_token):
         return False
 
 
-def send_code_via_phone(code, receiver,account_sid,auth_token):
+def send_code_via_phone(code, receiver, account_sid, auth_token):
     client = Client(account_sid, auth_token)
-    if phone_number.startswith('0'):
-            phone_number = "+84" + phone_number[1:]
+    if phone_number.startswith("0"):
+        phone_number = "+84" + phone_number[1:]
     try:
         message = client.messages.create(
             body=f"Fruitshop: Your verification code is:{code}",
@@ -66,7 +66,7 @@ def send_code_via_phone(code, receiver,account_sid,auth_token):
             to=f"{receiver}",
         )
     except TwilioRestException as e:
-        print('An error was orcured: ',e)
+        print("An error was orcured: ", e)
 
 
 def send_specific_email(request, choice: int, email_list, code=""):
@@ -128,6 +128,12 @@ def generate_random_password(length=12):
     return "".join(random.choice(characters) for _ in range(length))
 
 
+def replace_string(value, new):
+    new_words = value.replace("_count", new)
+    words = new_words.split("_")
+    return " ".join(word.capitalize() for word in words)
+
+
 def position_required(*positions):
     def decorator(view_func):
         @wraps(view_func)
@@ -150,7 +156,24 @@ def position_required(*positions):
     return decorator
 
 
-def replace_string(value, new):
-    new_words = value.replace("_count", new)
-    words = new_words.split("_")
-    return " ".join(word.capitalize() for word in words)
+def role_required(allowed_roles=[]):
+    """
+    Decorator to restrict access to users with specific roles.
+    """
+
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if (
+                request.user.is_authenticated
+                and request.user.groups.filter(name__in=allowed_roles).exists()
+            ):
+                return view_func(request, *args, **kwargs)
+            else:
+                return HttpResponseForbidden(
+                    "You don't have permission to access this page."
+                )
+
+        return _wrapped_view
+
+    return decorator

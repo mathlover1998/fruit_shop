@@ -78,7 +78,7 @@
             <div class="our-link">
               <ul>
                 <li>
-                  <a href="{% url 'profile' %}"><i class="fa fa-user s_color"></i> My Account</a>
+                  <a href="{% url 'view_user_account' %}"><i class="fa fa-user s_color"></i> My Account</a>
                 </li>
                 <li>
                   <a href="{% url 'location' %}"><i class="fas fa-location-arrow"></i> Our location</a>
@@ -91,10 +91,10 @@
             <div class="login-box">
               <div class="dropdown">
                 {% if not user.is_authenticated%}
-                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Sign In</button>
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Login</button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                  <a class="dropdown-item" href="{% url 'customer_register'%}">Register Here</a>
-                  <a class="dropdown-item" href="{% url 'sign_in'%}">Sign In</a>
+                  <a class="dropdown-item" href="{% url 'register_customer'%}">Register Here</a>
+                  <a class="dropdown-item" href="{% url 'handle_login'%}">Login</a>
                 </div>
                 {% else%}
                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -102,7 +102,7 @@
                 </button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                   <a class="dropdown-item" href="{% url 'profile'%}">Your Profile</a>
-                  <a class="dropdown-item" href="{% url 'logout'%}">Logout</a>
+                  <a class="dropdown-item" href="{% url 'handle_logout'%}">Logout</a>
                 </div>
                 {% endif%}
               </div>
