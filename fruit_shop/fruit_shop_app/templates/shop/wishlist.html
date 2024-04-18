@@ -25,12 +25,12 @@
                                 {% for wishlist in wishlist_items %}
                                 <tr>
                                     <td class="thumbnail-img">
-                                        <a href="{% url 'product_detail' product_id=wishlist.product.id%}">
+                                        <a href="{% url 'get_product' product_id=wishlist.product.id%}">
 									<img class="img-fluid" src="{{ wishlist.product.images.first.image.url }}" alt="" />
 								</a>
                                     </td>
                                     <td class="name-pr">
-                                        <a href="{% url 'product_detail' product_id=wishlist.product.id%}">
+                                        <a href="{% url 'get_product' product_id=wishlist.product.id%}">
 									{{wishlist.product.product_name}}
 								</a>
                                     </td>
@@ -39,10 +39,10 @@
                                     </td>
                                     <td class="quantity-box">In Stock</td>
                                     <td class="add-pr">
-                                        <a class="btn hvr-hover" href="{% url 'add_to_cart' product_id=wishlist.product.id quantity=1 %}">Add to Cart</a>
+                                        <a class="btn hvr-hover" href="{% url 'update_cart_item' product_id=wishlist.product.id quantity=1 %}">Add to Cart</a>
                                     </td>
                                     <td class="remove-pr">
-                                        <a href="{% url 'remove_from_wishlist' product_id=wishlist.product.id %}">
+                                        <a href="{% url 'delete_wishlist_item' product_id=wishlist.product.id %}">
 									<i class="fas fa-times"></i>
 								</a>
                                     </td>

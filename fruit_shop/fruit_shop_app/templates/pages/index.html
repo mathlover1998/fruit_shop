@@ -18,7 +18,7 @@
               See how your users experience your website in realtime or view <br />
               trends to see any changes in performance over time.
             </p>
-            <p><a class="btn hvr-hover" href="{% url 'product_view'%}">Shop Now</a></p>
+            <p><a class="btn hvr-hover" href="{% url 'get_all_products'%}">Shop Now</a></p>
           </div>
         </div>
       </div>
@@ -149,7 +149,7 @@
               <div class="mask-icon">
                 <ul>
                     <li>
-                        <a href="{% url 'product_detail' product_id=product.id%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
+                        <a href="{% url 'get_product' product_id=product.id%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
                       </li>
                       <li>
                         <a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a>
@@ -158,7 +158,7 @@
                         <a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a>
                       </li>
                 </ul>
-                <a class="cart" href="{% url 'add_to_cart' product_id=product.id quantity=1 %}">Add to Cart</a>
+                <a class="cart" href="{% url 'update_cart_item' product_id=product.id quantity=1 %}">Add to Cart</a>
               </div>
             </div>
             <div class="why-text">
@@ -189,7 +189,7 @@
                       <div class="mask-icon">
                         <ul>
                             <li>
-                                <a href="{% url 'product_detail' product_id=product.product.id%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'get_product' product_id=product.product.id%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
                               </li>
                               <li>
                                 <a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a>
@@ -198,7 +198,7 @@
                                 <a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a>
                               </li>
                         </ul>
-                        <a class="cart" href="{% url 'add_to_cart' product_id=product.product.id quantity=1 %}">Add to Cart</a>
+                        <a class="cart" href="{% url 'update_cart_item' product_id=product.product.id quantity=1 %}">Add to Cart</a>
                       </div>
                     </div>
                     <div class="why-text">

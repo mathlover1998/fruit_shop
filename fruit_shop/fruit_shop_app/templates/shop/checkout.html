@@ -174,7 +174,7 @@
                                 <div class="rounded p-2 bg-light">
                                     {% for item in cart_items %}
                                     <div class="media mb-2 border-bottom">
-                                        <div class="media-body"> <a href="{% url 'product_detail' product_id=item.product.id%}">{{ item.product.product_name }}</a>
+                                        <div class="media-body"> <a href="{% url 'get_product' product_id=item.product.id%}">{{ item.product.product_name }}</a>
                                             <div class="small text-muted">Price: {{ item.product.price }}đ <span class="mx-2">|</span> Qty: {{ item.quantity }} <span class="mx-2">|</span> Subtotal: {{ item.product.price }}đ</div>
                                         </div>
                                     </div>

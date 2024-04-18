@@ -123,8 +123,8 @@
           <div class="collapse navbar-collapse" id="navbar-menu">
             <ul class="nav navbar-nav ml-auto" data-in="fadeInDown" data-out="fadeOutUp">
               <li class="nav-item active"><a class="nav-link" href="{% url 'index' %}">Home</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'product_view' %}">Shop</a></li>
-              <li class="nav-item"><a class="nav-link" href=" {% url 'wishlist_view'%}">Wishlist</a></li>
+              <li class="nav-item"><a class="nav-link" href="{% url 'get_all_products' %}">Shop</a></li>
+              <li class="nav-item"><a class="nav-link" href=" {% url 'get_wishlist'%}">Wishlist</a></li>
               <li class="nav-item"><a class="nav-link" href="#">Gallery</a></li>
               <li class="nav-item"><a class="nav-link" href="{% url 'view_about_us ' %}">About Us</a></li>
               <li class="nav-item"><a class="nav-link" href="{% url 'handle_contact_us' %}">Contact Us</a></li>
@@ -164,7 +164,7 @@
               </li>
              {% endfor %}
               <li class="total">
-                <a href="{% url 'cart_view'%}" class="btn btn-default hvr-hover btn-cart">VIEW CART</a>
+                <a href="{% url 'get_cart'%}" class="btn btn-default hvr-hover btn-cart">VIEW CART</a>
                 <span class="float-right"><strong>Total</strong>: {{global_total_price}}đ</span>
               </li>
             </ul>

@@ -1,12 +1,6 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import (
-    Product,
-    ProductImage,
-    Order,
-    OrderItem,
-    Address,
-    Transaction,
-)
+from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction
+
 from django.urls import reverse
 from fruit_shop.utils import position_required, replace_string
 from .forms import CreateProductForm
@@ -38,7 +32,7 @@ def calculate_total_price(cart):
     return total_price
 
 
-def product_view(request):
+def get_all_products(request):
     product_list = Product.objects.filter(is_active=True)
     return render(request, "shop/shop.html", {"products": product_list})
 
@@ -109,12 +103,12 @@ def create_product(request):
                     product=product, image=cropped_image_path
                 ).save()
 
-            return redirect(reverse("product_view"))
+            return redirect(reverse("get_all_products"))
 
     return render(request, "shop/create_product.html", {"form": form})
 
 
-def product_detail(request, product_id):
+def get_product(request, product_id):
     product_id_ = str(product_id)
     recently_viewed = request.session.get("recently_viewed", {})
     product = get_object_or_404(Product, pk=product_id)
@@ -123,10 +117,10 @@ def product_detail(request, product_id):
 
     request.session["recently_viewed"] = recently_viewed
     request.session.set_expiry(timedelta(days=7))
-    return render(request, "shop/product_detail.html", {"product": product})
+    return render(request, "shop/product.html", {"product": product})
 
 
-def add_to_cart(request, product_id, quantity=1):
+def update_cart_item(request, product_id, quantity=1):
     product_id_ = str(product_id)
     cart = request.session.get("cart", {})
     product = get_object_or_404(Product, pk=product_id)
@@ -138,7 +132,7 @@ def add_to_cart(request, product_id, quantity=1):
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
-def cart_view(request):
+def get_cart(request):
     cart = request.session.get("cart", {})
     cart_items = []
     total_price = 0
@@ -157,7 +151,7 @@ def cart_view(request):
 
 
 @login_required
-def remove_from_cart(request, product_id):
+def delete_cart_item(request, product_id):
     cart = request.session.get("cart", {})
 
     # Check if the product_id exists in the wishlist
@@ -172,29 +166,8 @@ def remove_from_cart(request, product_id):
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
-def update_cart(request):
-    if request.method == "POST" and request.is_ajax():
-        product_id = request.POST.get("productId")
-        quantity = int(request.POST.get("quantity"))
-        cart = request.session.get("cart", {})
-
-        if product_id in cart:
-            cart[product_id]["quantity"] = quantity
-
-        # Calculate total price
-        total_price = calculate_total_price(cart)
-
-        # Update session data
-        request.session["cart"] = cart
-        request.session.modified = True
-
-        return JsonResponse({"success": True, "total_price": total_price})
-
-    return JsonResponse({"success": False})
-
-
 @login_required
-def add_to_wishlist(request, product_id):
+def update_wishlist_item(request, product_id):
     product_id_ = str(product_id)
     wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
     if product_id_ not in wishlist:
@@ -207,7 +180,7 @@ def add_to_wishlist(request, product_id):
 
 
 @login_required
-def wishlist_view(request):
+def get_wishlist(request):
     wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
     wishlist_items = []
 
@@ -219,7 +192,7 @@ def wishlist_view(request):
 
 
 @login_required
-def remove_from_wishlist(request, product_id):
+def delete_wishlist_item(request, product_id):
     wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
 
     if str(product_id) in wishlist:
@@ -292,7 +265,7 @@ def checkout(request):
 
             request.session["cart"] = {}
 
-            return redirect(reverse('view_confirmation_page'))
+            return redirect(reverse("view_confirmation_page"))
         else:
             return HttpResponse("Payment method not supported yet.")
 

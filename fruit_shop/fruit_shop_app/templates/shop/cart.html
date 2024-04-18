@@ -23,12 +23,12 @@
               {% for item in cart_items %}
               <tr>
                 <td class="thumbnail-img">
-                  <a href="{% url 'product_detail' product_id=item.product.id%}">
+                  <a href="{% url 'get_product' product_id=item.product.id%}">
                     <img class="img-fluid" src="{{ item.product.images.first.image.url }}" alt="Product Image" />
                   </a>
                 </td>
                 <td class="name-pr">
-                  <a href="{% url 'product_detail' product_id=item.product.id%}">{{ item.product.product_name }}</a>
+                  <a href="{% url 'get_product' product_id=item.product.id%}">{{ item.product.product_name }}</a>
                 </td>
                 <td class="price-pr">
                   <p>{{ item.product.price }}đ</p>
@@ -40,7 +40,7 @@
                   <p>{{ item.total_price }}đ</p>
                 </td>
                 <td class="remove-pr">
-                  <a href="{% url 'remove_from_cart' product_id=item.product.id %}"><i class="fas fa-times"></i></a>
+                  <a href="{% url 'delete_cart_item' product_id=item.product.id %}"><i class="fas fa-times"></i></a>
                 </td>
               </tr>
               {% endfor %}
@@ -93,7 +93,7 @@
     <div class="empty-cart-message">
       <h2>Your cart is currently empty!</h2>
       <p>Start adding products to your cart to experience the awesomeness.</p>
-      <p><a class="btn hvr-hover" href="{% url 'product_view'%}">Shop Now</a></p>
+      <p><a class="btn hvr-hover" href="{% url 'get_all_products'%}">Shop Now</a></p>
     </div>
     
     {% endif %}

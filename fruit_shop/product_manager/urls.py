@@ -2,18 +2,16 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.product_view, name="product_view"),
+    path("", views.get_all_products, name="get_all_products"),
     path("create/", views.create_product, name="create_product"),
-    path("<int:product_id>",views.product_detail,name="product_detail"),
-    path('cart',views.cart_view,name='cart_view'),
-    path('add-to-cart/<int:product_id>/<int:quantity>/', views.add_to_cart, name='add_to_cart'),
+    path("<int:product_id>/",views.get_product,name="get_product"),
+    path("filter/<str:category>/",views.category_filtered_view,name='category_filtered_view'),#
+    path('wishlist',views.get_wishlist,name='get_wishlist'),
+    path('wishlist/add/<int:product_id>/', views.update_wishlist_item, name='update_wishlist_item'),
+    path('wishlist/delete/<int:product_id>/',views.delete_wishlist_item,name='delete_wishlist_item'),
+    path('cart/',views.get_cart,name='get_cart'),
+    path('cart/add/<int:product_id>/<int:quantity>/', views.update_cart_item, name='update_cart_item'),
+    path('cart/delete/<int:product_id>/',views.delete_cart_item,name='delete_cart_item'),
     path('checkout/',views.checkout,name='checkout'),
-    path("filter/<str:category>/",views.category_filtered_view,name='category_filtered_view'),
-    path('add-to-wishlist/<int:product_id>/', views.add_to_wishlist, name='add_to_wishlist'),
-    path('wishlist',views.wishlist_view,name='wishlist_view'),
-    path('remove-wishlist/<int:product_id>/',views.remove_from_wishlist,name='remove_from_wishlist'),
-    path('remove-cart/<int:product_id>/',views.remove_from_cart,name='remove_from_cart'),
-    path('update-cart/', views.update_cart, name='update_cart'),
-    path('test2/',views.test,name='test')
 
 ]
