@@ -1,0 +1,73 @@
+{% extends "shared/base.html" %}
+{% load static %}
+{% block heading_page_subtitle %}Search Results{% endblock %}
+{% block heading_page_title %}Blog Entries{% endblock %}
+
+{% block content %}
+    
+
+
+    <section class="blog-posts grid-system">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8">
+            <div class="all-blog-posts">
+              <div class="row">
+                {% for post in blog_posts %}
+                <div class="col-lg-6">
+                  <div class="blog-post">
+                    <div class="blog-thumb">
+                      <a href ="{% url 'blog_post' id=post.id %}"><img src="{{ post.image.url }}" alt="" ></a>
+                    </div>
+                    <div class="down-content">
+                      <a href="{% url 'blog_post' id=post.id %}"><h4>{{post.title}}</h4></a>
+                      <ul class="post-info">
+                        <li><a href="#">{{post.author.username}}</a></li>
+                        <li><a href="#">{{post.published_at}}</a></li>
+                        
+                      </ul>
+                      <p>{{post.subtitle}}</p>
+                      <div class="post-options">
+                        <div class="row">
+                          <div class="col-lg-12">
+                            <ul class="post-tags">
+                              <li><i class="fa fa-tags"></i></li>
+                              {% for tag in post.tags.all %}
+                                <li style = 'background-color: #ebebeb; padding: 1px;margin: 1px 0;'>
+                                  <a href="{% url 'get_posts_by_tag' tag_id=tag.id %}">{{ tag.name }}</li></a>
+                            {% endfor %}
+                              {% for category in post.categories.all %}
+                                <li><a href="{% url 'get_posts_by_category' category_id=category.id %}">{{ category.name }}</li></a>
+                                {% endfor %}
+                              
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+                <div class="col-lg-12">
+                  <ul class="page-numbers">
+                    {% if page_number|default:1|add:'-1' > 0 %}
+                    <li><a href="{% url 'your_blog_posts'%}?page={{ page_number|default:1|add:'-1' }}"><i class="fa fa-angle-double-left"></i></a></li>
+                    {% endif %}
+                    
+                    <li class="active"><a href="#">{{ page_number|default:1 }}</a></li>
+
+                    {% if has_next_page %}
+                    <li><a href="{% url 'your_blog_posts'%}?page={{ page_number|default:1|add:'1' }}"><i class="fa fa-angle-double-right"></i></a></li>
+                    {% endif %}
+                    
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% include "shared/sidebar.html" %}
+        </div>
+      </div>
+    </section>
+{% endblock %}

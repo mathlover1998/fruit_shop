@@ -1,0 +1,83 @@
+{% extends "shared/base.html" %}
+{% load static %}
+{% block heading_page_subtitle %}
+  {% if update %}
+    Update Post
+  {% else %}
+    Create Post
+  {% endif %}
+{% endblock %}
+
+{% block heading_page_title %}
+  {% if update %}
+    Update here!
+  {% else %}
+    Create here!
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<form method="POST" enctype = 'multipart/form-data' id ='blogForm'>
+    {% csrf_token %}
+    <h1 style = 'text-align:center;fone-size:18;'>Blog detail</h1>
+    {% if messages %}
+    <ul class="messages" >
+        {% for message in messages %}
+            <li style = 'text-align:center;font-size:12;color:red;list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+      <div class="formcontainer">
+      <hr/>
+      <div class="container">
+        <label for="slug"><strong>Blog Title</strong></label>
+        <input type="text" placeholder="Title of blog" name="title" required  {% if update %}value='{{blog_post.title}}'{% else %}{% endif %}>
+
+        <label><strong>Blog Subtitle</strong></label>
+        <input type="text" placeholder="Subtitle of blog" name="subtitle" required {% if update %}value='{{blog_post.subitle}}'{% else %}{% endif %}>
+
+        <label for="slug"><strong>Slug</strong></label>
+        <input type="text" placeholder="Slug" name="slug" required {% if update %}value='{{blog_post.slug}}'{% else %}{% endif %}>
+        
+        <label><strong>Blog Content</strong></label>
+        <textarea id="editor" name = 'content' >{% if update %}{{blog_post.content}}{% else %}{% endif %}</textarea>
+
+        <div id="tags-container">
+          <label for ='tag'><strong>Tag:</strong></label>
+          <input type="text" id='tag' name = 'tag' required>
+          <button type="button" onclick="addTag()">Add Tag</button>
+        </div>
+
+        <label><strong>Upload Image</strong></label>
+        <br>
+        <input type="file" accept="image/*" name = 'image'>
+      </div>
+      <input type="submit" value='Submit' class="btn btn-primary">
+</form>
+<script>
+  function addTag() {
+    var tagInput = document.getElementById('tag');
+    var tagsContainer = document.getElementById('tags-container');
+    if (tagInput.value.trim() !==''){
+      var tagText = tagInput.value;
+      var tagElement = document.createElement('span');
+      tagElement.textContent = tagText;
+
+      var hiddenInput = document.createElement('input')
+      hiddenInput.type = 'hidden'
+      hiddenInput.name = 'tags';
+      hiddenInput.value = tagText;
+
+      tagsContainer.appendChild(tagElement);
+      tagsContainer.appendChild(hiddenInput);
+      tagsContainer.appendChild(document.createElement('br'));
+
+            // Clear the input field after adding the tag
+      tagInput.value = "";
+    }
+  }
+</script>
+
+{% endblock %}
