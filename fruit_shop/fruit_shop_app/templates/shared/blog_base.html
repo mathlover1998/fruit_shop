@@ -1,193 +1,40 @@
+{% extends "shared/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% block nav_links %}
+<!-- Collect the nav links, forms, and other content for toggling -->
+<div class="collapse navbar-collapse" id="navbar-menu">
+  <ul class="nav navbar-nav ml-auto" data-in="fadeInDown" data-out="fadeOutUp">
+    <li class="nav-item active"><a class="nav-link" href="{% url 'blog_index' %}">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
+    <li class="nav-item"><a class="nav-link" href="#">Shop</a></li>
+    {% if user.is_authenticated%}
+    <li class="dropdown">
+      <a href="#" class="nav-link dropdown-toggle arrow" data-toggle="dropdown">Welcome, {{user.username}}</a>
+      <ul class="dropdown-menu">
+          <li><a href="#">Create blog</a></li>
+          <li><a href="#">Your blog</a></li>
+          <li><a href="#">Saved Blog</a></li>
+      </ul>
+    </li>
+    {% else%}
+    <li class="dropdown">
+      <a href="#" class="nav-link dropdown-toggle arrow" data-toggle="dropdown">Login</a>
+      <ul class="dropdown-menu">
+          <li><a href="#">Login</a></li>
+          <li><a href="#">Register</a></li>
+      </ul>
+    </li>
+    {% endif %}
+  </ul>
+</div>
+<!-- /.navbar-collapse -->
 
-  <head>
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="TemplateMo">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <title>Cole Tran's Personal Blog</title>
-
-    <!-- Bootstrap core CSS -->
-    <link href="{% static 'blog/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    
-
-    <!-- Additional CSS Files -->
-    <link rel="stylesheet" href="{% static 'blog/css/fontawesome.css' %}">
-    <link rel="stylesheet" href="{% static 'blog/css/templatemo-stand-blog.css' %}">
-    <link rel="stylesheet" href="{% static 'blog/css/owl.css' %}">
-
-    <!-- Favicon Files -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'blog/favicon_io/apple-touch-icon.png'%}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'blog/favicon_io/favicon-32x32.png'%}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'blog/favicon_io/favicon-16x16.png'%}">
-    <link rel="manifest" href="{% static 'blog/favicon_io/site.webmanifest'%}">
-
-
-
-  </head>
-
-  <body>
-
-    <!-- ***** Preloader Start ***** -->
-    <div id="preloader">
-        <div class="jumper">
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-    </div>  
-    <!-- ***** Preloader End ***** -->
-    
-    <!-- Header -->
-    <header class="">
-      <nav class="navbar navbar-expand-lg">
-        <div class="container">
-          <a class="navbar-brand" href="#"><h2>Cole Tran Blog<em>.</em></h2></a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarResponsive">
-            <ul class="navbar-nav ml-auto">
-              <li class="nav-item">
-                <a class="nav-link" href="#">Home
-                  {% comment %} <span class="sr-only">(current)</span> {% endcomment %}
-                </a>
-              </li> 
-              <li class="nav-item">
-                <a class="nav-link" href="#">About Us</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#">Blog Entries</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#">Contact Us</a>
-              </li>
-              {% if not user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link" href="#">Register</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#">Login</a>
-              </li>
-              {% else %}
-              <li class="nav-item">
-                <li class="nav-item dropdown">
-                  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    Welcome back, {{user.username}}
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-dark">
-                    <li><a class="nav-link dropdown-item" href="#">Create blog</a></li>
-                    <li><a class="nav-link dropdown-item" href="#">Your blogs</a></li>
-                    <li><a class="nav-link dropdown-item" href="#">Profile</a></li>
-                    <li><a class="nav-link dropdown-item" href="#">Change Pasword</a></li>
-                    <li><a class="nav-link dropdown-item" href="#">Logout</a></li>
-                  </ul>
-                </li>
-              </li>
-              
-              {% endif %}
-              
-            
-              
-            </ul>
-          </div>
-        </div>
-      </nav>
-    </header>
-
-{% block heading_page %}
-    <div class="heading-page header-text">
-      <section class="page-heading">
-        <div class="container">
-          <div class="row">
-            <div class="col-lg-12">
-              <div class="text-content">
-                <h4>{% block heading_page_subtitle %}{% endblock %}</h4>
-                <h2>{% block heading_page_title %}{% endblock %}</h2>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-{% endblock %}
-        
-
-{% block content %} {% endblock %}
-
-    
-    <footer>
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-12">
-            <ul class="social-icons">
-              <li><a href="https://www.facebook.com/ColeTran164/">Facebook</a></li>
-              <li><a href="https://twitter.com/mathlover1998">Twitter</a></li>
-              <li><a href="#">Instagram</a></li>
-              <li><a href="#">Linkedin</a></li>
-              <li><a href="#">Dribbble</a></li>
-            </ul>
-          </div>
-          <div class="col-lg-12">
-            <div class="copyright-text">
-              <p>Copyright 2020 Stand Blog Co.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="{% static 'blog/vendor/jquery/jquery.min.js' %}"></script>
-    <script src="{% static 'blog/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="https://cdn.ckeditor.com/4.16.0/standard/ckeditor.js"></script>
-    <script>
-      CKEDITOR.replace('editor');
-    </script>
-
-
-    <!-- Additional Scripts -->
-    <script src="{% static 'blog/js/custom.js' %}"></script>
-    <script src="{% static 'blog/js/owl.js' %}"></script>
-    <script src="{% static 'blog/js/slick.js' %}"></script>
-    <script src="{% static 'blog/js/isotope.js' %}"></script>
-    <script src="{% static 'blog/js/accordions.js' %}"></script>
-
-    <script language = "text/Javascript"> 
-      cleared[0] = cleared[1] = cleared[2] = 0; //set a cleared flag for each field
-      function clearField(t){                   //declaring the array outside of the
-      if(! cleared[t.id]){                      // function makes it static and global
-          cleared[t.id] = 1;  // you could use true and false, but that's more typing
-          t.value='';         // with more chance of typos
-          t.style.color='#fff';
-          }
-      }
-    </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-      $(document).ready(function() {
-          $(".toggle-edit-form-link").click(function(e) {
-              e.preventDefault();
-              $(this).closest('.right-content').find('.edit-form').toggle();
-          });
-      });
-
-      $(document).ready(function() {
-        $(".toggle-reply-form-link").click(function(e) {
-            e.preventDefault();
-            $(this).closest('.right-content').find('.reply-form').toggle();
-        });
-    });
-
-    
-  </script>
-
-  
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-  </body>
-</html>
+<!-- Start Atribute Navigation -->
+<div class="attr-nav">
+  <ul>
+    <li class="search">
+      <a href="#"><i class="fa fa-search"></i></a>
+    </li>
+  </ul>
+</div>
+{% endblock nav_links %} 

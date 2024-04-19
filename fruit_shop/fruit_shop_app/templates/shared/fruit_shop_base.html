@@ -7,7 +7,7 @@
     <li class="nav-item active"><a class="nav-link" href="{% url 'index' %}">Home</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'get_all_products' %}">Shop</a></li>
     <li class="nav-item"><a class="nav-link" href=" {% url 'get_wishlist'%}">Wishlist</a></li>
-    <li class="nav-item"><a class="nav-link" href="#">Gallery</a></li>
+    <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'view_about_us ' %}">About Us</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'handle_contact_us' %}">Contact Us</a></li>
   </ul>
@@ -55,21 +55,7 @@
 </div>
 {% endblock side_cart_menu %}
 
-{% block title_box %}
-<div class="all-title-box">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12">
-          <h2>{% block heading_title %}{% endblock heading_title %}</h2>
-          <ul class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
-            <li class="breadcrumb-item active">{% block heading_sub_title %}{% endblock heading_sub_title %}</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-{% endblock title_box %}
+
 
 {% block instagram_feed %}
     <div id="target-section" class="instagram-box">

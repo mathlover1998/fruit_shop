@@ -3,9 +3,9 @@ from . import views
 
 urlpatterns = [
     path('',view=views.blog_index,name='blog_index'),
-    path('blogs',view=views.get_all_blog_posts,name='get_all_blog_posts'),
-    path('create-post/',views.create_blog_post,name='create_blog_post'),
-    path('<int:id>/',view=views.get_blog_post,name='blog_post'),
+    path('<int:id>/',view=views.get_blog,name='get_blog'),
+    # path('blogs',view=views.get_all_blog_posts,name='get_all_blog_posts'),
+    path('create/',views.create_blog_post,name='create_blog_post'),
     path('your-blog',view=views.get_your_blog_posts,name='your_blog_posts'),
     path('update-post/<int:id>',view=views.update_blog_post,name='update_post'),
     path('delete-post/<int:id>',view=views.delete_blog_post,name='delete_post'),

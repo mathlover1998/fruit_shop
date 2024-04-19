@@ -1,7 +1,6 @@
-{% extends "shared/fruit_shop_base.html" %} 
+{% extends "shared/blog_base.html" %} 
 {% load static %} 
 {% load custom_filters %} 
-{% block title_box %} {% endblock title_box %} 
 {% block content %}
 
 <div class="blog-box-inner">
@@ -13,7 +12,7 @@
             <div class="tab-content">
               <div role="tabpanel" class="tab-pane fade show active" id="list-view">
                 <div class="row">
-                  {% for post in posts_by_time %}
+                  {% for post in newest_posts %}
                   <div class="col-md-12">
                     <div class="products-single fix">
                       <div class="row">
