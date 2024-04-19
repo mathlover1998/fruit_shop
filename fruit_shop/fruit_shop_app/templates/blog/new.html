@@ -1,0 +1,51 @@
+{% extends "shared/fruit_shop_base.html" %} 
+{% load static %} 
+{% load custom_filters %} 
+{% block title_box %} {% endblock title_box %} 
+{% block content %}
+
+<div class="blog-box-inner">
+  <div class="container">
+    <div class="row">
+      <div class="col-xl-9 col-lg-9 col-sm-12 col-xs-12 blog-content">
+        <div class="right-product-box">
+          <div class="product-categorie-box">
+            <div class="tab-content">
+              <div role="tabpanel" class="tab-pane fade show active" id="list-view">
+                <div class="row">
+                  {% for post in posts_by_time %}
+                  <div class="col-md-12">
+                    <div class="products-single fix">
+                      <div class="row">
+                        <div class="col-md-4">
+                          <div class="box-img-hover">
+                            <img style="height: 200px; width: auto;" src="{% if post.images %}{{ post.images.first.image.url }}{% else %}{% static 'images/default/default_blog.png' %}{% endif %}" class="img-fluid" alt="Image" />
+                          </div>
+                        </div>
+                        <div class="col-md-8">
+                          <div class="why-text" style="width: 100%;">
+                            <h4>{{ post.title }}</h4>
+                            <div class="blog-meta">
+                              <span class="author"><i class="far fa-user"></i> {{ post.author.username }}</span>
+                              <span class="date"><i class="far fa-calendar-alt"></i> {{ post.created_at|date:"F j, Y" }}</span>
+                              <span class="comments"><i class="far fa-comments"></i> {{ post.comments.all.count }} comments</span>
+                            </div>
+                            <p>{{ post.subtitle }}</p>
+                            <a href="#" class="btn hvr-hover">Read More</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
 
-
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
@@ -363,3 +362,4 @@ class StoreLocation(models.Model):
         managed = True
         verbose_name = "Store Location Table"
         verbose_name_plural = "Store Locations Table"
+

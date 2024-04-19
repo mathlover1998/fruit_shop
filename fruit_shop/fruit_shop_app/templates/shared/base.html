@@ -117,60 +117,19 @@
             </button>
             <a class="navbar-brand" href="{% url 'index'%}"><img src=" {% static 'images/logo.png' %} " class="logo" alt="" /></a>
           </div>
+
           <!-- End Header Navigation -->
-
-          <!-- Collect the nav links, forms, and other content for toggling -->
-          <div class="collapse navbar-collapse" id="navbar-menu">
-            <ul class="nav navbar-nav ml-auto" data-in="fadeInDown" data-out="fadeOutUp">
-              <li class="nav-item active"><a class="nav-link" href="{% url 'index' %}">Home</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'get_all_products' %}">Shop</a></li>
-              <li class="nav-item"><a class="nav-link" href=" {% url 'get_wishlist'%}">Wishlist</a></li>
-              <li class="nav-item"><a class="nav-link" href="#">Gallery</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'view_about_us ' %}">About Us</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'handle_contact_us' %}">Contact Us</a></li>
-            </ul>
-          </div>
-          <!-- /.navbar-collapse -->
-
-          <!-- Start Atribute Navigation -->
-          <div class="attr-nav">
-            <ul>
-              <li class="search">
-                <a href="#"><i class="fa fa-search"></i></a>
-              </li>
-              <li class="side-menu">
-                <a href="#">
-                  <i class="fa fa-shopping-bag"></i>
-                  <span class="badge">{{global_cart_items_count}}</span>
-                  {% comment %} <p>My Cart</p> {% endcomment %}
-                </a>
-              </li>
-            </ul>
-          </div>
+          {% block nav_links %}
+          {% endblock nav_links %}
           <!-- End Atribute Navigation -->
+          
         </div>
+
         <!-- Start Side Menu -->
-        <div class="side">
-          <a href="#" class="close-side"><i class="fa fa-times"></i></a>
-          <li class="cart-box">
-            <ul class="cart-list">
-              {% for item in global_cart_items %}
-              <li>
-                <a href="#" class="photo">
-                  <img src="{{ item.product.images.first.image.url }}" class="cart-thumb" alt="" />
-                </a>
-                <h6><a href="#">{{ item.product.product_name }}</a></h6>
-                <p>{{ item.quantity }}x - <span class="price">{{ item.product.price }}đ</span></p>
-              </li>
-             {% endfor %}
-              <li class="total">
-                <a href="{% url 'get_cart'%}" class="btn btn-default hvr-hover btn-cart">VIEW CART</a>
-                <span class="float-right"><strong>Total</strong>: {{global_total_price}}đ</span>
-              </li>
-            </ul>
-          </li>
-        </div>
+        {% block side_cart_menu %}
+        {% endblock side_cart_menu %}
         <!-- End Side Menu -->
+
       </nav>
       <!-- End Navigation -->
     </header>
@@ -190,112 +149,18 @@
 
     <!-- Start All Title Box -->
     {% block title_box %}
-    <div class="all-title-box">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-12">
-            <h2>{% block heading_title %}{% endblock heading_title %}</h2>
-            <ul class="breadcrumb">
-              <li class="breadcrumb-item"><a href="{% url 'index' %}">Home</a></li>
-              <li class="breadcrumb-item active">{% block heading_sub_title %}{% endblock heading_sub_title %}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
     {% endblock title_box %}
     <!-- End All Title Box -->
 
-    {% block content %} {% endblock %} {% block instagram_feed %}
+    {% block content %} 
+    {% endblock %}
+
     <!-- Start Instagram Feed  -->
-    <div id="target-section" class="instagram-box">
-      <div class="main-instagram owl-carousel owl-theme">
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-01.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-02.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-03.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-04.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-05.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-06.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-07.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-08.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-09.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-05.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% block instagram_feed %}
+    {% endblock instagram_feed %}
     <!-- End Instagram Feed  -->
 
-    {% endblock instagram_feed %}
-
+    
     <!-- Start Footer  -->
     <footer>
       <div class="footer-main">

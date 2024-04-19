@@ -50,3 +50,19 @@ class BlogImage(models.Model):
         managed = True
         verbose_name = "Blog Image Table"
         verbose_name_plural = "Blog Images Table"
+
+class Comment(models.Model):
+    blog = models.ForeignKey(Blog,models.CASCADE,null=False,related_name='comments')
+    author = models.ForeignKey(User,models.CASCADE,null=False,related_name='comments')
+    content = models.TextField(null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_approved = models.BooleanField(default=False)
+    parent_comment = models.ForeignKey('self',null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
+    
+    class Meta:
+        ordering = ["id"]
+        db_table = "Comments"
+        managed = True
+        verbose_name = "Comment Table"
+        verbose_name_plural = "Comments Table"
