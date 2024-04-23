@@ -1,11 +1,93 @@
+from collections.abc import Sequence
 from django.contrib import admin
 import django.apps
 from django import forms
 from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.http import HttpRequest
 from .models import *
 
-#register Product section
+
+class AddressInline(admin.TabularInline):
+    model = Address
+    extra = 1
+    fields = ["receiver_name", "phone_number", "street", "default_address"]
+
+
+class EmployeeInline(admin.TabularInline):
+    model = Employee
+
+
+class CustomerInline(admin.TabularInline):
+    model = Customer
+
+
+class UserAdmin(admin.ModelAdmin):
+    filter_horizontal = (
+        "groups",
+        "user_permissions",
+    )
+    inlines = [AddressInline, CustomerInline, EmployeeInline]
+    list_display = [
+        "username",
+        "email",
+        "phone",
+        "is_staff",
+        "is_active",
+        "is_approved",
+        "gender",
+    ]
+    list_filter = ["is_superuser", "date_joined"]
+    search_fields = ["username", "email"]
+    list_per_page = 20
+    readonly_fields = ["date_joined", "last_login", "approval_email_sent"]
+    ordering = [
+        "-date_joined",
+    ]
+    fieldsets = (
+        (
+            "Main Information",
+            {
+                "fields": (("username"), "email", "password"),
+            },
+        ),
+        (
+            "Personal Information",
+            {
+                "fields": (
+                    ("first_name", "last_name"),
+                    ("phone"),
+                    ("dob", "gender"),
+                )
+            },
+        ),
+        (
+            "Status and Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "last_login",
+                    ("is_superuser", "is_staff"),
+                    "date_joined",
+                    ("is_approved", "receive_updates", "approval_email_sent"),
+                    "groups",
+                    "user_permissions",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Image",
+            {
+                "fields": ("image",),
+            },
+        ),
+    )
+
+
+admin.site.register(User, UserAdmin)
+
+
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1

@@ -44,7 +44,8 @@ def category_filtered_view(request, category):
     return render(request, "shop/shop.html", {"products": product_list})
 
 
-# @permission_required('fruit_shop_app.add_product', raise_exception=True)
+
+@permission_required('fruit_shop_app.add_product',raise_exception=True)
 def create_product(request):
     form = CreateProductForm()
     if request.method == "POST":

@@ -1,11 +1,11 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser,PermissionsMixin
 from django.core.validators import MinValueValidator, MaxValueValidator
 import random
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
-
+from django.contrib.auth.models import Group
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
@@ -43,7 +43,7 @@ RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 DISCOUNT_TYPE = (("percentage", "Percentage"), ("fixed_discount", "Fixed Discount"))
 
 
-class User(AbstractUser):
+class User(AbstractUser,PermissionsMixin):
     phone = models.CharField(max_length=20, null=True)
     gender = models.CharField(
         max_length=20, choices=GENDER, default="other", null=False
@@ -55,6 +55,12 @@ class User(AbstractUser):
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
     approval_email_sent = models.BooleanField(default=False)
+    groups = models.ManyToManyField(
+        Group,
+        blank=True,
+        related_name="user_memberships"  # Specify a unique related_name
+    )
+    # user_permissions = models.ManyToManyField(Permission, blank=True, related_name="user_permissions")
 
     def save(self, *args, **kwargs):
         # Set default password if password is not provided
@@ -76,23 +82,10 @@ class User(AbstractUser):
         indexes = [models.Index(fields=["first_name", "last_name"], name="full_name")]
 
 
-class Position(models.Model):
-    name = models.CharField(_("Name"), max_length=100, unique=True)
-    permissions = models.ManyToManyField(Permission, blank=True)
-
-    class Meta:
-        verbose_name = _("Position")
-        verbose_name_plural = _("Positions")
-
-    def __str__(self):
-        return self.name
-
-
 class Employee(models.Model):
     hire_date = models.DateField(null=True)
     salary = models.IntegerField(null=False, default=0)
     department = models.CharField(max_length=200, default="", null=False)
-    position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="employee")
 
     class Meta:
