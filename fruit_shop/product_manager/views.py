@@ -233,10 +233,12 @@ def checkout(request):
         if payment_method == "cash":
 
             order = Order.objects.create(
+                payment_method = payment_method,
                 customer=request.user.customer,
                 total_amount=0,
-                payment_status="pending",
-                delivery_address=request.POST.get("address"),
+                status="pending",
+                shipping_address=request.POST.get("address"),
+                
             )
             total_amount = 0
             for item_id, item_data in cart.items():
@@ -258,12 +260,14 @@ def checkout(request):
             order.total_amount = total_amount
             order.save()
 
-            Transaction.objects.create(
+            transaction = Transaction.objects.create(
                 order=order,
                 payment_method=payment_method,
                 amount_paid=0,
             )
-
+            transaction.save()
+            order.payment_transaction = transaction.pk
+            order.save()
             request.session["cart"] = {}
 
             return redirect(reverse("view_confirmation_page"))

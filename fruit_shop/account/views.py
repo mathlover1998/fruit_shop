@@ -1,5 +1,5 @@
 import os, asyncio
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect, HttpResponse,get_object_or_404
 from fruit_shop_app.models import User, Customer, Address, Employee
 from django.contrib import messages
 from django.template.loader import render_to_string
@@ -13,7 +13,7 @@ from django.template.defaultfilters import date
 from django.utils.html import strip_tags
 from django.contrib.sessions.models import Session
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect,HttpResponseBadRequest
 from django.core.serializers import serialize
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
@@ -208,11 +208,12 @@ def update_phone(request):
 def handle_verification_code(request, email_or_phone):
     if request.method == "POST":
         current_user = request.user
-        if request.POST.get("code") == request.session.get("phone_verification_code"):
-            current_user.phone = email_or_phone
-        elif request.POST.get("code") == request.session.get("email_verification_code"):
-            current_user.email = email_or_phone
-        current_user.save()
+        if current_user:
+            if request.POST.get("code") == request.session.get("phone_verification_code"):
+                current_user.phone = email_or_phone
+            elif request.POST.get("code") == request.session.get("email_verification_code"):
+                current_user.email = email_or_phone
+            current_user.save()
         return render(request, "pages/successfully.html")
     else:
         return render(request, "account/enter_verification_code.html")
@@ -420,7 +421,7 @@ def reset_password(request):
                     send_code_via_phone(verification_code, phone_number)
                     return redirect(
                         reverse(
-                            "handle_verification_code",
+                            "handle_verification_code_reset_password",
                             kwargs={"email_or_phone": email_or_phone},
                         )
                     )
@@ -440,10 +441,47 @@ def reset_password(request):
                     )
                     return redirect(
                         reverse(
-                            "handle_verification_code",
+                            "handle_verification_code_reset_password",
                             kwargs={"email_or_phone": email_or_phone},
                         )
                     )
-            return redirect(reverse("choose_reset_method"))
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
     else:
         return render(request, "account/reset_password.html")
+
+def handle_verification_code_reset_password(request,email_or_phone):
+    if request.method == "POST":
+        if request.session.get("phone_verification_code"):
+            print(f'phone_verification_code: {request.session.get("phone_verification_code")}')
+            user = User.objects.filter(phone=email_or_phone).first()
+            print(f'phone: {user.id}')
+            if request.POST.get("code") == request.session.get("phone_verification_code") and user:
+                
+                return redirect(reverse('set_new_password_reset_password'),kwargs={"user_id": user.id})
+        elif request.session.get("email_verification_code"):
+            print(f'email_verification_code: {request.session.get("email_verification_code")}')
+            user = User.objects.filter(email=email_or_phone).first()
+            print(f'email: {user.id}')
+            if request.POST.get("code") == request.session.get("email_verification_code") and user:
+                
+                return redirect(reverse('set_new_password_reset_password'),kwargs={"user_id": user.id})
+        
+    else:
+        return render(request, "account/enter_verification_code.html")
+    
+def set_new_password_reset_password(request,user_id):
+    if request.method == "POST":
+        user = get_object_or_404(User,id=user_id)
+        print(user)
+        new_password = request.POST.get("password")
+        if new_password and not check_password(new_password, user.password):
+                    user.set_password(new_password)
+                    user.save()
+                    update_session_auth_hash(request, user)
+                    return redirect(reverse("index"))
+        else:
+            messages.error(
+                request, "New password must be different from the old password!"
+            )
+            return redirect(reverse("set_new_password"))
+    return render(request, "account/enter_new_password.html")

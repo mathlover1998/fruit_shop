@@ -63,7 +63,7 @@ def recently_viewed_product(request):
     return {'recently_viewed_products':recently_view}
 
 def display_discount(request):
-    largest_discount_list = Discount.objects.order_by('-discount_percentage')[:5]
+    largest_discount_list = Discount.objects.order_by('-valid_to')[:5]
     if not largest_discount_list:
         return {'discount_list':[]}
     return {'discount_list':largest_discount_list}

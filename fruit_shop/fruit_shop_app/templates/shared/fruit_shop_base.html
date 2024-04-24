@@ -10,6 +10,18 @@
     <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'view_about_us ' %}">About Us</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'handle_contact_us' %}">Contact Us</a></li>
+    <li class="dropdown">
+    {% if user.is_authenticated %}
+    <a href="{% url 'view_user_account'%}" class="nav-link dropdown-toggle" data-toggle="dropdown"><img src="{{user.image.url}}" alt="Avatar" class="rounded-circle img-fluid" style="height:15px;width=15px" /> Welcome, {{user.username}}</a></a>
+      <ul class="dropdown-menu">
+        <li><a href="{% url 'handle_logout'%}">Logout</a></li>
+      {% else %}
+      <a href="{% url 'handle_login'%}" class="nav-link dropdown-toggle" data-toggle="dropdown">Login</a>
+      <ul class="dropdown-menu">
+        <li><a href="{% url 'register_customer'%}">Register</a></li>
+      {% endif %}
+      </ul>
+    </li>
   </ul>
 </div>
 <!-- /.navbar-collapse -->
@@ -31,6 +43,7 @@
     </li>
   </ul>
 </div>
+
 {% endblock nav_links %} 
 {% block side_cart_menu %}
 <div class="side">

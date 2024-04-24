@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
+from django.utils import timezone
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
@@ -20,15 +21,7 @@ GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 #     ("produce_specialist", "Produce Specialist"),
 #     ("customer_service_representative", "Customer Service Representative"),
 # )
-PAYMENT_STATUS = (
-    ("pending", "Pending"),
-    ("complete", "Complete"),
-    ("refunded", "Refunded"),
-    ("failed", "Failed"),
-    ("abandoned", "Abandoned"),
-    ("on_hold", "On Hold"),
-    ("cancelled", "Cancelled"),
-)
+
 UNIT = (
     ("kg", "Kilogram"),
     ("gr", "Gram"),
@@ -36,13 +29,18 @@ UNIT = (
     ("pack", "Pack"),
     ("unit", "Unit"),
 )
-PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
 
 RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
-DISCOUNT_TYPE = (("percentage", "Percentage"), ("fixed_discount", "Fixed Discount"))
+DISCOUNT_TYPE = (("percentage", "Percentage"), ("fixed_amount", "Fixed Amount"))
 
+APPLIES_TO_CHOICES = (
+        ('all_products', 'All Products'),
+        ('category', 'Category'),
+        ('specific_products', 'Specific Products'),
+    )
 
+PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
 class User(AbstractUser,PermissionsMixin):
     phone = models.CharField(max_length=20, null=True)
     gender = models.CharField(
@@ -77,8 +75,8 @@ class User(AbstractUser,PermissionsMixin):
     class Meta:
         managed = True
         db_table = "Users"
-        verbose_name = "User Table"
-        verbose_name_plural = "Users Table"
+        verbose_name = "User"
+        verbose_name_plural = "Users"
         indexes = [models.Index(fields=["first_name", "last_name"], name="full_name")]
 
 
@@ -92,8 +90,8 @@ class Employee(models.Model):
         ordering = ["id"]
         db_table = "Employees"
         managed = True
-        verbose_name = "Employee Table"
-        verbose_name_plural = "Employees Table"
+        verbose_name = "Employee"
+        verbose_name_plural = "Employees"
 
 
 class Customer(models.Model):
@@ -104,8 +102,8 @@ class Customer(models.Model):
         ordering = ["id"]
         db_table = "Customers"
         managed = True
-        verbose_name = "Customer Table"
-        verbose_name_plural = "Customers Table"
+        verbose_name = "Customer"
+        verbose_name_plural = "Customers"
 
 
 class ConfirmationToken(models.Model):
@@ -132,33 +130,10 @@ class ConfirmationToken(models.Model):
         ordering = ["id"]
         db_table = "ConfirmationTokens"
         managed = True
-        verbose_name = "Confirmation Token Table"
-        verbose_name_plural = "Confirmation Tokens Table"
+        verbose_name = "Confirmation Token"
+        verbose_name_plural = "Confirmation Tokens"
 
 
-class Discount(models.Model):
-    min_purchase_amount = models.IntegerField(null=False, default=0)
-    is_active = models.BooleanField(default=True)
-    discount_type = models.CharField(
-        choices=DISCOUNT_TYPE, default="percentage", null=False
-    )
-    amount_of_use = models.IntegerField(
-        null=False, validators=[MinValueValidator(1)], default=1
-    )
-    discount_code = models.CharField(max_length=20, null=True)
-    discount_percentage = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)], null=True
-    )
-    max_value_discount = models.FloatField(null=False, default=0)
-    valid_from = models.DateField(null=True)
-    valid_to = models.DateField(null=True)
-
-    class Meta:
-        ordering = ["id"]
-        db_table = "Discounts"
-        managed = True
-        verbose_name = "Discount Table"
-        verbose_name_plural = "Discounts Table"
 
 
 #
@@ -192,9 +167,29 @@ class Category(models.Model):
         ordering = ["id"]
         db_table = "Categories"
         managed = True
-        verbose_name = "Category Table"
-        verbose_name_plural = "Categories Table"
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
 
+class Discount(models.Model):
+    code = models.CharField(max_length=20, null=True)
+    description = models.TextField(blank=True)
+    discount_type = models.CharField(
+        choices=DISCOUNT_TYPE, default="percentage", null=False
+    )
+    discount_value = models.DecimalField(max_digits=7, decimal_places=2,null=False,default=0.00)
+    applies_to = models.CharField(max_length=20, choices=APPLIES_TO_CHOICES,default='all_products')
+    category_id = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)  # Assuming a categories model
+    valid_from = models.DateTimeField(default=timezone.now)
+    valid_to = models.DateTimeField(blank=True, null=True)
+    minimum_purchase = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "Discounts"
+        managed = True
+        verbose_name = "Discount"
+        verbose_name_plural = "Discounts"
 
 class Supplier(models.Model):
     supplier_name = models.CharField(max_length=100, null=False)
@@ -209,8 +204,8 @@ class Supplier(models.Model):
         ordering = ["id"]
         db_table = "Suppliers"
         managed = True
-        verbose_name = "Supplier Table"
-        verbose_name_plural = "Suppliers Table"
+        verbose_name = "Supplier"
+        verbose_name_plural = "Suppliers"
 
 
 class Product(models.Model):
@@ -254,8 +249,8 @@ class Product(models.Model):
         ordering = ["id"]
         db_table = "Products"
         managed = True
-        verbose_name = "Product Table"
-        verbose_name_plural = "Products Table"
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
 
 
 class ProductImage(models.Model):
@@ -269,55 +264,8 @@ class ProductImage(models.Model):
     class Meta:
         db_table = "ProductImages"
         managed = True
-        verbose_name = "ProductImage Table"
-        verbose_name_plural = "ProductImages Table"
-
-
-class Order(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    order_date = models.DateField(auto_now=True)
-    total_amount = models.IntegerField(null=False, default=0)
-    payment_status = models.CharField(choices=PAYMENT_STATUS, null=False)
-    delivery_address = models.CharField(max_length=255, default="", null=False)
-    delivery_date = models.DateField(null=True)
-
-    class Meta:
-        ordering = ["id"]
-        db_table = "Orders"
-        managed = True
-        verbose_name = "Order Table"
-        verbose_name_plural = "Orders Table"
-
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
-    quantity = models.IntegerField(null=False, default=0)
-    subtotal = models.IntegerField(null=False, default=0)
-    discount_applied = models.CharField(max_length=30, default="", null=False)
-
-    class Meta:
-        ordering = ["id"]
-        db_table = "OrderItems"
-        managed = True
-        verbose_name = "Order Item Table"
-        verbose_name_plural = "Order Items Table"
-
-
-class Transaction(models.Model):
-    order = models.OneToOneField(Order, on_delete=models.CASCADE)
-    transaction_date = models.DateField(auto_now=True)
-    payment_method = models.CharField(choices=PAYMENT_METHOD, null=False)
-    amount_paid = models.FloatField(null=False, default=0.0)
-
-    # transaction_type
-    class Meta:
-        ordering = ["id"]
-        db_table = "Transactions"
-        managed = True
-        verbose_name = "Transaction Table"
-        verbose_name_plural = "Transactions Table"
-
+        verbose_name = "ProductImage"
+        verbose_name_plural = "ProductImages"
 
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -340,8 +288,93 @@ class Address(models.Model):
         ordering = ["id"]
         db_table = "Addresses"
         managed = True
-        verbose_name = "Address Table"
-        verbose_name_plural = "Addresses Table"
+        verbose_name = "Address"
+        verbose_name_plural = "Addresses"
+
+    # user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    # # Consider adding a separate model for Customer if User represents a broader entity
+    
+    # full_name = models.CharField(max_length=255, null=True, blank=True)  # Optional, derived from user or entered manually
+    # phone_number = models.CharField(max_length=20, null=True)
+    
+    # # Address components
+    # street_address = models.CharField(max_length=255)
+    # apartment_number = models.CharField(max_length=50, null=True, blank=True)
+    # locality = models.CharField(max_length=100, null=True, blank=True)  # Can be commune, ward, district, etc. (configurable)
+    # city = models.CharField(max_length=100, null=True, blank=True)
+    # region = models.CharField(max_length=100, null=True, blank=True)  # Can be state or province (configurable)
+    # postal_code = models.CharField(max_length=20, null=True, blank=True)
+    # country = models.CharField(max_length=100)
+    
+    # type = models.CharField(max_length=50, choices=ADDRESS_TYPE, default="home")  # Home, Work, Other
+    # is_default = models.BooleanField(default=False)
+
+    # class Meta:
+    #     ordering = ["id"]
+    #     db_table = "Addresses"
+    #     managed = True
+    #     verbose_name = "Address"
+    #     verbose_name_plural = "Addresses"
+    #     constraints = [
+    #         models.UniqueConstraint(fields=["user", "is_default"], name="unique_default_address_per_user"),  # Ensures only one default address per user
+    #     ]
+
+
+class Order(models.Model):
+    ORDER_STATUS = (
+        ("pending", "Pending"),
+        ("complete", "Complete"),
+        ("refunded", "Refunded"),
+        ("failed", "Failed"),
+        ("shipped", "Shipped"),
+        ("cancelled", "Cancelled"),
+    )
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    placed_at = models.DateTimeField(default=timezone.now)
+    status = models.CharField(choices=ORDER_STATUS, null=False,default='pending')
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    billing_address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="billing_orders", null=True, blank=True)
+    shipping_address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="shipping_orders", null=True, blank=True)
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD, default="")
+    payment_transaction = models.CharField(max_length=255, null=True, blank=True)  # Optional for storing transaction ID
+    class Meta:
+        ordering = ["-placed_at"]
+        db_table = "Orders"
+        managed = True
+        verbose_name = "Order"
+        verbose_name_plural = "Orders"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+    quantity = models.IntegerField(null=False, default=0)
+    subtotal = models.IntegerField(null=False, default=0)
+    discount_applied = models.CharField(max_length=30, default="", null=False)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "OrderItems"
+        managed = True
+        verbose_name = "Order Item"
+        verbose_name_plural = "Order Items"
+
+
+class Transaction(models.Model):
+    
+    order = models.OneToOneField(Order, on_delete=models.CASCADE)
+    transaction_date = models.DateField(auto_now=True)
+    payment_method = models.CharField(choices=PAYMENT_METHOD, null=False,default='cash')
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0.00)
+
+    # transaction_type
+    class Meta:
+        ordering = ["id"]
+        db_table = "Transactions"
+        managed = True
+        verbose_name = "Transaction"
+        verbose_name_plural = "Transactions"
+
 
 
 class StoreLocation(models.Model):
@@ -353,6 +386,6 @@ class StoreLocation(models.Model):
         ordering = ["id"]
         db_table = "StoreLocations"
         managed = True
-        verbose_name = "Store Location Table"
-        verbose_name_plural = "Store Locations Table"
+        verbose_name = "Store Location"
+        verbose_name_plural = "Store Locations"
 

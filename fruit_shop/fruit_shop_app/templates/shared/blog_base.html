@@ -7,24 +7,17 @@
     <li class="nav-item active"><a class="nav-link" href="{% url 'blog_index' %}">Home</a></li>
     <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
     <li class="nav-item"><a class="nav-link" href="#">Shop</a></li>
-    {% if user.is_authenticated%}
-    <li class="dropdown">
-      <a href="#" class="nav-link dropdown-toggle arrow" data-toggle="dropdown">Welcome, {{user.username}}</a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'view_user_account'%}" class="nav-link dropdown-toggle" data-toggle="dropdown"><img src="{{user.image.url}}" alt="Avatar" class="rounded-circle img-fluid" style="height:15px;width=15px" /> Welcome, {{user.username}}</a></a>
       <ul class="dropdown-menu">
-          <li><a href="#">Create blog</a></li>
-          <li><a href="#">Your blog</a></li>
-          <li><a href="#">Saved Blog</a></li>
+        <li><a href="{% url 'handle_logout'%}">Logout</a></li>
+      {% else %}
+      <a href="{% url 'handle_login'%}" class="nav-link dropdown-toggle" data-toggle="dropdown">Login</a>
+      <ul class="dropdown-menu">
+        <li><a href="{% url 'register_customer'%}">Register</a></li>
+      {% endif %}
       </ul>
     </li>
-    {% else%}
-    <li class="dropdown">
-      <a href="#" class="nav-link dropdown-toggle arrow" data-toggle="dropdown">Login</a>
-      <ul class="dropdown-menu">
-          <li><a href="#">Login</a></li>
-          <li><a href="#">Register</a></li>
-      </ul>
-    </li>
-    {% endif %}
   </ul>
 </div>
 <!-- /.navbar-collapse -->
