@@ -40,6 +40,10 @@ def view_confirmation_page(request):
     return render(request, "notification/wait_for_confirmation.html")
 
 
+def error_response(request,code):
+    return render(request,'errors/error_response.html',{'status_code':code})
+
+
 def clear_session(request):
     expired_sessions = Session.objects.filter(expire_date__lt=timezone.now())
     expired_sessions.delete()

@@ -108,6 +108,16 @@ def create_product(request):
 
     return render(request, "shop/create_product.html", {"form": form})
 
+# def update_product(request):
+#     product_id = request.GET.get('product_id')
+#     product = Product.objects.filter(pk = product_id).first()
+
+#     form = CreateProductForm()
+#     if form.is_valid():
+#         pass
+#     return render(request, 'shop/create_product.html',{'is_update':True})
+
+
 
 def get_product(request, product_id):
     product_id_ = str(product_id)
@@ -285,13 +295,3 @@ def checkout(request):
     )
 
 
-def test(request):
-    content_type = ContentType.objects.get_for_model(Product)
-
-    # Get permissions for the content type
-    permissions = Permission.objects.filter(content_type=content_type)
-
-    # Print permission codenames
-    for permission in permissions:
-        print(permission.codename)
-    return HttpResponse("Dog")
