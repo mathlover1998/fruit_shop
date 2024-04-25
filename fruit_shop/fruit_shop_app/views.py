@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from fruit_shop.utils import send_code_via_phone, generate_verification_code
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
-from fruit_shop_app.models import Supplier,Product
+from fruit_shop_app.models import Brand,Product
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 
@@ -23,17 +23,18 @@ def view_location(request):
     return render(request,'pages/location.html')
 
 
-def supplier_register(request):
+def brand_register(request):
     if request.method == "POST":
-        supplier_name = request.POST.get("supplier_name")
+        brand_name = request.POST.get("brand_name")
+        contact_person = request.POST.get("contact_person")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        new_supplier = Supplier.objects.create(
-            supplier_name=supplier_name, email=email, phone=phone
+        new_supplier = Brand.objects.create(
+            brand_name=brand_name, contact_person=contact_person, email=email, phone=phone
         )
         new_supplier.save()
         return redirect(reverse("view_confirmation_page"))
-    return render(request, "account/supplier_register.html")
+    return render(request, "account/brand_register.html")
 
 
 def view_confirmation_page(request):

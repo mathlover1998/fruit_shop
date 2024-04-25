@@ -232,50 +232,45 @@ def create_address(request):
     current_user = request.user
 
     if request.method == "POST":
-        receiver_name = request.POST.get("receiver_name")
+        full_name = request.POST.get("full_name")
         phone_number = request.POST.get("phone_number")
+        street_address = request.POST.get("street_address")
+        locality = request.POST.get("locality")
         country = request.POST.get("country")
-        province = request.POST.get("province")
-        district = request.POST.get("district")
-        ward = request.POST.get("ward")
-        commune = request.POST.get("commune")
-        street = request.POST.get("street")
+        postal_code = request.POST.get("postal_code")
         type = request.POST.get("type")
-        zipcode = request.POST.get("zipcode")
-        default_address = request.POST.get("default_address", False)
+        city = request.POST.get("city")
+        is_default = request.POST.get("is_default", False)
         if (
-            receiver_name
+            full_name
             and phone_number
             and country
-            and province
-            and district
-            and ward
-            or commune
-            and street
+            and street_address
+            and locality
+            and postal_code
+            and is_default
             and type
-            and zipcode
+            and city
         ):
             new_address = Address.objects.create(
                 user=current_user,
-                receiver_name=receiver_name,
+                full_name=full_name,
                 phone_number=phone_number,
+                street_address=street_address,
+                locality=locality,
+                city=city,
+                postal_code=postal_code,
                 country=country,
-                province=province,
-                district=district,
-                ward=ward,
-                commune=commune,
-                street=street,
                 type=type,
-                zipcode=zipcode,
             )
-            if default_address:
-                new_address.default_address = True
+            if is_default:
+                new_address.is_default = True
                 customer_addresses = (
                     Address.objects.exclude(id=new_address.id)
                     .filter(user=current_user)
                     .all()
                 )
-                customer_addresses.update(default_address=False)
+                customer_addresses.update(is_default=False)
             new_address.save()
             return redirect(reverse("view_address"))
         else:
@@ -290,26 +285,24 @@ def update_address(request, id):
 
     address = Address.objects.filter(user=current_user, pk=id).first()
     if request.method == "POST":
-        address.receiver_name = request.POST.get("receiver_name")
+        address.full_name = request.POST.get("full_name")
         address.phone_number = request.POST.get("phone_number")
+        address.street_address = request.POST.get("street_address")
+        address.locality = request.POST.get("locality")
         address.country = request.POST.get("country")
-        address.province = request.POST.get("province")
-        address.district = request.POST.get("district")
-        address.ward = request.POST.get("ward")
-        address.commune = request.POST.get("commune")
-        address.street = request.POST.get("street")
+        address.postal_code = request.POST.get("postal_code")
         address.type = request.POST.get("type")
-        address.zipcode = request.POST.get("zipcode")
-        default_address = request.POST.get("default_address", False)
-        if default_address:
+        address.city = request.POST.get("city")
+        is_default = request.POST.get("is_default", False)
+        if is_default:
             address.default_address = True
             customer_addresses = (
                 Address.objects.exclude(id=address.id).filter(user=current_user).all()
             )
-            customer_addresses.update(default_address=False)
+            customer_addresses.update(is_default=False)
         address.save()
         return redirect(reverse("view_address"))
-    return render(request, "account/address_manage.html", {"address": address})
+    return render(request, "account/address_manage.html", {"address": address,'is_update':True})
 
 
 @login_required

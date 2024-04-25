@@ -1,8 +1,13 @@
 {% extends "shared/fruit_shop_base.html" %}
 {% load static %}
+{% if is_update %}
+{% block heading_title %}{% if is_update %}Update{% else %}New
+{% endif %} address{% endblock heading_title %}
+{% block heading_sub_title %}{% if is_update %}Update{% else %}New
+{% endif %} address{% endblock heading_sub_title %}
+{% else %}
 
-{% block heading_title %}New address{% endblock heading_title %}
-{% block heading_sub_title %}New address{% endblock heading_sub_title %}
+{% endif %}
 {% block content %}
 
 <div class="container mt-5">
@@ -10,8 +15,11 @@
     <div class="col-md-12">
       <div class="card">
         <div class="card-header">
+          {% if is_update %}
+          <h2 class="text-start">Update address</h2>
+          {% else %}
           <h2 class="text-start">New address</h2>
-          
+          {% endif %}
         </div>
         <div class="card-body">
           <form method='POST' enctype="multipart/form-data">
@@ -24,7 +32,7 @@
               </ul>
             {% endif %}
             <div class="mb-3">
-              <input type="text" class="form-control" placeholder="Full name" name='receiver_name'value="{{ address.receiver_name }}">
+              <input type="text" class="form-control" placeholder="Full name" name='full_name'value="{{ address.full_name }}">
             </div>
             <div class="mb-3">
               <input type="text" class="form-control" name='phone_number' placeholder="Phone Number" value="{{ address.phone_number }}">
@@ -33,22 +41,17 @@
                 <input type="text" class="form-control" placeholder="Country" name='country'value="{{ address.country }}">
               </div>
             <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Province" name='province'value="{{ address.province }}">
+                <input type="text" class="form-control" placeholder="City" name='city'value="{{ address.city }}">
               </div>
             <div class="mb-3">
-                <input type="text" class="form-control" placeholder="District" name='district'value="{{ address.district }}">
+                <input type="text" class="form-control" placeholder="Locality" name='locality'value="{{ address.locality }}">
               </div>
             <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Ward" name='ward'value="{{ address.ward }}">
+                <input type="text" class="form-control" placeholder="Postal Code" name='postal_code'value="{{ address.postal_code }}">
             </div>
-            <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Commune" name='commune'value="{{ address.commune }}">
-              </div>
+          
               <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Details" name='street'value="{{ address.street }}">
-              </div>
-              <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Zipcode" name='zipcode'value="{{ address.zipcode }}">
+                <input type="text" class="form-control" placeholder="Details" name='street_address'value="{{ address.street_address }}">
               </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="type" id="inlineRadio1" value="home" {% if address.type == 'home' %} checked {% endif %}>
@@ -59,7 +62,7 @@
                 <label class="form-check-label" for="inlineRadio2">Office</label>
               </div>
               <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="exampleCheck1" name='default_address' {% if address.default_address %} checked {% endif %}>
+                <input type="checkbox" class="form-check-input" id="exampleCheck1" name='is_default' {% if address.is_default %} checked {% endif %}>
                 <label class="form-check-label" for="exampleCheck1">Set as default address</label>
               </div>
               <input type="submit" class="btn btn-primary btn-block" value='Submit'>

@@ -1,4 +1,4 @@
-{% extends "shared/fruit_shop_base.html" %} {% load static %} {% block heading_title %}Supplier Register{% endblock heading_title %} 
+{% extends "shared/fruit_shop_base.html" %} {% load static %} {% block heading_title %}Brand Register{% endblock heading_title %} 
 {% block heading_sub_title %}Register{% endblock heading_sub_title %} {% block content %}
 
 <div class="container mt-5">
@@ -18,13 +18,16 @@
             </ul>
             {% endif %}
             <div class="form-group">
-              <input type="text" class="form-control" placeholder="Please provide Supplier's name" name="supplier_name" required />
+              <input type="text" class="form-control" placeholder="Please provide Brand's name" name="brand_name" required />
             </div>
             <div class="form-group">
-              <input type="email" class="form-control" placeholder="Enter Supplier's email" name="email" required />
+              <input type="text" class="form-control" placeholder="Enter contact person" name="contact_person" required />
             </div>
             <div class="form-group">
-                <input type="text" class="form-control" placeholder="Enter Supplier's contact phone number" name="phone" required />
+              <input type="email" class="form-control" placeholder="Enter Brand's email" name="email" required />
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Enter Brand's contact phone number" name="phone" required />
               </div>
             <input type="submit" class="btn btn-primary btn-block" value="Submit" />
           </form>

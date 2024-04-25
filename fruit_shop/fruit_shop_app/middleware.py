@@ -24,8 +24,8 @@ class CheckURLMiddleware:
 
     def __call__(self, request):
         try:
-            resolve(request.path_info)
+            response = self.get_response(request)
+            return response
         except Http404:
             return redirect(reverse('error_response',kwargs={'code':404}))
-        response = self.get_response(request)
-        return response
+        

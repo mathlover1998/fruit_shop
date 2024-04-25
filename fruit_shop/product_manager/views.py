@@ -1,6 +1,6 @@
 from django.shortcuts import render, HttpResponse, redirect
 from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction
-
+from django.contrib import messages
 from django.urls import reverse
 from fruit_shop.utils import position_required, replace_string
 from .forms import CreateProductForm
@@ -108,14 +108,20 @@ def create_product(request):
 
     return render(request, "shop/create_product.html", {"form": form})
 
-# def update_product(request):
-#     product_id = request.GET.get('product_id')
-#     product = Product.objects.filter(pk = product_id).first()
+def update_product(request):
+    product_id = request.GET.get('product_id')
+    product = Product.objects.filter(pk = product_id).first()
 
-#     form = CreateProductForm()
-#     if form.is_valid():
-#         pass
-#     return render(request, 'shop/create_product.html',{'is_update':True})
+    form = CreateProductForm(isinstance = product)
+    if form.is_valid():
+        product_name = form.cleaned_data["product_name"]
+        # if Product.objects.exclude(product_name = product_name).exists():
+        #     messages.error(request,'')
+        product.supplier = form.cleaned_data["supplier"]
+        product.product_name = product_name
+        
+
+    return render(request, 'shop/create_product.html',{'is_update':True,'form':form})
 
 
 

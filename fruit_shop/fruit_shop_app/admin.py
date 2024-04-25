@@ -43,7 +43,7 @@ class PhoneFilter(admin.SimpleListFilter):
 class AddressInline(admin.TabularInline):
     model = Address
     extra = 1
-    fields = ["receiver_name", "phone_number", "street", "default_address"]
+    fields = ["full_name", "phone_number", "street_address", "is_default"]
 
 
 class EmployeeInline(admin.TabularInline):
@@ -228,16 +228,16 @@ class DiscountAdmin(admin.ModelAdmin):
 admin.site.register(Discount, DiscountAdmin)
 
 
-# Supplier section
-class SupplierAdmin(admin.ModelAdmin):
-    list_display = ("supplier_name", "phone")
-    search_fields = ("supplier_name",)
+# Brand section
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ("brand_name", "phone")
+    search_fields = ("brand_name",)
     fieldsets = (
         (
             "Information",
             {
                 "fields": (
-                    "supplier_name",
+                    "brand_name",
                     "contact_person",
                     "email",
                     "phone",
@@ -247,7 +247,7 @@ class SupplierAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Supplier, SupplierAdmin)
+admin.site.register(Brand, BrandAdmin)
 
 
 

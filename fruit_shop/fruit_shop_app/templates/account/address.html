@@ -16,10 +16,10 @@
                 {% for address in address_list%}
                 <h2>Address {{forloop.counter}}</h2>
                 <p class="card-text">
-                    {{address.receiver_name}} | {{address.phone_number}}<br>
-                    {{address.street}}<br>
-                    {{address.commune}}, {{address.ward}},{{address.district}},{{address.province}},{{address.country}} {{address.zipcode}}<br>
-                    {% if address.default_address %}
+                    {{address.full_name}} | {{address.phone_number}}<br>
+                    {{address.street_address}}<br>
+                    {{address.locality}}, {{address.city}},{{address.country}},{{address.postal_code}}<br>
+                    {% if address.is_default %}
                     <span class="badge badge-pill badge-danger border border-danger">Default</span>
                     {% endif %}
                     <span class="badge badge-pill border">{{address.type}}</span>

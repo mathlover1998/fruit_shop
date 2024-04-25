@@ -30,7 +30,6 @@ UNIT = (
     ("unit", "Unit"),
 )
 
-RECEIVER_TYPE = (("home", "Home"), ("office", "Office"))
 
 DISCOUNT_TYPE = (("percentage", "Percentage"), ("fixed_amount", "Fixed Amount"))
 
@@ -191,25 +190,25 @@ class Discount(models.Model):
         verbose_name = "Discount"
         verbose_name_plural = "Discounts"
 
-class Supplier(models.Model):
-    supplier_name = models.CharField(max_length=100, null=False)
+class Brand(models.Model):
+    brand_name = models.CharField(max_length=100, null=False)
     contact_person = models.CharField(max_length=100, null=False, default="")
     email = models.EmailField(max_length=100, null=False)
     phone = models.CharField(max_length=15, help_text="Enter your phone number")
 
     def __str__(self):
-        return self.supplier_name
+        return self.brand_name
 
     class Meta:
         ordering = ["id"]
-        db_table = "Suppliers"
+        db_table = "Brands"
         managed = True
-        verbose_name = "Supplier"
-        verbose_name_plural = "Suppliers"
+        verbose_name = "Brand"
+        verbose_name_plural = "Brands"
 
 
 class Product(models.Model):
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     product_name = models.CharField(max_length=255, null=False)
     categories = models.ManyToManyField(Category, related_name="products")
     price = models.IntegerField(null=False, default=0)
@@ -268,21 +267,20 @@ class ProductImage(models.Model):
         verbose_name_plural = "ProductImages"
 
 class Address(models.Model):
+    ADDRESS_TYPE = (("home", "Home"), ("office", "Office"))
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    supplier = models.ForeignKey(
-        Supplier, on_delete=models.CASCADE, null=True, blank=True
+    brand = models.ForeignKey(
+        Brand, on_delete=models.CASCADE, null=True, blank=True
     )
-    receiver_name = models.CharField(max_length=100, null=True)
+    full_name = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True)
-    street = models.CharField(max_length=255, default="", null=False)
-    commune = models.CharField(max_length=50, default="", null=True)
-    ward = models.CharField(max_length=50, default="", null=True)
-    district = models.CharField(max_length=50, default="", null=True)
-    province = models.CharField(max_length=50, default="", null=True)
-    country = models.CharField(max_length=50, default="", null=False)
-    zipcode = models.IntegerField(null=False, default=0)
-    type = models.CharField(choices=RECEIVER_TYPE, default="home", null=False)
-    default_address = models.BooleanField(default=False)
+    street_address = models.CharField(max_length=255)
+    locality = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=100)
+    type = models.CharField(max_length=50, choices=ADDRESS_TYPE, default="home")  # Home, Work, Other
+    is_default = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["id"]
@@ -290,35 +288,11 @@ class Address(models.Model):
         managed = True
         verbose_name = "Address"
         verbose_name_plural = "Addresses"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "is_default"], name="unique_default_address_per_user"),  # Ensures only one default address per user
+        ]
 
-    # user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    # # Consider adding a separate model for Customer if User represents a broader entity
     
-    # full_name = models.CharField(max_length=255, null=True, blank=True)  # Optional, derived from user or entered manually
-    # phone_number = models.CharField(max_length=20, null=True)
-    
-    # # Address components
-    # street_address = models.CharField(max_length=255)
-    # apartment_number = models.CharField(max_length=50, null=True, blank=True)
-    # locality = models.CharField(max_length=100, null=True, blank=True)  # Can be commune, ward, district, etc. (configurable)
-    # city = models.CharField(max_length=100, null=True, blank=True)
-    # region = models.CharField(max_length=100, null=True, blank=True)  # Can be state or province (configurable)
-    # postal_code = models.CharField(max_length=20, null=True, blank=True)
-    # country = models.CharField(max_length=100)
-    
-    # type = models.CharField(max_length=50, choices=ADDRESS_TYPE, default="home")  # Home, Work, Other
-    # is_default = models.BooleanField(default=False)
-
-    # class Meta:
-    #     ordering = ["id"]
-    #     db_table = "Addresses"
-    #     managed = True
-    #     verbose_name = "Address"
-    #     verbose_name_plural = "Addresses"
-    #     constraints = [
-    #         models.UniqueConstraint(fields=["user", "is_default"], name="unique_default_address_per_user"),  # Ensures only one default address per user
-    #     ]
-
 
 class Order(models.Model):
     ORDER_STATUS = (

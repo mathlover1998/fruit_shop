@@ -1,5 +1,5 @@
 from django import forms
-from fruit_shop_app.models import Category, Supplier, Employee,UNIT
+from fruit_shop_app.models import Category, Brand, Employee,UNIT
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
@@ -21,8 +21,8 @@ class MultipleFileField(forms.FileField):
 class CreateProductForm(forms.Form):
 
     supplier = forms.ModelChoiceField(
-        queryset=Supplier.objects.all(),
-        label="Supplier",
+        queryset=Brand.objects.all(),
+        label="Brand",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     product_name = forms.CharField(
