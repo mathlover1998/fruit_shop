@@ -13,7 +13,7 @@
             <h2 class="text-center">{% if is_update %}Update {% else %}Create {% endif %}Product Form</h2>
           </div>
           <div class="card-body">
-            <form method='POST' enctype="multipart/form-data" action="{% url 'update_product' product_id=product.id %}"> 
+            <form method='POST' enctype="multipart/form-data" > 
               {% csrf_token %}
               {% for field in form %}
               <div class="form-group">

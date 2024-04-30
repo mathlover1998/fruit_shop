@@ -1,4 +1,4 @@
-{% extends "shared/fruit_shop_base.html" %} {% load static %} {% load custom_filters %} {% block heading_title %}Shop{% endblock heading_title %} {% block heading_sub_title %}Shop{% endblock heading_sub_title %} 
+{% extends "shared/fruit_shop_base.html" %} {% load static %} {% load custom_filters %} {% block heading_title %}Your Products{% endblock heading_title %} {% block heading_sub_title %}Your Products{% endblock heading_sub_title %} 
 {% block content %}
 <div class="shop-box-inner">
   <div class="container">
@@ -49,7 +49,10 @@
                         <div class="mask-icon">
                           <ul>
                             <li>
-                              <a href="{% url 'get_product' sku=product.sku%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
+                              <a href="{% url 'update_product' product_id=product.id%}" data-toggle="tooltip" data-placement="right" title="Update"><i class="fas fa-pen-to-square"></i></a>
+                            </li>
+                            <li>
+                              <a href="{% url 'get_product' product_id=product.id%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
                             </li>
                             <li>
                               <a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a>
@@ -87,7 +90,7 @@
                           <div class="mask-icon">
                             <ul>
                               <li>
-                                <a href="{% url 'get_product' sku=product.sku%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{% url 'get_product' product_id=product.id%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
                               </li>
                               <li>
                                 <a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a>
@@ -124,7 +127,7 @@
               <button type="submit"><i class="fa fa-search"></i></button>
             </form>
           </div>
-          <div class="filter-sidebar-left">
+          <!-- <div class="filter-sidebar-left">
             <div class="title-left">
               <h3>Categories</h3>
             </div>
@@ -149,7 +152,7 @@
                 </p>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>

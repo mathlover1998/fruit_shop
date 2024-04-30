@@ -85,6 +85,8 @@ class Employee(models.Model):
     department = models.CharField(max_length=200, default="", null=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="employee")
 
+    def __str__(self) -> str:
+        return self.user.username
     class Meta:
         ordering = ["id"]
         db_table = "Employees"
@@ -217,7 +219,7 @@ class Product(models.Model):
     information = models.TextField(null=True)
     create_date = models.DateField(auto_now_add=True)
     expiry_date = models.DateField(null=True)
-    sku = models.CharField(max_length=10, unique=True, default="")
+    sku = models.CharField(max_length=10, unique=True, default="",blank=True)
     unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
 

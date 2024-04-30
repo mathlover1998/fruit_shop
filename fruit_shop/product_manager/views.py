@@ -14,7 +14,7 @@ from django.conf import settings
 from uuid import uuid4
 from datetime import timedelta
 from django.contrib.auth.decorators import permission_required
-
+from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -54,7 +54,7 @@ def create_product(request):
             product_name = form.cleaned_data["product_name"]
 
             product = Product(
-                supplier=form.cleaned_data["supplier"],
+                brand=form.cleaned_data["brand"],
                 product_name=product_name,
                 price=form.cleaned_data["price"],
                 stock_quantity=form.cleaned_data["stock_quantity"],
@@ -108,29 +108,92 @@ def create_product(request):
 
     return render(request, "shop/create_product.html", {"form": form})
 
+def get_your_products(request):
+    current_employee = request.user.employee
+    product_lists = Product.objects.filter(inventory_manager=current_employee)
+    return render(request,'shop/your_products.html',{'products':product_lists})
+
+
+@permission_required('fruit_shop_app.change_product', raise_exception=True)
 def update_product(request):
-    product_id = request.GET.get('product_id')
-    product = Product.objects.filter(pk = product_id).first()
+    try:
+        product_id = request.GET.get('product_id')
+        product = Product.objects.get(pk=product_id)
+    except Product.DoesNotExist:
+        messages.error(request, "Product not found!")
+        return redirect("get_all_products")
 
-    form = CreateProductForm(isinstance = product)
-    if form.is_valid():
-        product_name = form.cleaned_data["product_name"]
-        # if Product.objects.exclude(product_name = product_name).exists():
-        #     messages.error(request,'')
-        product.supplier = form.cleaned_data["supplier"]
-        product.product_name = product_name
-        
+    # Get current product images
+    current_images = product.images.all()
 
-    return render(request, 'shop/create_product.html',{'is_update':True,'form':form})
+    if request.method == "POST":
+        form = CreateProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            product = form.save(commit=False)  # Don't save yet
+            product.save()
+
+            category_ids = form.cleaned_data["category"]
+            product.categories.set(category_ids)
+
+            # Handle new product image uploads
+            product_images = request.FILES.getlist("product_images")
+            for img in product_images:
+                image = Image.open(img)
+                width, height = image.size
+                center_x = width // 2
+                center_y = height // 2
+
+                # Determine the desired size for the centered crop
+                desired_width = 255
+                desired_height = 241
+                half_width = desired_width // 2
+                half_height = desired_height // 2
+
+                # Calculate the cropping box coordinates
+                left = center_x - half_width
+                top = center_y - half_height
+                right = center_x + half_width
+                bottom = center_y + half_height
+
+                # Crop the image to the center
+                cropped_image = image.crop((left, top, right, bottom))
+                # Perform image processing (similar to create_product)
+
+                try:
+                    # Save the cropped image
+                    cropped_image_path = os.path.join(
+                        settings.MEDIA_ROOT,
+                        "images/product_images/",
+                        f"{uuid4().hex}.jpg",
+                    )
+                    cropped_image.save(cropped_image_path)
+
+                    ProductImage.objects.create(
+                        product=product, image=cropped_image_path
+                    ).save()
+                except (ValidationError, OSError) as e:
+                    messages.error(request, f"Error saving image: {e}")
+
+            return redirect("get_all_products")
+
+    else:
+        # Populate form with product data
+        form = CreateProductForm(instance=product)
+
+    return render(
+        request,
+        "shop/update_product.html",
+        {"form": form, "current_images": current_images, "product": product},
+    )
 
 
 
-def get_product(request, product_id):
-    product_id_ = str(product_id)
+def get_product(request,sku):
+    product = get_object_or_404(Product, sku=sku)
+    product_id = product.id
     recently_viewed = request.session.get("recently_viewed", {})
-    product = get_object_or_404(Product, pk=product_id)
     if str(product.id) not in recently_viewed:
-        recently_viewed[product_id_] = product_id
+        recently_viewed[str(product_id)] = product_id
 
     request.session["recently_viewed"] = recently_viewed
     request.session.set_expiry(timedelta(days=7))

@@ -20,7 +20,7 @@ class MultipleFileField(forms.FileField):
 
 class CreateProductForm(forms.Form):
 
-    supplier = forms.ModelChoiceField(
+    brand = forms.ModelChoiceField(
         queryset=Brand.objects.all(),
         label="Brand",
         widget=forms.Select(attrs={"class": "form-control"}),

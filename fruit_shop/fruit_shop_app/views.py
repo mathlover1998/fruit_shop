@@ -29,10 +29,10 @@ def brand_register(request):
         contact_person = request.POST.get("contact_person")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        new_supplier = Brand.objects.create(
+        new_brand = Brand.objects.create(
             brand_name=brand_name, contact_person=contact_person, email=email, phone=phone
         )
-        new_supplier.save()
+        new_brand.save()
         return redirect(reverse("view_confirmation_page"))
     return render(request, "account/brand_register.html")
 

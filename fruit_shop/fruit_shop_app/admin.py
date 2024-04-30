@@ -155,7 +155,7 @@ class ProductFormAdmin(admin.ModelAdmin):
                     "inventory_manager",
                     ("price", "unit"),
                     "stock_quantity",
-                    ("categories", "supplier"),
+                    ("categories", "brand"),
                     "is_active",
                 ),
             },
@@ -171,6 +171,12 @@ class ProductFormAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    # def formfield_for_foreignkey(self, db_field, request, **kwargs):
+    #     if db_field.name == "inventory_manager":
+    #         kwargs["queryset"] = Employee.objects.select_related("user")  # Optimize query
+    #         kwargs["label_from_instance"] = lambda obj: obj.user.username  # Display username
+    #     return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 admin.site.register(Product, ProductFormAdmin)
@@ -273,6 +279,12 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Order,OrderAdmin)
+
+
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ('user',)
+
+admin.site.register(Employee,EmployeeAdmin)
 
 # models = django.apps.apps.get_models()
 # for model in models:
