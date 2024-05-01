@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser,PermissionsMixin
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator,EmailValidator
 import random
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError,ObjectDoesNotExist
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
@@ -268,6 +268,43 @@ class ProductImage(models.Model):
         verbose_name = "ProductImage"
         verbose_name_plural = "ProductImages"
 
+class SingletonModel(models.Model):
+    def save(self,*args, **kwargs):
+        self.pk = 1
+        return super().save(*args, **kwargs)
+
+class WebsiteInfo(SingletonModel):
+    email = models.EmailField(max_length=255, validators=[EmailValidator()],null=False,default='groceryshop@example.com')
+    phone = models.CharField(max_length=20, null=False, default="")
+    address = models.CharField(max_length=255)
+    
+    class Meta:
+        
+        db_table = "WebsiteInfos"
+        managed = True
+        verbose_name = "Website Infomation"
+        verbose_name_plural = "Website Infomations"
+
+class WebsiteImage(models.Model):
+    IMAGE_TYPES = (
+        ('banner', 'Banner Image'),
+        ('slide', 'Slide Image'),
+        ('category', 'Category Image'),
+        ('about', 'About Image'),
+        
+    )
+    
+    image = models.ImageField(upload_to="images/website_images/")
+    image_type = models.CharField(max_length=20, choices=IMAGE_TYPES,help_text="Slide:(1342*932); Category:(354*354); About:(540*472)")
+    website_info = models.ForeignKey(WebsiteInfo, on_delete=models.CASCADE, related_name='images')
+
+    class Meta:
+        
+        db_table = "WebsiteImages"
+        managed = True
+        verbose_name = "Website Image"
+        verbose_name_plural = "Website Images"
+
 class Address(models.Model):
     ADDRESS_TYPE = (("home", "Home"), ("office", "Office"))
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -280,7 +317,7 @@ class Address(models.Model):
     locality = models.CharField(max_length=100, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     postal_code = models.CharField(max_length=20, null=True, blank=True)
-    country = models.CharField(max_length=100)
+    country = models.CharField(max_length=100,null=True, blank=True)
     type = models.CharField(max_length=50, choices=ADDRESS_TYPE, default="home")  # Home, Work, Other
     is_default = models.BooleanField(default=False)
 
@@ -364,4 +401,5 @@ class StoreLocation(models.Model):
         managed = True
         verbose_name = "Store Location"
         verbose_name_plural = "Store Locations"
+
 

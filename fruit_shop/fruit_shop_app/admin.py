@@ -12,33 +12,35 @@ from django.utils.translation import gettext_lazy as _
 
 admin.site.register(Permission)
 
-#filter to get the most product sold
-#filter to get the most category that have all products sold
+# filter to get the most product sold
+# filter to get the most category that have all products sold
 
 
-#filter email (has email, no email)
+# filter email (has email, no email)
 class EmailFilter(admin.SimpleListFilter):
-    title = _('Email Filter',)
-    parameter_name = 'email'
+    title = _(
+        "Email Filter",
+    )
+    parameter_name = "email"
 
     def lookups(self, request: Any, model_admin: Any) -> list[tuple[Any, str]]:
-        return (
-            ('has_email',_('Has Email')),
-            ('no_email',_('No Email'))
-        )
+        return (("has_email", _("Has Email")), ("no_email", _("No Email")))
 
     def queryset(self, request: Any, queryset: QuerySet[Any]) -> QuerySet[Any] | None:
         if not self.value():
             return queryset
-        if self.value().lower() == 'has_email':
-            return queryset.exclude(email = '')
-        if self.value().lower() == 'no_email':
-            return queryset.filter(email='')
+        if self.value().lower() == "has_email":
+            return queryset.exclude(email="")
+        if self.value().lower() == "no_email":
+            return queryset.filter(email="")
 
-#filter phone number (has phone, no phone)
+
+# filter phone number (has phone, no phone)
 class PhoneFilter(admin.SimpleListFilter):
     title = _()
     pass
+
+
 # User section
 class AddressInline(admin.TabularInline):
     model = Address
@@ -69,7 +71,7 @@ class UserAdmin(admin.ModelAdmin):
         "is_approved",
         "gender",
     ]
-    list_filter = ["is_superuser", "date_joined",EmailFilter]
+    list_filter = ["is_superuser", "date_joined", EmailFilter]
     search_fields = ["username", "email"]
     list_per_page = 20
     readonly_fields = ["date_joined", "last_login", "approval_email_sent"]
@@ -256,7 +258,6 @@ class BrandAdmin(admin.ModelAdmin):
 admin.site.register(Brand, BrandAdmin)
 
 
-
 # Category Section
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("category_name",)
@@ -271,20 +272,69 @@ class CategoryAdmin(admin.ModelAdmin):
 
 admin.site.register(Category, CategoryAdmin)
 
-#Order section
+
+# Order section
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('customer','placed_at','status')
-    search_fields = ('customer',)
-    list_filter = ('placed_at','status','payment_method')
+    list_display = ("customer", "placed_at", "status")
+    search_fields = ("customer",)
+    list_filter = ("placed_at", "status", "payment_method")
 
 
-admin.site.register(Order,OrderAdmin)
+admin.site.register(Order, OrderAdmin)
 
 
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('user',)
+    list_display = ("user",)
 
-admin.site.register(Employee,EmployeeAdmin)
+
+admin.site.register(Employee, EmployeeAdmin)
+
+
+# Website section
+
+
+
+class WebsiteImageInline(admin.TabularInline):
+    model = WebsiteImage
+    extra = 1
+    fields = [
+        "image_type",
+        "image",
+        
+    ]
+
+
+class WebsiteInfoForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(WebsiteInfoForm, self).__init__(*args, **kwargs)
+        self.fields["email"].help_text = "Email of Website"
+
+    class Meta:
+        model = WebsiteInfo
+        exclude = ("",)
+
+
+class WebsiteInfoAdmin(admin.ModelAdmin):
+    list_display = ("email",)
+    form = WebsiteInfoForm
+    inlines = [WebsiteImageInline]
+    fieldsets = (
+        (
+            "Information",
+            {
+                "fields": (
+                    "email",
+                    "phone",
+                    'address',
+                ),
+            },
+        ),
+    )
+    
+
+
+admin.site.register(WebsiteInfo, WebsiteInfoAdmin)
+
 
 # models = django.apps.apps.get_models()
 # for model in models:

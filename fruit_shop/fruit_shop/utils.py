@@ -61,7 +61,7 @@ def send_code_via_phone(code, receiver, account_sid, auth_token):
         phone_number = "+84" + phone_number[1:]
     try:
         message = client.messages.create(
-            body=f"Fruitshop: Your verification code is:{code}",
+            body=f"Cole's Grocery Shop: Your verification code is:{code}",
             from_=os.environ.get("TWILIO_SENDER_PHONE"),
             to=f"{receiver}",
         )
@@ -74,12 +74,12 @@ def send_specific_email(request, choice: int, email_list, code=""):
     from_email = os.environ.get("EMAIL_HOST_USER")
     # welcome mail
     if choice == 1:
-        subject = "Cole's Fruitshop: Welcome to fruitshop"
+        subject = "Cole's Grocery Shop: Welcome to Grocery Shop"
         message = "Congratulations on your successful registration"
     # receive updates mail
     elif choice == 2:
         subject = (
-            "Cole's Fruitshop: Thank you for subscribing to the Fruitshop newsletter"
+            "Cole's Grocery Shop: Thank you for subscribing to the Grocery Shop newsletter"
         )
         html_message = render_to_string(
             "letters/receive_updates.html", {"user": request.user.username}
@@ -87,7 +87,7 @@ def send_specific_email(request, choice: int, email_list, code=""):
         message = strip_tags(html_message)
     # mail with 6-digits verification code
     elif choice == 3:
-        subject = "Cole's Fruitshop: Verification Code"
+        subject = "Cole's Grocery Shop: Verification Code"
         html_message = render_to_string(
             "letters/verification_email.html",
             {"user": request.user.username, "code": code},

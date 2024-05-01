@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 # CELERY_BROKER_URL = 'django://'
 # CELERY_RESULT_BACKEND = 'django-db'
 
-LOGIN_URL = '/account/sign-in/'
+LOGIN_URL = '/account/login/'
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
 EMAIL_HOST = os.environ.get('EMAIL_HOST')
@@ -119,8 +119,8 @@ DATABASES = {
         'PASSWORD': '1234',
         'HOST':'localhost',
         'PORT':'5432' 
-    }
-    # live database
+    },
+    # live database aws
     # 'default': {
     #     'ENGINE': 'django.db.backends.postgresql',
     #     'NAME': 'cole_fruit_shop_db',
@@ -128,6 +128,12 @@ DATABASES = {
     #     'PASSWORD': 'Bunnie123',
     #     'HOST':'database-2.clbdt0uzsyg9.ap-southeast-2.rds.amazonaws.com',
     #     'PORT':'5432' 
+    # }
+
+    #live database render
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
     # }
 }
 

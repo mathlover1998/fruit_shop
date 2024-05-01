@@ -7,7 +7,7 @@ from django import forms
 # class FruitShopAdmin(admin.AdminSite):
 #     #set header of new admin site
 #     site_header = 'Fruit shop admin site'
-#config login page for admin site bind with Fruitshop admin site 
+#config login page for admin site bind with Grocery Shop admin site 
 #     login_template = 'admin/login.html'  
 
 # fruitshop_site = FruitShopAdmin(name='FruitshopAdmin')
