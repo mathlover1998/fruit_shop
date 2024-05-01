@@ -97,7 +97,7 @@ class Employee(models.Model):
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customer")
-    registration_date = models.DateField(auto_now_add=True)
+    registration_date = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ["id"]
@@ -217,8 +217,8 @@ class Product(models.Model):
     stock_quantity = models.IntegerField(null=False, default=0)
     origin_country = models.CharField(max_length=40, default="")
     information = models.TextField(null=True)
-    create_date = models.DateField(auto_now_add=True)
-    expiry_date = models.DateField(null=True)
+    create_date = models.DateTimeField(default=timezone.now)
+    expiry_date = models.DateTimeField(blank=True,null=True)
     sku = models.CharField(max_length=10, unique=True, default="",blank=True)
     unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
@@ -339,7 +339,7 @@ class OrderItem(models.Model):
 class Transaction(models.Model):
     
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
-    transaction_date = models.DateField(auto_now=True)
+    transaction_date = models.DateTimeField(default=timezone.now)
     payment_method = models.CharField(choices=PAYMENT_METHOD, null=False,default='cash')
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0.00)
 

@@ -15,7 +15,7 @@ from uuid import uuid4
 from datetime import timedelta
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
-
+from django.forms.models import model_to_dict
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 
@@ -61,7 +61,6 @@ def create_product(request):
                 unit=form.cleaned_data["unit"],
                 origin_country=form.cleaned_data["origin_country"],
                 information=form.cleaned_data["information"],
-                create_date=form.cleaned_data["create_date"],
                 expiry_date=form.cleaned_data["expiry_date"],
                 inventory_manager=request.user.employee,
             )
@@ -111,23 +110,17 @@ def create_product(request):
 def get_your_products(request):
     current_employee = request.user.employee
     product_lists = Product.objects.filter(inventory_manager=current_employee)
-    return render(request,'shop/your_products.html',{'products':product_lists})
+    return render(request,'shop/my_products.html',{'products':product_lists})
 
 
 @permission_required('fruit_shop_app.change_product', raise_exception=True)
-def update_product(request):
-    try:
-        product_id = request.GET.get('product_id')
-        product = Product.objects.get(pk=product_id)
-    except Product.DoesNotExist:
-        messages.error(request, "Product not found!")
-        return redirect("get_all_products")
-
+def update_product(request,sku):
+    product = get_object_or_404(Product, sku=sku)
     # Get current product images
     current_images = product.images.all()
 
     if request.method == "POST":
-        form = CreateProductForm(request.POST, request.FILES, instance=product)
+        form = CreateProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)  # Don't save yet
             product.save()
@@ -178,7 +171,7 @@ def update_product(request):
 
     else:
         # Populate form with product data
-        form = CreateProductForm(instance=product)
+        form = CreateProductForm(initial=model_to_dict(product))
 
     return render(
         request,

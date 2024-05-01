@@ -67,6 +67,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'fruit_shop_app.middleware.CustomPermissionDeniedMiddleware',
     'fruit_shop_app.middleware.CheckURLMiddleware',
+    'fruit_shop_app.middleware.CheckProductExistMiddleware',
     
 ]
 

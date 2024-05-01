@@ -14,6 +14,10 @@
     {% if user.is_authenticated %}
     <a href="{% url 'view_user_account'%}" class="nav-link dropdown-toggle" data-toggle="dropdown"><img src="{{user.image.url}}" alt="Avatar" class="rounded-circle img-fluid" style="height:15px;width=15px" /> Welcome, {{user.username}}</a></a>
       <ul class="dropdown-menu">
+        {% if user.employee %}
+        <li><a href="{% url 'get_your_products'%}">My Products</a></li>
+        {% else %}
+        {% endif %}
         <li><a href="{% url 'handle_logout'%}">Logout</a></li>
       {% else %}
       <a href="{% url 'handle_login'%}" class="nav-link dropdown-toggle" data-toggle="dropdown">Login</a>

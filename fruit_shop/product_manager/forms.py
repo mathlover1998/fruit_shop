@@ -64,10 +64,6 @@ class CreateProductForm(forms.Form):
         ),  # Using Textarea widget
         required=False,
     )
-    create_date = forms.DateField(
-        label="Create Date",
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-    )
     expiry_date = forms.DateField(
         label="Expiry Date",
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),

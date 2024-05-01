@@ -1,14 +1,15 @@
-from datetime import timedelta, date
+from datetime import timedelta
 from django import template
+from django.utils import timezone
 
 register = template.Library()
 
 @register.filter
-def is_recent(date_str):
-    current_date = date.today()
+def is_recent(target_datetime):
+    now = timezone.now()
     
-    # Calculate the difference between the current date and the checked date
-    difference = current_date - date_str
+    # Calculate the difference between the current datetime and the target datetime
+    difference = now - target_datetime
     
     # Check if the difference is less than 1 week (7 days)
     if difference < timedelta(days=7):
