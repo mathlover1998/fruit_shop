@@ -75,8 +75,21 @@
 
 
 {% block instagram_feed %}
+
     <div id="target-section" class="instagram-box">
       <div class="main-instagram owl-carousel owl-theme">
+        {% if global_information.global_instagram_images %}
+        {% for instagram_image in global_information.global_instagram_images %}
+        <div class="item">
+          <div class="ins-inner-box">
+            <img src=" {{instagram_image.url}} " alt="" />
+            <div class="hov-in">
+              <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
         <div class="item">
           <div class="ins-inner-box">
             <img src=" {% static 'images/instagram-img-01.jpg' %} " alt="" />
@@ -93,70 +106,9 @@
             </div>
           </div>
         </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-03.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-04.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-05.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-06.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-07.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-08.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-09.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="item">
-          <div class="ins-inner-box">
-            <img src=" {% static 'images/instagram-img-05.jpg' %} " alt="" />
-            <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
-            </div>
-          </div>
-        </div>
+        
+        {% endif %}
       </div>
     </div>
+    
 {% endblock instagram_feed %}

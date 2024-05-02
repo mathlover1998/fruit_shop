@@ -287,7 +287,7 @@ class WebsiteInfo(SingletonModel):
 
 class WebsiteImage(models.Model):
     IMAGE_TYPES = (
-        ('banner', 'Banner Image'),
+        ('instagram', 'Instagram Image'),
         ('slide', 'Slide Image'),
         ('category', 'Category Image'),
         ('about', 'About Image'),

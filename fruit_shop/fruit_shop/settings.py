@@ -84,11 +84,12 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'fruit_shop.context_processors.cart_item_count',
-                'fruit_shop.context_processors.category_displayed',
-                'fruit_shop.context_processors.category_count',
-                'fruit_shop.context_processors.recently_viewed_product',
-                'fruit_shop.context_processors.display_discount'
+                'fruit_shop.context_processors.get_global_cart_data',
+                'fruit_shop.context_processors.get_separated_category_product',
+                'fruit_shop.context_processors.get_category_name_context',
+                'fruit_shop.context_processors.get_recently_viewed_products',
+                'fruit_shop.context_processors.get_latest_discounts',
+                'fruit_shop.context_processors.get_website_information',
             ],
             'libraries':{
                 'custom_filters': 'product_manager.custom_filters'
