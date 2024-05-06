@@ -46,14 +46,79 @@ def get_separated_category_product(request):
     return {"separated_category_products": global_categories}
 
 
+# def get_category_name_context(request):
+#     categories = Category.objects.all().values_list("category_name", flat=True)
+#     data = {}
+#     for category in categories:
+#         products = Product.objects.filter(
+#             categories__category_name=category, is_active=True
+#         ).annotate(category_count=Count("categories"))
+#         data[f"{category.replace(' ', '_').lower()}_count"] = len(products)
+#     return {"category_context": data}
+
+# def get_category_name_context(request):
+#     categories_with_subcategories = Category.objects.filter(sub_categories__isnull=False).distinct()
+
+#     data = []
+
+#     for category in categories_with_subcategories:
+#         subcategories = category.sub_categories.all()
+#         subcategory_data = []
+
+#         for subcategory in subcategories:
+#             products = Product.objects.filter(
+#                 categories__category_name=subcategory.category_name, is_active=True
+#             ).annotate(category_count=Count("categories"))
+#             subcategory_count = len(products)
+#             subcategory_data.append({
+#                 "name": subcategory.category_name,
+#                 "count": subcategory_count
+#             })
+
+#         category_products = Product.objects.filter(
+#             categories__category_name=category.category_name, is_active=True
+#         ).annotate(category_count=Count("categories"))
+#         category_count = len(category_products)
+
+#         category_dict = {
+#             "name": category.category_name,
+#             "count": category_count,
+#             "subcategories": subcategory_data
+#         }
+#         data.append(category_dict)
+
+#     return {"category_context": data}
 def get_category_name_context(request):
-    categories = Category.objects.all().values_list("category_name", flat=True)
+    categories_with_subcategories = Category.objects.filter(sub_categories__isnull=False).distinct()
     data = {}
-    for category in categories:
-        products = Product.objects.filter(
-            categories__category_name=category, is_active=True
+
+    for category in categories_with_subcategories:
+        subcategories = category.sub_categories.all()
+        subcategory_data = []
+
+        for subcategory in subcategories:
+            products = Product.objects.filter(
+                categories__category_name=subcategory.category_name, is_active=True
+            ).annotate(category_count=Count("categories"))
+            subcategory_count = len(products)
+            subcategory_data.append({
+                "name": subcategory.category_name,
+                "count": subcategory_count
+            })
+
+        category_products = Product.objects.filter(
+            categories__category_name=category.category_name, is_active=True
         ).annotate(category_count=Count("categories"))
-        data[f"{category.replace(' ', '_').lower()}_count"] = len(products)
+        category_count = len(category_products)
+
+        # Store the original category name in the data dictionary
+        category_name = category.category_name.replace(' ', '_').lower()
+        data[category_name] = {
+            "original_name": category.category_name,
+            "count": category_count,
+            "subcategories": subcategory_data
+        }
+
     return {"category_context": data}
 
 
@@ -78,23 +143,40 @@ def get_latest_discounts(request):
     return {"discount_list": largest_discount_list}
 
 
+
+
 def get_website_information(request):
-    website_info = get_object_or_404(WebsiteInfo,pk=1)
-    instagram_images = website_info.images.filter(image_type='instagram').order_by('-id')[:10] #take at least 5 slide images
-    slide_images = website_info.images.filter(image_type='slide').order_by('-id')[:5] #take at least 5 slide images
-    category_images = website_info.images.filter(image_type='category').order_by('-id')[:3] #only take 3 latest category images
-    about_images = website_info.images.filter(image_type='about').order_by('-id')[:1] #only take 1 about image
+    try:
+        website_info = WebsiteInfo.objects.get(pk=1)  # Try to get the WebsiteInfo record with pk=1
+    except WebsiteInfo.DoesNotExist:
+        website_info = None
+    
     data = {
-        'global_instagram_images': [image.image for image in instagram_images],
-        'global_slide_images': [image.image for image in slide_images],
-        'global_category_images': [image.image for image in category_images],
-        'global_about_images': [image.image for image in about_images],
+        'global_instagram_images': [],
+        'global_slide_images': [],
+        'global_category_images': [],
+        'global_about_images': [],
+        'global_website_address': None,
+        'global_website_email': None,
+        'global_website_phone': None,
     }
 
-    if website_info.address:
-        data['global_website_address'] = website_info.address
-    if website_info.email:
-        data['global_website_email'] = website_info.email
-    if website_info.phone:
-        data['global_website_phone'] = website_info.phone
-    return {'global_information':data}
+    if website_info:
+        instagram_images = website_info.images.filter(image_type='instagram').order_by('-id')[:10]
+        slide_images = website_info.images.filter(image_type='slide').order_by('-id')[:5]
+        category_images = website_info.images.filter(image_type='category').order_by('-id')[:3]
+        about_images = website_info.images.filter(image_type='about').order_by('-id')[:1]
+
+        data['global_instagram_images'] = [image.image for image in instagram_images]
+        data['global_slide_images'] = [image.image for image in slide_images]
+        data['global_category_images'] = [image.image for image in category_images]
+        data['global_about_images'] = [image.image for image in about_images]
+
+        if website_info.address:
+            data['global_website_address'] = website_info.address
+        if website_info.email:
+            data['global_website_email'] = website_info.email
+        if website_info.phone:
+            data['global_website_phone'] = website_info.phone
+    
+    return {'global_information': data}

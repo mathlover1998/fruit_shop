@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
   <!-- Basic -->
@@ -75,7 +76,7 @@
               <div id="offer-box" class="carouselTicker">
                 <ul class="offer-box">
                   {% for discount in discount_list %}
-                  <li><i class="fab fa-opencart"></i> {{discount.discount_percentage}}% off {{discount.discount_code}}</li>
+                  <li><i class="fab fa-opencart"></i>{% if discount.discount_type == 'percentage' %}{{ discount.discount_value| mul:100 }}% off {{ discount.code }}{% else %}{{ discount.discount_value }}VNĐ off {{ discount.code }}{% endif %}</li>
                   {% endfor %}
                 </ul>
               </div>

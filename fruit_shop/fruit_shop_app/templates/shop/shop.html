@@ -63,7 +63,7 @@
                       </div>
                       <div class="why-text">
                         <h4>{{product.product_name}}</h4>
-                        <h5>{{product.price}}</h5>
+                        <h5>{{product.updated_price}} VNĐ</h5>
                       </div>
                     </div>
                   </div>
@@ -129,13 +129,19 @@
               <h3>Categories</h3>
             </div>
             <div class="list-group list-group-collapse list-group-sm list-group-tree" id="list-group-men" data-children=".sub-men">
-              {% for key, value in category_context.items %}
+              {% for category_name, category_data in category_context.items %}
               <div class="list-group-collapse sub-men">
-                {% with category_name=key|replace_filter:"" %}
-                <a class="list-group-item list-group-item-action" href="{% url 'category_filtered_view' category=category_name %}" aria-expanded="true"> {{ category_name }} <small class="text-muted">({{ value }})</small> </a>
-                {% endwith %}
+                  <a class="list-group-item list-group-item-action" href="#" data-toggle="collapse" aria-expanded="true">{{ category_data.original_name }} <small class="text-muted">({{ category_data.count }})</small></a>
+                  <div class="collapse show" id="{{ category_name }}" data-parent="#list-group-men">
+                      <div class="list-group">
+                          {% for subcategory in category_data.subcategories %}
+                          <a href="{% url 'category_filtered_view' category=subcategory.name %}" class="list-group-item list-group-item-action">{{ subcategory.name }} <small class="text-muted">({{ subcategory.count }})</small></a>
+                          {% endfor %}
+                      </div>
+                  </div>
               </div>
               {% endfor %}
+
             </div>
             <div class="filter-price-left">
               <div class="title-left">

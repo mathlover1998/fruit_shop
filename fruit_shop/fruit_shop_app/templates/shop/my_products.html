@@ -134,7 +134,7 @@
             <div class="list-group list-group-collapse list-group-sm list-group-tree" id="list-group-men" data-children=".sub-men">
               {% for key, value in category_count.items %}
               <div class="list-group-collapse sub-men">
-                {% with category_name=key|replace_filter:"" %}
+                {% with category_name=key|replace:"" %}
                 <a class="list-group-item list-group-item-action" href="{% url 'category_filtered_view' category=category_name %}" aria-expanded="true"> {{ category_name }} <small class="text-muted">({{ value }})</small> </a>
                 {% endwith %}
               </div>

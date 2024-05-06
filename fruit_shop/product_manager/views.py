@@ -16,8 +16,10 @@ from datetime import timedelta
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
+from django.views.decorators.csrf import csrf_exempt,csrf_protect
+# from .utils import apply_discount
+# from django.contrib.auth.models import Permission
+# from django.contrib.contenttypes.models import ContentType
 
 
 # Create your views here.
@@ -357,3 +359,13 @@ def checkout(request):
     )
 
 
+def create_discount(request):
+    pass
+
+def apply_discount_view(request):
+    products_with_category_discount = Product.objects.filter(categories__discount__is_active=True)
+
+# You can then use 'products_with_brand_discount' as needed
+    for product in products_with_category_discount:
+        print(product.product_name)
+    return render(request, 'shop/discount_applied.html')

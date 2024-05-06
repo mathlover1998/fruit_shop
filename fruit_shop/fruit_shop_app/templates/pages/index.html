@@ -3,7 +3,7 @@
 <!-- Start Slider -->
 <div id="slides-shop" class="cover-slides">
   <ul class="slides-container">
-    {% if global_information.global_about_images %}
+    {% if global_information.global_slide_images %}
     {% for slide_image in global_information.global_slide_images %}
     <li class="text-center">
       <img src="{{ slide_image.url }}" alt="" />
@@ -26,7 +26,7 @@
       </div>
     </li>
     {% endfor %}
-    {%else%}
+    {% else %}
     <li class="text-center">
       <img src=" {% static 'images/banner-01.jpg' %} " alt="" />
       <div class="container">

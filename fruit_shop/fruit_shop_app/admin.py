@@ -142,9 +142,10 @@ class ProductFormAdmin(admin.ModelAdmin):
     inlines = [ProductImageInline]
     form = ProductForm
     search_fields = ["product_name", "sku"]
+    list_display = ['product_name','sku','price','brand','is_active']
     list_per_page = 20
     list_filter = ["is_active", "price", "stock_quantity"]
-    readonly_fields = ["create_date"]
+    readonly_fields = ["create_date",'updated_price',]
     ordering = [
         "-create_date",
     ]
@@ -155,7 +156,7 @@ class ProductFormAdmin(admin.ModelAdmin):
                 "fields": (
                     ("product_name", "sku"),
                     "inventory_manager",
-                    ("price", "unit"),
+                    ("price",'updated_price', "unit"),
                     "stock_quantity",
                     ("categories", "brand"),
                     "is_active",
@@ -195,12 +196,22 @@ class DiscountForm(forms.ModelForm):
         self.fields["applies_to"].help_text = (
             "Defines what the discount applies to (all products, specific category, or specific products)."
         )
+        self.fields["maximum_discount_amount"].help_text = (
+            "The maximum value to reduce"
+        )
         self.fields["minimum_purchase"].help_text = (
             "Minimum purchase amount required to qualify for the discount"
         )
-        self.fields["category_id"].help_text = (
-            "select category if and only if applies_to be selected as Category"
+        self.fields["category"].help_text = (
+            "Select category if and only if applies_to be selected as Category"
         )
+        self.fields["brand"].help_text = (
+            "Select brand if and only if applies_to be selected as Brand"
+        )
+        self.fields["products"].help_text = (
+            "Select products if and only if applies_to be selected as Product"
+        )
+    
 
     class Meta:
         model = Discount
@@ -209,8 +220,14 @@ class DiscountForm(forms.ModelForm):
 
 
 class DiscountAdmin(admin.ModelAdmin):
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'products':
+            # Filter products based on the current logged-in account (inventory_manager)
+            kwargs['queryset'] = request.user.employee.managed_product.all()
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
     form = DiscountForm
-    list_display = ("code", "discount_type", "valid_from", "valid_to", "is_active")
+    list_display = ("code", "discount_type","applies_to", "valid_from", "valid_to", "is_active")
     search_fields = ("code",)
     list_filter = ("is_active", "valid_from", "valid_to", "discount_type")
     ordering = ("-valid_from",)
@@ -222,11 +239,14 @@ class DiscountAdmin(admin.ModelAdmin):
                     "code",
                     "description",
                     ("discount_type", "discount_value"),
+                    'maximum_discount_amount',
                     "minimum_purchase",
                     "is_active",
                     ("valid_from", "valid_to"),
                     "applies_to",
-                    "category_id",
+                    "category",
+                    'brand',
+                    'products',
                 ),
             },
         ),
@@ -334,6 +354,10 @@ class WebsiteInfoAdmin(admin.ModelAdmin):
 
 
 admin.site.register(WebsiteInfo, WebsiteInfoAdmin)
+
+#category and product many to many model section
+
+
 
 
 # models = django.apps.apps.get_models()

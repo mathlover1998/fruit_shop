@@ -1,12 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser,PermissionsMixin
-from django.core.validators import MinValueValidator, MaxValueValidator,EmailValidator
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.core.validators import MinValueValidator, MaxValueValidator, EmailValidator
 import random
-from django.core.exceptions import ValidationError,ObjectDoesNotExist
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import Group
 from django.utils import timezone
+
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
@@ -31,16 +32,10 @@ UNIT = (
 )
 
 
-DISCOUNT_TYPE = (("percentage", "Percentage"), ("fixed_amount", "Fixed Amount"))
-
-APPLIES_TO_CHOICES = (
-        ('all_products', 'All Products'),
-        ('category', 'Category'),
-        ('specific_products', 'Specific Products'),
-    )
-
 PAYMENT_METHOD = (("cash", "Cash"), ("momo", "Momo"))
-class User(AbstractUser,PermissionsMixin):
+
+
+class User(AbstractUser, PermissionsMixin):
     phone = models.CharField(max_length=20, null=True)
     gender = models.CharField(
         max_length=20, choices=GENDER, default="other", null=False
@@ -55,7 +50,7 @@ class User(AbstractUser,PermissionsMixin):
     groups = models.ManyToManyField(
         Group,
         blank=True,
-        related_name="user_memberships"  # Specify a unique related_name
+        related_name="user_memberships",  # Specify a unique related_name
     )
     # user_permissions = models.ManyToManyField(Permission, blank=True, related_name="user_permissions")
 
@@ -87,6 +82,7 @@ class Employee(models.Model):
 
     def __str__(self) -> str:
         return self.user.username
+
     class Meta:
         ordering = ["id"]
         db_table = "Employees"
@@ -135,11 +131,9 @@ class ConfirmationToken(models.Model):
         verbose_name_plural = "Confirmation Tokens"
 
 
-
-
 #
 class Category(models.Model):
-    category_name = models.CharField(max_length=255, null=False)
+    category_name = models.CharField(max_length=255, unique=True)
     description = models.TextField(null=False, default="")
     parent_category = models.ForeignKey(
         "self",
@@ -171,29 +165,9 @@ class Category(models.Model):
         verbose_name = "Category"
         verbose_name_plural = "Categories"
 
-class Discount(models.Model):
-    code = models.CharField(max_length=20, null=True)
-    description = models.TextField(blank=True)
-    discount_type = models.CharField(
-        choices=DISCOUNT_TYPE, default="percentage", null=False
-    )
-    discount_value = models.DecimalField(max_digits=7, decimal_places=2,null=False,default=0.00)
-    applies_to = models.CharField(max_length=20, choices=APPLIES_TO_CHOICES,default='all_products')
-    category_id = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)  # Assuming a categories model
-    valid_from = models.DateTimeField(default=timezone.now)
-    valid_to = models.DateTimeField(blank=True, null=True)
-    minimum_purchase = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ["id"]
-        db_table = "Discounts"
-        managed = True
-        verbose_name = "Discount"
-        verbose_name_plural = "Discounts"
 
 class Brand(models.Model):
-    brand_name = models.CharField(max_length=100, null=False)
+    brand_name = models.CharField(max_length=100, unique=True)
     contact_person = models.CharField(max_length=100, null=False, default="")
     email = models.EmailField(max_length=100, null=False)
     phone = models.CharField(max_length=15, help_text="Enter your phone number")
@@ -214,15 +188,15 @@ class Product(models.Model):
     product_name = models.CharField(max_length=255, null=False)
     categories = models.ManyToManyField(Category, related_name="products")
     price = models.IntegerField(null=False, default=0)
+    updated_price = models.IntegerField(null=False, default=0)
     stock_quantity = models.IntegerField(null=False, default=0)
     origin_country = models.CharField(max_length=40, default="")
     information = models.TextField(null=True)
     create_date = models.DateTimeField(default=timezone.now)
-    expiry_date = models.DateTimeField(blank=True,null=True)
-    sku = models.CharField(max_length=10, unique=True, default="",blank=True)
+    expiry_date = models.DateTimeField(blank=True, null=True)
+    sku = models.CharField(max_length=10, unique=True, default="", blank=True)
     unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
-
     inventory_manager = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
@@ -230,6 +204,16 @@ class Product(models.Model):
         blank=True,
         related_name="managed_product",
     )
+
+    def apply_discount(self, discount):
+        if discount.discount_type == "percentage":
+            discount_amount = self.price * discount.discount_value
+        elif discount.discount_type == "fixed_amount":
+            discount_amount = discount.discount_value
+
+        discount_amount = min(discount_amount, discount.maximum_discount_amount)
+        self.updated_price = self.price - discount_amount
+        self.save()
 
     def __str__(self):
         return self.product_name
@@ -243,6 +227,8 @@ class Product(models.Model):
                 return sku
 
     def save(self, *args, **kwargs):
+        if self.updated_price == 0:  # Check if updated_price is not already set
+            self.updated_price = self.price
         self.sku = self.generate_unique_sku()
         super().save(*args, **kwargs)
 
@@ -268,57 +254,151 @@ class ProductImage(models.Model):
         verbose_name = "ProductImage"
         verbose_name_plural = "ProductImages"
 
+
+class Discount(models.Model):
+    DISCOUNT_TYPE = (("percentage", "Percentage"), ("fixed_amount", "Fixed Amount"))
+    APPLIES_TO_CHOICES = (
+        ("all_products", "All Products"),
+        ("category", "Category"),
+        ("specific_products", "Specific Products"),
+        ("brand", "Brand"),
+    )
+    code = models.CharField(max_length=20, null=True)
+    description = models.TextField(blank=True)
+    discount_type = models.CharField(
+        choices=DISCOUNT_TYPE, default="percentage", null=False
+    )
+    discount_value = models.DecimalField(
+        max_digits=7, decimal_places=2, null=False, default=0.00
+    )
+    applies_to = models.CharField(
+        max_length=20, choices=APPLIES_TO_CHOICES, default="all_products"
+    )
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, blank=True, null=True
+    )  # Assuming a categories model
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, blank=True, null=True)
+    products = models.ManyToManyField(Product, related_name="discounts",blank=True)
+    valid_from = models.DateTimeField(default=timezone.now)
+    valid_to = models.DateTimeField(blank=True, null=True)
+    minimum_purchase = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.00, null=False
+    )
+    maximum_discount_amount = models.DecimalField(
+        max_digits=8, decimal_places=2, default=0.00, null=False
+    )
+    is_active = models.BooleanField(default=True)
+    def clean(self):
+        """
+        Custom validation to ensure discount value is within reasonable limits.
+        """
+        if self.discount_type == "percentage":
+            if self.discount_value < 0.00 or self.discount_value > 1:
+                raise ValidationError(
+                    "Discount value for percentage discounts must be between 0.00 and 1."
+                )
+        elif self.discount_value < 0:
+            raise ValidationError("Discount value cannot be negative.")
+        
+    def save(self, *args, **kwargs):
+        self.clean()  # Run custom validation
+        
+        super().save(*args, **kwargs)
+        if self.applies_to == "category":
+
+            products_to_discount = Product.objects.filter(categories=self.category)
+
+        elif self.applies_to == "brand":
+            
+            products_to_discount = Product.objects.filter(brand=self.brand)
+        elif self.applies_to == "all_products":
+
+            products_to_discount = Product.objects.all()
+        elif self.applies_to == "specific_products":
+            products_to_discount = Product.objects.filter(discounts__isnull=True)  # Filter products without discounts
+            for product in products_to_discount:
+                product.apply_discount(self)
+            self.products.add(*products_to_discount)
+            
+            return
+        # Apply the discount to selected products
+        for product in products_to_discount:
+            product.apply_discount(self)
+            
+        
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "Discounts"
+        managed = True
+        verbose_name = "Discount"
+        verbose_name_plural = "Discounts"
+
+
 class SingletonModel(models.Model):
-    def save(self,*args, **kwargs):
+    def save(self, *args, **kwargs):
         self.pk = 1
         return super().save(*args, **kwargs)
 
+
 class WebsiteInfo(SingletonModel):
-    email = models.EmailField(max_length=255, validators=[EmailValidator()],null=False,default='groceryshop@example.com')
+    email = models.EmailField(
+        max_length=255,
+        validators=[EmailValidator()],
+        null=False,
+        default="groceryshop@example.com",
+    )
     phone = models.CharField(max_length=20, null=False, default="")
     address = models.CharField(max_length=255)
-    
+
     class Meta:
-        
+
         db_table = "WebsiteInfos"
         managed = True
         verbose_name = "Website Infomation"
         verbose_name_plural = "Website Infomations"
 
+
 class WebsiteImage(models.Model):
     IMAGE_TYPES = (
-        ('instagram', 'Instagram Image'),
-        ('slide', 'Slide Image'),
-        ('category', 'Category Image'),
-        ('about', 'About Image'),
-        
+        ("instagram", "Instagram Image"),
+        ("slide", "Slide Image"),
+        ("category", "Category Image"),
+        ("about", "About Image"),
     )
-    
+
     image = models.ImageField(upload_to="images/website_images/")
-    image_type = models.CharField(max_length=20, choices=IMAGE_TYPES,help_text="Slide:(1342*932); Category:(354*354); About:(540*472)")
-    website_info = models.ForeignKey(WebsiteInfo, on_delete=models.CASCADE, related_name='images')
+    image_type = models.CharField(
+        max_length=20,
+        choices=IMAGE_TYPES,
+        help_text="Slide:(1342*932); Category:(354*354); About:(540*472)",
+    )
+    website_info = models.ForeignKey(
+        WebsiteInfo, on_delete=models.CASCADE, related_name="images"
+    )
 
     class Meta:
-        
+
         db_table = "WebsiteImages"
         managed = True
         verbose_name = "Website Image"
         verbose_name_plural = "Website Images"
 
+
 class Address(models.Model):
     ADDRESS_TYPE = (("home", "Home"), ("office", "Office"))
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    brand = models.ForeignKey(
-        Brand, on_delete=models.CASCADE, null=True, blank=True
-    )
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True, blank=True)
     full_name = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True)
     street_address = models.CharField(max_length=255)
     locality = models.CharField(max_length=100, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     postal_code = models.CharField(max_length=20, null=True, blank=True)
-    country = models.CharField(max_length=100,null=True, blank=True)
-    type = models.CharField(max_length=50, choices=ADDRESS_TYPE, default="home")  # Home, Work, Other
+    country = models.CharField(max_length=100, null=True, blank=True)
+    type = models.CharField(
+        max_length=50, choices=ADDRESS_TYPE, default="home"
+    )  # Home, Work, Other
     is_default = models.BooleanField(default=False)
 
     class Meta:
@@ -328,10 +408,11 @@ class Address(models.Model):
         verbose_name = "Address"
         verbose_name_plural = "Addresses"
         constraints = [
-            models.UniqueConstraint(fields=["user", "is_default"], name="unique_default_address_per_user"),  # Ensures only one default address per user
+            models.UniqueConstraint(
+                fields=["user", "is_default"], name="unique_default_address_per_user"
+            ),  # Ensures only one default address per user
         ]
 
-    
 
 class Order(models.Model):
     ORDER_STATUS = (
@@ -344,12 +425,45 @@ class Order(models.Model):
     )
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     placed_at = models.DateTimeField(default=timezone.now)
-    status = models.CharField(choices=ORDER_STATUS, null=False,default='pending')
+    status = models.CharField(choices=ORDER_STATUS, null=False, default="pending")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    billing_address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="billing_orders", null=True, blank=True)
-    shipping_address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="shipping_orders", null=True, blank=True)
+    billing_address = models.ForeignKey(
+        Address,
+        on_delete=models.SET_NULL,
+        related_name="billing_orders",
+        null=True,
+        blank=True,
+    )
+    shipping_address = models.ForeignKey(
+        Address,
+        on_delete=models.SET_NULL,
+        related_name="shipping_orders",
+        null=True,
+        blank=True,
+    )
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD, default="")
-    payment_transaction = models.CharField(max_length=255, null=True, blank=True)  # Optional for storing transaction ID
+    payment_transaction = models.CharField(
+        max_length=255, null=True, blank=True
+    )  # Optional for storing transaction ID
+
+    def apply_discount(self, discount):
+        # Calculate discount amount based on the discount type and value
+        if discount.discount_type == "percentage":
+            discount_amount = (discount.discount_value / 100) * self.total_amount
+        elif discount.discount_type == "fixed_amount":
+            discount_amount = min(discount.discount_value, self.total_amount)
+
+        # Update the total amount of the order after applying the discount
+        self.total_amount -= discount_amount
+        self.save()
+
+        # Optionally, store information about the applied discount
+        # For example, you can update the discount_applied field of each order item
+        order_items = self.orderitem_set.all()
+        for order_item in order_items:
+            order_item.discount_applied = discount.code
+            order_item.save()
+
     class Meta:
         ordering = ["-placed_at"]
         db_table = "Orders"
@@ -374,11 +488,15 @@ class OrderItem(models.Model):
 
 
 class Transaction(models.Model):
-    
+
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
     transaction_date = models.DateTimeField(default=timezone.now)
-    payment_method = models.CharField(choices=PAYMENT_METHOD, null=False,default='cash')
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0.00)
+    payment_method = models.CharField(
+        choices=PAYMENT_METHOD, null=False, default="cash"
+    )
+    amount_paid = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], default=0.00
+    )
 
     # transaction_type
     class Meta:
@@ -387,7 +505,6 @@ class Transaction(models.Model):
         managed = True
         verbose_name = "Transaction"
         verbose_name_plural = "Transactions"
-
 
 
 class StoreLocation(models.Model):
@@ -401,5 +518,3 @@ class StoreLocation(models.Model):
         managed = True
         verbose_name = "Store Location"
         verbose_name_plural = "Store Locations"
-
-
