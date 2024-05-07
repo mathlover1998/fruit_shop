@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-
+import dj_database_url
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -113,17 +113,19 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # }
 
 # local postgresql database
-DATABASES = {
+# DATABASES = {
     
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fruit_shop_db',
-        'USER': 'admin',
-        'PASSWORD': '1234',
-        'HOST':'localhost',
-        'PORT':'5432' 
-    }
-}
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'fruit_shop_db',
+#         'USER': 'admin',
+#         'PASSWORD': '1234',
+#         'HOST':'localhost',
+#         'PORT':'5432' 
+#     }
+# }
+
+
 # aws database (disabled)
 # DATABASES = {
     # 'default': {
@@ -136,14 +138,15 @@ DATABASES = {
     # }
 # }
 
+
 #render database
-# DATABASES = {
+DATABASES = {
     
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-#     }
-# }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    }
+}
     
 
 
