@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-(py9y)mt4nwsukdwcye0nm95i_+*0__s32oe-!2a_@g+!4pekk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = []
 
 # CELERY_BROKER_URL = 'django://'
 # CELERY_RESULT_BACKEND = 'django-db'
