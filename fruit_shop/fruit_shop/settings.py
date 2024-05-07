@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -111,8 +112,9 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 #     }
 # }
 
+# local postgresql database
 DATABASES = {
-    # local postgresql database
+    
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'fruit_shop_db',
@@ -120,8 +122,10 @@ DATABASES = {
         'PASSWORD': '1234',
         'HOST':'localhost',
         'PORT':'5432' 
-    },
-    # live database aws
+    }
+}
+# aws database (disabled)
+# DATABASES = {
     # 'default': {
     #     'ENGINE': 'django.db.backends.postgresql',
     #     'NAME': 'cole_fruit_shop_db',
@@ -130,13 +134,18 @@ DATABASES = {
     #     'HOST':'database-2.clbdt0uzsyg9.ap-southeast-2.rds.amazonaws.com',
     #     'PORT':'5432' 
     # }
+# }
 
-    #live database render
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-    # }
-}
+#render database
+# DATABASES = {
+    
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+#     }
+# }
+    
+
 
 
 # Password validation
@@ -173,10 +182,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR,'productionstatic')
+STATIC_ROOT = os.path.join(BASE_DIR,'static')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "fruit_shop_app/static"),
 )
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')

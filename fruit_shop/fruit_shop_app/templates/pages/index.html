@@ -85,7 +85,7 @@
         <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
           <div class="shop-cat-box">
             <img class="img-fluid" src="{{ slide_image.url }}" alt="" />
-            <a class="btn hvr-hover" href="#">Lorem ipsum dolor</a>
+            <a class="btn hvr-hover" href="#">Initialize Category </a>
           </div>
         </div>
         {% endfor %}
@@ -146,7 +146,7 @@
         <div class="col-lg-3 col-md-6 special-grid {{ category|snake_case_filter }}">
           <div class="products-single fix">
             <div class="box-img-hover">
-              <img src="{{ product.images.first.image.url }}" class="img-fluid" alt="Image" />
+              <img src="{% if product.images.all %}{{ product.images.first.image.url }}{% else %}{% static 'images/default_fruit.jpg' %}{% endif %}" class="img-fluid" alt="Image" />
               <div class="mask-icon">
                 <ul>
                     <li>
@@ -186,7 +186,7 @@
                 <div class="col-lg-3 col-md-6 special-grid">
                   <div class="products-single fix">
                     <div class="box-img-hover">
-                      <img src="{{ product.product.images.first.image.url }}" class="img-fluid" alt="Image" />
+                      <img src="{% if product.product.images.all %}{{ product.product.images.first.image.url }}{% else %}{% static 'images/default_fruit.jpg' %}{% endif %}" class="img-fluid" alt="Image" />
                       <div class="mask-icon">
                         <ul>
                             <li>
