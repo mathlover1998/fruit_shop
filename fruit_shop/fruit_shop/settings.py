@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(py9y)mt4nwsukdwcye0nm95i_+*0__s32oe-!2a_@g+!4pekk'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    "whitenoise.runserver_nostatic",
+    # "whitenoise.runserver_nostatic",
     'django.contrib.staticfiles',
     'fruit_shop_app',
     'account',
@@ -61,7 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -115,17 +115,17 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # }
 
 # local postgresql database
-# DATABASES = {
+DATABASES = {
     
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'fruit_shop_db',
-#         'USER': 'admin',
-#         'PASSWORD': '1234',
-#         'HOST':'localhost',
-#         'PORT':'5432' 
-#     }
-# }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fruit_shop_db',
+        'USER': 'admin',
+        'PASSWORD': '1234',
+        'HOST':'localhost',
+        'PORT':'5432' 
+    }
+}
 
 
 # aws database (disabled)
@@ -142,13 +142,13 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 
 
 #render database
-DATABASES = {
+# DATABASES = {
     
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-    }
-}
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+#     }
+# }
     
 
 
@@ -210,5 +210,5 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # WHITENOISE_MANIFEST_STRICT = False
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+# STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 # STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
