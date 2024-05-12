@@ -16,12 +16,12 @@
             <form method='POST'>
               {% csrf_token %}
               {% if messages %}
-                <ul class="messages" >
-                  {% for message in messages %}
-                    <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li style="color: red; list-style-type: none;" {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
               <div class="form-group">
                   <input type="text" class="form-control" id="name" placeholder="Enter your Username" name="username" required>
               </div>

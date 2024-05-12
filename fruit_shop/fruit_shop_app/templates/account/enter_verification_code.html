@@ -1,15 +1,17 @@
 {% extends "shared/fruit_shop_base.html" %}
 {% load static %}
 
-{% block title_box %}{% endblock title_box %}
+{% block heading_title %}Verify Code{% endblock heading_title %}
+{% block heading_sub_title %}Verify{% endblock heading_sub_title %}
 {% block content %}
+
 
 <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-md-12">
       <div class="card">
         <div class="card-header">
-          <h2 class="text-start">{{text}}</h2>
+          <h2 class="text-start">Vefiry code send via your email/phone</h2>
           
         </div>
         <div class="card-body">
@@ -23,9 +25,9 @@
               </ul>
             {% endif %}
             <div class="mb-3">
-              <input type="text" class="form-control" placeholder="Enter code" name ='code'>
+              <input type="text" class="form-control" placeholder="Code" name="code" id="code">
             </div>
-            <input type="submit" class="btn btn-primary btn-block" value='Confirm'>
+            <input type="submit" class="btn btn-primary btn-sm btn-block" value="Confirm">
           </form>
         </div>
       </div>

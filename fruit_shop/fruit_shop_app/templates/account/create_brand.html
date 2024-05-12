@@ -1,12 +1,12 @@
-{% extends "shared/fruit_shop_base.html" %} {% load static %} {% block heading_title %}Brand Register{% endblock heading_title %} 
-{% block heading_sub_title %}Register{% endblock heading_sub_title %} {% block content %}
+{% extends "shared/fruit_shop_base.html" %} {% load static %} {% block heading_title %}Create Brand{% endblock heading_title %} 
+{% block heading_sub_title %}Create Brand{% endblock heading_sub_title %} {% block content %}
 
 <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h2 class="text-center">Registration Form</h2>
+          <h2 class="text-center">Brand Form</h2>
         </div>
         <div class="card-body">
           <form method="POST">
@@ -29,7 +29,7 @@
             <div class="form-group">
                 <input type="text" class="form-control" placeholder="Enter Brand's contact phone number" name="phone" required />
               </div>
-            <input type="submit" class="btn btn-primary btn-block" value="Submit" />
+            <input type="submit" class="btn btn-primary btn-block" value="Create" />
           </form>
         </div>
       </div>

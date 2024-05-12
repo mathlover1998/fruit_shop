@@ -405,7 +405,7 @@ def update_comment_on_product(request, sku):
     return render(request, 'shop/edit_comment.html', {'comment': comment})
 
 @permission_required('fruit_shop_app.add_brand',raise_exception=True)
-def brand_register(request):
+def create_brand(request):
     if request.method == "POST":
         brand_name = request.POST.get("brand_name")
         contact_person = request.POST.get("contact_person")
@@ -416,4 +416,4 @@ def brand_register(request):
         )
         new_brand.save()
         return redirect(reverse("view_confirmation_page"))
-    return render(request, "account/brand_register.html")
+    return render(request, "account/create_brand.html")

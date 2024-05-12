@@ -28,9 +28,9 @@
           <form method='POST' enctype="multipart/form-data">
             {% csrf_token %}
             {% if messages %}
-              <ul class="messages" >
+              <ul class="messages">
                 {% for message in messages %}
-                  <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                  <li style="color: {% if message.tags %}{% if message.tags == 'error' %}red{% else %}green{% endif %}{% else %}black{% endif %}; list-style-type: none;">{{ message }}</li>
                 {% endfor %}
               </ul>
             {% endif %}

@@ -57,8 +57,8 @@ def is_real_phone_number(phone_number, account_sid, auth_token):
 
 def send_code_via_phone(code, receiver, account_sid, auth_token):
     client = Client(account_sid, auth_token)
-    if phone_number.startswith("0"):
-        phone_number = "+84" + phone_number[1:]
+    if receiver.startswith("0"): 
+        receiver = "+84" + receiver[1:]
     try:
         message = client.messages.create(
             body=f"Cole's Grocery Shop: Your verification code is:{code}",
@@ -66,7 +66,7 @@ def send_code_via_phone(code, receiver, account_sid, auth_token):
             to=f"{receiver}",
         )
     except TwilioRestException as e:
-        print("An error was orcured: ", e)
+        print("An error was occurred: ", e)
 
 
 def send_specific_email(request, choice: int, email_list, code=""):

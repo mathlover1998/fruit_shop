@@ -15,6 +15,9 @@
     <a href="{% url 'view_user_account'%}" class="nav-link dropdown-toggle" data-toggle="dropdown"><img src="{{user.image.url}}" alt="Avatar" class="rounded-circle img-fluid" style="height:15px;width=15px" /> Welcome, {{user.username}}</a></a>
       <ul class="dropdown-menu">
         {% if user.employee %}
+        {% if perms.fruit_shop_app.can_add_brand %}
+        <li><a href="{% url 'create_brand'%}">Add Brand</a></li>
+        {% endif %}
         <li><a href="{% url 'create_product'%}">Add Product</a></li>
         <li><a href="{% url 'get_your_products'%}">My Products</a></li>
         {% else %}
@@ -85,7 +88,7 @@
           <div class="ins-inner-box">
             <img src=" {{instagram_image.url}} " alt="" />
             <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab "></i></a>
             </div>
           </div>
         </div>
@@ -95,7 +98,7 @@
           <div class="ins-inner-box">
             <img src=" {% static 'images/instagram-img-01.jpg' %} " alt="" />
             <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab "></i></a>
             </div>
           </div>
         </div>
@@ -103,7 +106,7 @@
           <div class="ins-inner-box">
             <img src=" {% static 'images/instagram-img-02.jpg' %} " alt="" />
             <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab "></i></a>
             </div>
           </div>
         </div>

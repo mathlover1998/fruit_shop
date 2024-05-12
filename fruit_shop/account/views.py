@@ -182,7 +182,9 @@ def update_phone(request):
         if not is_phone_number(phone_number):
             messages.error(request, "Invalid phone number format!")
             return redirect(reverse("update_phone"))
-
+        if request.user.phone == phone_number:
+            messages.error(request, "This phone number is already associated with another account. Please use a different phone number or log in with your existing account.")
+            return redirect(reverse("update_phone"))
         # Check if the phone number is already taken
         if User.objects.exclude(pk=request.user.id).filter(phone=phone_number).exists():
             messages.error(request, "This phone number has already been taken!")
@@ -199,7 +201,7 @@ def update_phone(request):
         verification_code = generate_verification_code()
         request.session["phone_verification_code"] = verification_code
         request.session.set_expiry(timedelta(minutes=2))
-        send_code_via_phone(verification_code, phone_number)
+        send_code_via_phone(verification_code,receiver=phone_number,account_sid=account_sid,auth_token=auth_token)
         # Redirect to the verification page
         return redirect(
             reverse("handle_verification_code", kwargs={"email_or_phone": phone_number})
@@ -212,19 +214,29 @@ def update_phone(request):
 def handle_verification_code(request, email_or_phone):
     if request.method == "POST":
         current_user = request.user
-        if current_user:
-            if request.POST.get("code") == request.session.get(
-                "phone_verification_code"
-            ):
-                current_user.phone = email_or_phone
-            elif request.POST.get("code") == request.session.get(
-                "email_verification_code"
-            ):
-                current_user.email = email_or_phone
-            current_user.save()
-        return render(request, "pages/successfully.html")
+        if not current_user:
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+        code = request.POST.get("code")
+        if not code:
+            messages.error(request, 'Verification code is required!')
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+        if "phone_verification_code" in request.session and code == request.session["phone_verification_code"]:
+            current_user.phone = email_or_phone
+            del request.session["phone_verification_code"]
+        elif "email_verification_code" in request.session and code == request.session["email_verification_code"]:
+            current_user.email = email_or_phone
+            del request.session["email_verification_code"]
+        else:
+            messages.error(request, 'Invalid verification code!')
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+        current_user.save()
+        return redirect(reverse('update_profile'))
     else:
         return render(request, "account/enter_verification_code.html")
+
 
 
 @login_required
