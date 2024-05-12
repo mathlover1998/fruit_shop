@@ -3,7 +3,7 @@ from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,T
 from django.contrib import messages
 from django.urls import reverse
 from fruit_shop.utils import position_required, replace_string
-from .forms import CreateProductForm
+from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -49,9 +49,9 @@ def category_filtered_view(request, category):
 
 @permission_required('fruit_shop_app.add_product',raise_exception=True)
 def create_product(request):
-    form = CreateProductForm()
+    form = ProductForm()
     if request.method == "POST":
-        form = CreateProductForm(request.POST, request.FILES)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product_name = form.cleaned_data["product_name"]
 
@@ -122,7 +122,7 @@ def update_product(request,sku):
     current_images = product.images.all()
 
     if request.method == "POST":
-        form = CreateProductForm(request.POST, request.FILES)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)  # Don't save yet
             product.save()
@@ -173,7 +173,7 @@ def update_product(request,sku):
 
     else:
         # Populate form with product data
-        form = CreateProductForm(initial=model_to_dict(product))
+        form = ProductForm(initial=model_to_dict(product))
 
     return render(
         request,

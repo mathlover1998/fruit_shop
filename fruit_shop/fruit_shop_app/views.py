@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect
 from fruit_shop.utils import send_code_via_phone, generate_verification_code
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponse,HttpResponseRedirect
 from django.urls import reverse
 from fruit_shop_app.models import Brand,Product
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-
+from fruit_shop.utils import send_specific_email
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 def index(request):
@@ -50,3 +51,10 @@ def clear_session(request):
     expired_sessions.delete()
     Session.objects.all().delete()
     return HttpResponse("Sessions cleared successfully")
+
+@csrf_exempt
+def register_newsletter(request):
+    if request.method=='POST':
+        email= request.POST.get('email')
+        send_specific_email(request=request,choice=4,email_list=[email])
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))

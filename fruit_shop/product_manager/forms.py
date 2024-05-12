@@ -18,7 +18,7 @@ class MultipleFileField(forms.FileField):
         return result
 
 
-class CreateProductForm(forms.Form):
+class ProductForm(forms.Form):
 
     brand = forms.ModelChoiceField(
         queryset=Brand.objects.all(),
@@ -35,7 +35,7 @@ class CreateProductForm(forms.Form):
         required=False,
     )
     category = forms.ModelMultipleChoiceField(
-        queryset=Category.objects.all(),
+        queryset=Category.objects.filter(type='product'),
         label="Categories",
         widget=forms.SelectMultiple(attrs={"class": "form-control"})
     )

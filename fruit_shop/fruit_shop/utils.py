@@ -93,7 +93,13 @@ def send_specific_email(request, choice: int, email_list, code=""):
             {"user": request.user.username, "code": code},
         )
         message = strip_tags(html_message)
-
+    #receive newsletter    
+    elif choice==4:
+        subject = (
+            "Cole's Grocery Shop: Thank you for subscribing to the Grocery Shop newsletter"
+        )
+        message = "You will reveive further newsletter"
+        
     send_mail(
         subject=subject,
         message=message,

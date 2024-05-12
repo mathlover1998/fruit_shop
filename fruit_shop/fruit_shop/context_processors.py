@@ -1,7 +1,8 @@
 from fruit_shop_app.models import Product, Category, Discount,WebsiteInfo
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
-
+import os
+from django.conf import settings
 
 def get_global_cart_data(request):
     cart = request.session.get("cart", {})
@@ -110,13 +111,17 @@ def get_website_information(request):
         website_info = None
     
     data = {
+        'facebook': os.environ.get('FACEBOOK'),
+        'instagram': os.environ.get('INSTAGRAM'),
+        'twitter': os.environ.get('TWITTER'),
+        'linkedin': os.environ.get('LINKEDIN'),
         'global_instagram_images': [],
         'global_slide_images': [],
         'global_category_images': [],
         'global_about_images': [],
-        'global_website_address': None,
-        'global_website_email': None,
-        'global_website_phone': None,
+        'global_website_address': os.environ.get('WEBSITE_ADDRESS'),
+        'global_website_email': os.environ.get('WEBSITE_EMAIL'),
+        'global_website_phone': os.environ.get('WEBSITE_PHONE'),
     }
 
     if website_info:
@@ -142,8 +147,13 @@ def get_website_information(request):
 def get_featured_products_context(request):
     try:
         products = Product.objects.filter(is_featured=True)
-        print("Number of featured products:", len(products))
     except Product.DoesNotExist:
         products = []
         
     return {"featured_products":products}
+
+def get_domain_name(request):
+    host = request.get_host()
+    if settings.DEBUG:
+        host = 'example.com'
+    return {'domain_name':host}

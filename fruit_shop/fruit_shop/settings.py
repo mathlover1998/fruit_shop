@@ -94,6 +94,7 @@ TEMPLATES = [
                 'fruit_shop.context_processors.get_website_information',
                 'fruit_shop.context_processors.get_featured_products_context',
                 'fruit_shop.context_processors.get_recently_viewed_products',
+                'fruit_shop.context_processors.get_domain_name',
             ],
             'libraries':{
                 'custom_filters': 'product_manager.custom_filters'
