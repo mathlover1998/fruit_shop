@@ -139,13 +139,17 @@ class ProductForm(forms.ModelForm):
 
 
 class ProductFormAdmin(admin.ModelAdmin):
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'categories':
+            kwargs['queryset'] = Category.objects.filter(type='product')
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
     inlines = [ProductImageInline]
     form = ProductForm
     search_fields = ["product_name", "sku"]
-    list_display = ['product_name','sku','price','brand','is_active']
+    list_display = ['product_name','sku','price','brand','is_featured','is_active']
     list_per_page = 20
     list_filter = ["is_active", "price", "stock_quantity"]
-    readonly_fields = ["create_date",'updated_price',]
+    readonly_fields = ["create_date",'updated_price','updated_at']
     ordering = [
         "-create_date",
     ]
@@ -159,6 +163,7 @@ class ProductFormAdmin(admin.ModelAdmin):
                     ("price",'updated_price', "unit"),
                     "stock_quantity",
                     ("categories", "brand"),
+                    "is_featured",
                     "is_active",
                 ),
             },
@@ -169,7 +174,8 @@ class ProductFormAdmin(admin.ModelAdmin):
                 "fields": (
                     "origin_country",
                     "information",
-                    ("create_date", "expiry_date"),
+                    ("create_date", "updated_at"),
+                    "expiry_date"
                 ),
             },
         ),
@@ -285,7 +291,7 @@ class CategoryAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             "Information",
-            {"fields": ("category_name", "description", "parent_category")},
+            {"fields": ("category_name","type", "description", "parent_category")},
         ),
     )
 
@@ -311,9 +317,6 @@ admin.site.register(Employee, EmployeeAdmin)
 
 
 # Website section
-
-
-
 class WebsiteImageInline(admin.TabularInline):
     model = WebsiteImage
     extra = 1
@@ -351,13 +354,43 @@ class WebsiteInfoAdmin(admin.ModelAdmin):
         ),
     )
     
-
-
 admin.site.register(WebsiteInfo, WebsiteInfoAdmin)
 
 #category and product many to many model section
 
 
+#comment section
+class CommentForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(CommentForm, self).__init__(*args, **kwargs)
+        self.fields["content"].help_text = "Content of comment"
+        
+    class Meta:
+        model = Comment
+        exclude = ("",)
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ['user','is_approved',]
+    form = CommentForm
+    readonly_fields = ['created_at','updated_at']
+    fieldsets = (
+        (
+            "Information",
+            {
+                "fields": (
+                    "content",
+                    "user",
+                    "parent_comment",
+                    ("created_at","updated_at"),
+                    'product',
+                    'is_approved'
+                ),
+            },
+        ),
+    )
+    has_add_permission = lambda self, request: False
+
+admin.site.register(Comment,CommentAdmin)
 
 
 # models = django.apps.apps.get_models()

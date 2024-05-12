@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction
+from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment
 from django.contrib import messages
 from django.urls import reverse
 from fruit_shop.utils import position_required, replace_string
@@ -186,13 +186,15 @@ def update_product(request,sku):
 def get_product(request,sku):
     product = get_object_or_404(Product, sku=sku)
     product_id = product.id
+    comments = Comment.objects.filter(product=product)
     recently_viewed = request.session.get("recently_viewed", {})
     if str(product.id) not in recently_viewed:
         recently_viewed[str(product_id)] = product_id
 
     request.session["recently_viewed"] = recently_viewed
     request.session.set_expiry(timedelta(days=7))
-    return render(request, "shop/product.html", {"product": product})
+
+    return render(request, "shop/product.html", {"product": product,'comments':comments})
 
 
 def update_cart_item(request, product_id, quantity=1):
@@ -364,8 +366,40 @@ def create_discount(request):
 
 def apply_discount_view(request):
     products_with_category_discount = Product.objects.filter(categories__discount__is_active=True)
-
-# You can then use 'products_with_brand_discount' as needed
+    # You can then use 'products_with_brand_discount' as needed
     for product in products_with_category_discount:
         print(product.product_name)
     return render(request, 'shop/discount_applied.html')
+
+@login_required
+def create_comment_on_product(request, sku):
+    user = request.user
+    product = Product.objects.filter(sku=sku).first()
+    if request.method == 'POST':
+        comment = Comment.objects.create(
+            user=user,
+            product=product,
+            content=request.POST.get('content')
+        )
+        comment.save()
+        return redirect(reverse('get_product', kwargs={'sku': sku}))
+    
+    return render(request, 'shop/product.html')
+
+    
+@login_required
+def delete_comment_on_product(request,sku):
+    comment_id = request.GET.get('comment_id')
+    comment = Comment.objects.filter(id= comment_id)
+    comment.delete()
+    return redirect(reverse('get_product', kwargs={'sku': sku}))
+
+@login_required
+def update_comment_on_product(request, sku):
+    comment_id = request.POST.get('comment_id')
+    comment = Comment.objects.get(id=comment_id)
+    if request.method == 'POST':
+        comment.content = request.POST.get('content')
+        comment.save()
+        return redirect(reverse('get_product', kwargs={'sku': sku}))
+    return render(request, 'shop/edit_comment.html', {'comment': comment})

@@ -16,5 +16,8 @@ urlpatterns = [
     path('checkout/',views.checkout,name='checkout'),
     path('<str:sku>/update/',views.update_product, name="update_product"),
     path('discount/apply-discount/',views.apply_discount_view,name='apply_discount_view'),
+    path('<str:sku>/comment/',views.create_comment_on_product,name='create_comment_on_product'),
+    path('<str:sku>/comment/edit/', views.update_comment_on_product, name='update_comment_on_product'),
+    path('<str:sku>/comment/delete/',views.delete_comment_on_product,name='delete_comment_on_product'),
 
 ]

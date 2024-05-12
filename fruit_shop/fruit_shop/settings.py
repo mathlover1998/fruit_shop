@@ -90,9 +90,10 @@ TEMPLATES = [
                 'fruit_shop.context_processors.get_global_cart_data',
                 'fruit_shop.context_processors.get_separated_category_product',
                 'fruit_shop.context_processors.get_category_name_context',
-                'fruit_shop.context_processors.get_recently_viewed_products',
                 'fruit_shop.context_processors.get_latest_discounts',
                 'fruit_shop.context_processors.get_website_information',
+                'fruit_shop.context_processors.get_featured_products_context',
+                'fruit_shop.context_processors.get_recently_viewed_products',
             ],
             'libraries':{
                 'custom_filters': 'product_manager.custom_filters'

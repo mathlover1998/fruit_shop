@@ -1,5 +1,5 @@
 import os, asyncio
-from django.shortcuts import render, redirect, HttpResponse,get_object_or_404
+from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from fruit_shop_app.models import User, Customer, Address, Employee
 from django.contrib import messages
 from django.template.loader import render_to_string
@@ -13,12 +13,18 @@ from django.template.defaultfilters import date
 from django.utils.html import strip_tags
 from django.contrib.sessions.models import Session
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect,HttpResponseBadRequest
+from django.http import (
+    JsonResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+    HttpResponseBadRequest,
+)
 from django.core.serializers import serialize
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
 from datetime import timedelta
 from functools import wraps
+from django.db import transaction
 
 
 # Create your views here.
@@ -196,9 +202,7 @@ def update_phone(request):
         send_code_via_phone(verification_code, phone_number)
         # Redirect to the verification page
         return redirect(
-            reverse(
-                "handle_verification_code", kwargs={"email_or_phone": phone_number}
-            )
+            reverse("handle_verification_code", kwargs={"email_or_phone": phone_number})
         )
 
     return render(request, "account/enter_new_phone_number.html")
@@ -209,9 +213,13 @@ def handle_verification_code(request, email_or_phone):
     if request.method == "POST":
         current_user = request.user
         if current_user:
-            if request.POST.get("code") == request.session.get("phone_verification_code"):
+            if request.POST.get("code") == request.session.get(
+                "phone_verification_code"
+            ):
                 current_user.phone = email_or_phone
-            elif request.POST.get("code") == request.session.get("email_verification_code"):
+            elif request.POST.get("code") == request.session.get(
+                "email_verification_code"
+            ):
                 current_user.email = email_or_phone
             current_user.save()
         return render(request, "pages/successfully.html")
@@ -228,6 +236,7 @@ def view_address(request):
 
 
 @login_required
+@transaction.atomic
 def create_address(request):
     current_user = request.user
 
@@ -241,17 +250,18 @@ def create_address(request):
         type = request.POST.get("type")
         city = request.POST.get("city")
         is_default = request.POST.get("is_default", False)
-        if (
-            full_name
-            and phone_number
-            and country
-            and street_address
-            and locality
-            and postal_code
-            and is_default
-            and type
-            and city
-        ):
+
+        # Check if all required fields are provided
+        required_fields = [full_name, phone_number, country, street_address, locality, postal_code, type, city]
+        if all(required_fields):
+            # Get the existing default address, if any
+            existing_default_address = Address.objects.filter(user=current_user, is_default=True).first()
+            if existing_default_address and is_default:
+                # If a new address is set as default, unset the existing default address
+                existing_default_address.is_default = False
+                existing_default_address.save()
+
+            # Create a new address instance
             new_address = Address.objects.create(
                 user=current_user,
                 full_name=full_name,
@@ -262,20 +272,14 @@ def create_address(request):
                 postal_code=postal_code,
                 country=country,
                 type=type,
+                is_default=is_default
             )
-            if is_default:
-                new_address.is_default = True
-                customer_addresses = (
-                    Address.objects.exclude(id=new_address.id)
-                    .filter(user=current_user)
-                    .all()
-                )
-                customer_addresses.update(is_default=False)
-            new_address.save()
-            return redirect(reverse("view_address"))
+            return redirect(reverse("view_address"))  # Assuming you have a view for viewing addresses
+
         else:
-            messages.error(request, "Please provide at least one field to update.")
+            messages.error(request, "Please provide all required fields.")
             return redirect("create_address")
+
     return render(request, "account/address_manage.html")
 
 
@@ -302,7 +306,9 @@ def update_address(request, id):
             customer_addresses.update(is_default=False)
         address.save()
         return redirect(reverse("view_address"))
-    return render(request, "account/address_manage.html", {"address": address,'is_update':True})
+    return render(
+        request, "account/address_manage.html", {"address": address, "is_update": True}
+    )
 
 
 @login_required
@@ -442,36 +448,56 @@ def reset_password(request):
     else:
         return render(request, "account/reset_password.html")
 
-def handle_verification_code_reset_password(request,email_or_phone):
+
+def handle_verification_code_reset_password(request, email_or_phone):
     if request.method == "POST":
         if request.session.get("phone_verification_code"):
-            print(f'phone_verification_code: {request.session.get("phone_verification_code")}')
+            print(
+                f'phone_verification_code: {request.session.get("phone_verification_code")}'
+            )
             user = User.objects.filter(phone=email_or_phone).first()
-            print(f'phone: {user.id}')
-            if request.POST.get("code") == request.session.get("phone_verification_code") and user:
-                
-                return redirect(reverse('set_new_password_reset_password'),kwargs={"user_id": user.id})
+            print(f"phone: {user.id}")
+            if (
+                request.POST.get("code")
+                == request.session.get("phone_verification_code")
+                and user
+            ):
+
+                return redirect(
+                    reverse("set_new_password_reset_password"),
+                    kwargs={"user_id": user.id},
+                )
         elif request.session.get("email_verification_code"):
-            print(f'email_verification_code: {request.session.get("email_verification_code")}')
+            print(
+                f'email_verification_code: {request.session.get("email_verification_code")}'
+            )
             user = User.objects.filter(email=email_or_phone).first()
-            print(f'email: {user.id}')
-            if request.POST.get("code") == request.session.get("email_verification_code") and user:
-                
-                return redirect(reverse('set_new_password_reset_password'),kwargs={"user_id": user.id})
-        
+            print(f"email: {user.id}")
+            if (
+                request.POST.get("code")
+                == request.session.get("email_verification_code")
+                and user
+            ):
+
+                return redirect(
+                    reverse("set_new_password_reset_password"),
+                    kwargs={"user_id": user.id},
+                )
+
     else:
         return render(request, "account/enter_verification_code.html")
-    
-def set_new_password_reset_password(request,user_id):
+
+
+def set_new_password_reset_password(request, user_id):
     if request.method == "POST":
-        user = get_object_or_404(User,id=user_id)
+        user = get_object_or_404(User, id=user_id)
         print(user)
         new_password = request.POST.get("password")
         if new_password and not check_password(new_password, user.password):
-                    user.set_password(new_password)
-                    user.save()
-                    update_session_auth_hash(request, user)
-                    return redirect(reverse("index"))
+            user.set_password(new_password)
+            user.save()
+            update_session_auth_hash(request, user)
+            return redirect(reverse("index"))
         else:
             messages.error(
                 request, "New password must be different from the old password!"

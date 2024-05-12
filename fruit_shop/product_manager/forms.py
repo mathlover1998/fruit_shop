@@ -69,3 +69,4 @@ class CreateProductForm(forms.Form):
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         required=False,
     )
+
