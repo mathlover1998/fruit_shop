@@ -9,7 +9,6 @@ urlpatterns = [
     path('location/',views.view_location,name='view_location'),
     path('confirmation/', views.view_confirmation_page, name='view_confirmation_page'),
     path('error/<int:code>/',views.error_response,name='error_response'),
-    path('brand-register/',views.brand_register,name='brand_register'),
     path('receive-newsletter/',views.register_newsletter,name='register_newsletter'),
     path('clear/',views.clear_session,name='clear_session'),
 ]

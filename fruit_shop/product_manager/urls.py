@@ -19,5 +19,5 @@ urlpatterns = [
     path('<str:sku>/comment/',views.create_comment_on_product,name='create_comment_on_product'),
     path('<str:sku>/comment/edit/', views.update_comment_on_product, name='update_comment_on_product'),
     path('<str:sku>/comment/delete/',views.delete_comment_on_product,name='delete_comment_on_product'),
-
+    path('brand/register/',views.brand_register,name='brand_register'),
 ]

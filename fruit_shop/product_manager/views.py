@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment
+from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand
 from django.contrib import messages
 from django.urls import reverse
 from fruit_shop.utils import position_required, replace_string
@@ -403,3 +403,17 @@ def update_comment_on_product(request, sku):
         comment.save()
         return redirect(reverse('get_product', kwargs={'sku': sku}))
     return render(request, 'shop/edit_comment.html', {'comment': comment})
+
+@permission_required('fruit_shop_app.add_brand',raise_exception=True)
+def brand_register(request):
+    if request.method == "POST":
+        brand_name = request.POST.get("brand_name")
+        contact_person = request.POST.get("contact_person")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        new_brand = Brand.objects.create(
+            brand_name=brand_name, contact_person=contact_person, email=email, phone=phone
+        )
+        new_brand.save()
+        return redirect(reverse("view_confirmation_page"))
+    return render(request, "account/brand_register.html")
