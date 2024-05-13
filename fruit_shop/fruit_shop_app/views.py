@@ -3,9 +3,9 @@ from django.http import HttpResponse,HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from fruit_shop.utils import send_specific_email
+from common.utils import send_specific_email
 from django.views.decorators.csrf import csrf_exempt
-from fruit_shop.utils import send_specific_email
+
 
 # Create your views here.
 def index(request):

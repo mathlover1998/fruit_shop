@@ -2,7 +2,7 @@ from django.shortcuts import render, HttpResponse, redirect
 from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand
 from django.contrib import messages
 from django.urls import reverse
-from fruit_shop.utils import position_required, replace_string
+from common.utils import position_required, replace_string
 from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseRedirect

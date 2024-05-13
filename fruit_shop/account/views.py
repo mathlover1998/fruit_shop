@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model, login, logout, authenticate
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth.decorators import login_required, user_passes_test
-from fruit_shop.utils import *
+from common.utils import *
 from django.template.defaultfilters import date
 from django.utils.html import strip_tags
 from django.contrib.sessions.models import Session
@@ -55,7 +55,7 @@ def collect_customer_registration_email(request):
         password = request.session.get("password")
         if not username:
             # Handle case where username is missing (e.g., redirect back)
-            return render(request, "pages/error.html")
+            return redirect(reverse('register_customer'))
         if User.objects.filter(email=email):
             messages.error(request, "This email is taken! Please enter another one!")
             return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))

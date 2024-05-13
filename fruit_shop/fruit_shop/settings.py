@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'account',
     'product_manager',
     'blog',
+    'common',
     # 'django_celery_beat'
 ]
 
@@ -68,9 +69,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'fruit_shop_app.middleware.CustomPermissionDeniedMiddleware',
-    'fruit_shop_app.middleware.CheckURLMiddleware',
-    'fruit_shop_app.middleware.CheckProductExistMiddleware',
+    'fruit_shop.middleware.CustomPermissionDeniedMiddleware',
+    'fruit_shop.middleware.CheckURLMiddleware',
+    'fruit_shop.middleware.CheckProductExistMiddleware',
     
 ]
 
@@ -87,17 +88,17 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'fruit_shop.context_processors.get_global_cart_data',
-                'fruit_shop.context_processors.get_separated_category_product',
-                'fruit_shop.context_processors.get_category_name_context',
-                'fruit_shop.context_processors.get_latest_discounts',
-                'fruit_shop.context_processors.get_website_information',
-                'fruit_shop.context_processors.get_featured_products_context',
-                'fruit_shop.context_processors.get_recently_viewed_products',
-                'fruit_shop.context_processors.get_domain_name',
+                'common.context_processors.get_global_cart_data',
+                'common.context_processors.get_separated_category_product',
+                'common.context_processors.get_category_name_context',
+                'common.context_processors.get_latest_discounts',
+                'common.context_processors.get_website_information',
+                'common.context_processors.get_featured_products_context',
+                'common.context_processors.get_recently_viewed_products',
+                'common.context_processors.get_domain_name',
             ],
             'libraries':{
-                'custom_filters': 'product_manager.custom_filters'
+                'custom_filters': 'common.custom_filters'
             }
         },
     },
