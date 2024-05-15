@@ -606,3 +606,16 @@ class Comment(models.Model):
         verbose_name = "Comment"
         verbose_name_plural = "Comments"
 
+
+class ContactUsMessage(models.Model):
+    name = models.CharField(null=False,max_length=100)
+    email = models.EmailField(max_length=100, null=False)
+    subject = models.CharField(max_length=255,null=False)
+    content = models.TextField(null=False)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "ContactUsMessages"
+        managed = True
+        verbose_name = "Contact Us Message"
+        verbose_name_plural = "Contact Us Messages"

@@ -22,15 +22,8 @@
           {% endif %}
         </div>
         <div class="card-body">
-          <form method='POST' enctype="multipart/form-data">
+          <form method='POST' enctype="multipart/form-data"id= 'ajax-form'>
             {% csrf_token %}
-            {% if messages %}
-              <ul class="messages" >
-                {% for message in messages %}
-                  <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-              </ul>
-            {% endif %}
             <div class="mb-3">
               <input type="text" class="form-control" placeholder="Full name" name='full_name'value="{{ address.full_name }}">
             </div>
@@ -62,10 +55,10 @@
                 <label class="form-check-label" for="inlineRadio2">Office</label>
               </div>
               <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="exampleCheck1" name='is_default' {% if address.is_default %} checked {% endif %}>
+                <input type="checkbox" class="form-check-input" id="exampleCheck1" name='is_default' {% if address.is_default %} checked {% endif %} value="True">
                 <label class="form-check-label" for="exampleCheck1">Set as default address</label>
               </div>
-              <input type="submit" class="btn btn-primary btn-block" value='Submit'>
+              <input type="submit" class="btn btn-primary btn-block" value={% if is_update %}'Update'{% else %}'Create'{% endif %}>
             </form>
             </div>
 
@@ -73,4 +66,30 @@
       </div>
     </div>
   </div>
+  <script>
+    const ajaxForm = document.getElementById('ajax-form');
+    const isUpdate = JSON.parse('{{ is_update }}');
+    const addressId = JSON.parse('{{ address.id }}');
+    ajaxForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(ajaxForm);
+      const url = is_update ? "{% url 'update_address' addressId %}" : "{% url 'create_address' %}";
+      fetch(url , {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "{% url 'view_address' %}";
+        } else {
+          alert(data.error_message);
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert("An error occurred. Please try again.");
+      });
+    });
+  </script>
 {% endblock content %}

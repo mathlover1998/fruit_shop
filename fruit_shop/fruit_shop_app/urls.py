@@ -10,5 +10,6 @@ urlpatterns = [
     path('confirmation/', views.view_confirmation_page, name='view_confirmation_page'),
     path('error/<int:code>/',views.error_response,name='error_response'),
     path('receive-newsletter/',views.register_newsletter,name='register_newsletter'),
+    path('search/',views.search_result,name='search_result'),
     path('clear/',views.clear_session,name='clear_session'),
 ]

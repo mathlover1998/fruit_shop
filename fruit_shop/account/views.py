@@ -25,7 +25,7 @@ from django.views.decorators.http import require_POST
 from datetime import timedelta
 from functools import wraps
 from django.db import transaction
-
+from common import error_messages
 
 # Create your views here.
 
@@ -34,17 +34,15 @@ def register_customer(request):
     if request.method == "POST":
         username = request.POST.get("username")
         if User.objects.filter(username=username).exists():
-            messages.error(request, "This username is taken! Please log in instead!")
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+            return JsonResponse({'success':False,'error_message':error_messages.USERNAME_IS_TAKEN})
         else:
             password = request.POST.get("password")
             re_password = request.POST.get("re_password")
             if password == re_password:
                 request.session["username"] = username
                 request.session["password"] = password
-                return redirect(reverse("collect_customer_registration_email"))
-            messages.error(request, "Passwords don't match. Please try again.")
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+                return JsonResponse({'success': True})
+            return JsonResponse({'success':False,'error_message':error_messages.PASSWORDS_DO_NOT_MATCH})
     return render(request, "account/register.html")
 
 
@@ -54,11 +52,9 @@ def collect_customer_registration_email(request):
         username = request.session.get("username")
         password = request.session.get("password")
         if not username:
-            # Handle case where username is missing (e.g., redirect back)
-            return redirect(reverse('register_customer'))
-        if User.objects.filter(email=email):
-            messages.error(request, "This email is taken! Please enter another one!")
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+            return JsonResponse({'success':False,'error_message':error_messages.GENERAL_ERROR})
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({'success':False,'error_message':error_messages.EMAIL_IS_TAKEN})
         else:
             user = User.objects.create_user(username=username, password=password)
             user.email = email
@@ -66,7 +62,7 @@ def collect_customer_registration_email(request):
             Customer.objects.create(user=user).save()
             send_specific_email(request=request, choice=1, email_list=[email])
             login(request, user)
-            return redirect(reverse("index"))
+            return JsonResponse({'success':True})
     return render(request, "account/enter_verification_email.html")
 
 
@@ -77,11 +73,9 @@ def handle_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # messages.success(request,'Login Successfully')
-            return redirect(reverse("index"))
+            return JsonResponse({'success': True})
         else:
-            messages.error(request, "Invalid login credentials.")
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+            return JsonResponse({'success': False, 'error_message': error_messages.LOGIN_FAILED})
 
     return render(request, "account/log_in.html")
 
@@ -110,11 +104,9 @@ def update_profile(request):
         gender = request.POST.get("gender")
         dob = request.POST.get("dob")
 
-        # Validate form data
         if not (image or full_name or gender or dob):
-            messages.error(request, "Please provide at least one field to update.")
+            return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
 
-        # Update user profile
         if image:
             current_user.image = image
         if full_name:
@@ -127,8 +119,7 @@ def update_profile(request):
         if dob:
             current_user.dob = dob
         current_user.save()
-        messages.success(request, "Profile updated successfully.")
-        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+        return JsonResponse({'success': True,'success_message':error_messages.UPDATE_SUCCESSFULLY})
     return render(
         request,
         "account/profile.html",
@@ -157,8 +148,7 @@ def update_email(request):
             not email
             or User.objects.exclude(pk=current_user.id).filter(email=email).exists()
         ):
-            messages.error(request, "This email has been taken!")
-            return redirect(reverse("update_email"))
+            return JsonResponse({'success': False, 'error_message': error_messages.EMAIL_IS_TAKEN})
         else:
             code = generate_verification_code()
             request.session["email_verification_code"] = code
@@ -167,9 +157,9 @@ def update_email(request):
             send_specific_email(
                 request=request, choice=3, email_list=[email], code=code
             )
-            return redirect(
-                reverse("handle_verification_code", kwargs={"email_or_phone": email})
-            )
+            return JsonResponse({
+            'success': True,'redirect_url': reverse('handle_verification_code', kwargs={'email_or_phone': email})
+        })    
     return render(request, "account/update_new_email.html")
 
 
@@ -177,35 +167,26 @@ def update_email(request):
 def update_phone(request):
     if request.method == "POST":
         phone_number = request.POST.get("phone")
-
         # Check if the phone number is valid
         if not is_phone_number(phone_number):
-            messages.error(request, "Invalid phone number format!")
-            return redirect(reverse("update_phone"))
-        if request.user.phone == phone_number:
-            messages.error(request, "This phone number is already associated with another account. Please use a different phone number or log in with your existing account.")
-            return redirect(reverse("update_phone"))
+            return JsonResponse({'success': False, 'error_message': error_messages.PHONE_NUMBER_FORMAT_INVALID})
         # Check if the phone number is already taken
-        if User.objects.exclude(pk=request.user.id).filter(phone=phone_number).exists():
-            messages.error(request, "This phone number has already been taken!")
-            return redirect(reverse("update_phone"))
-
+        if User.objects.filter(phone=phone_number).exists():
+           return JsonResponse({'success': False, 'error_message': error_messages.PHONE_NUMBER_ALREADY_IN_USE})
         # Validate the phone number using Twilio's lookup
         account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
         auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
         if not is_real_phone_number(phone_number, account_sid, auth_token):
-            messages.error(request, "Invalid phone number!")
-            return redirect(reverse("update_phone"))
-
+            return JsonResponse({'success': False, 'error_message': error_messages.INVALID_PHONE})
         # Generate verification code and send it via SMS
         verification_code = generate_verification_code()
         request.session["phone_verification_code"] = verification_code
         request.session.set_expiry(timedelta(minutes=2))
         send_code_via_phone(verification_code,receiver=phone_number,account_sid=account_sid,auth_token=auth_token)
         # Redirect to the verification page
-        return redirect(
-            reverse("handle_verification_code", kwargs={"email_or_phone": phone_number})
-        )
+        return JsonResponse({
+            'success': True,'redirect_url': reverse('handle_verification_code', kwargs={'email_or_phone': phone_number})
+        })
 
     return render(request, "account/enter_new_phone_number.html")
 
@@ -215,13 +196,10 @@ def handle_verification_code(request, email_or_phone):
     if request.method == "POST":
         current_user = request.user
         if not current_user:
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-
+            return JsonResponse({'success': False, 'error_message': error_messages.GENERAL_ERROR})
         code = request.POST.get("code")
         if not code:
-            messages.error(request, 'Verification code is required!')
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-
+            return JsonResponse({'success': False, 'error_message': error_messages.REQUIRED_CODE})
         if "phone_verification_code" in request.session and code == request.session["phone_verification_code"]:
             current_user.phone = email_or_phone
             del request.session["phone_verification_code"]
@@ -229,11 +207,9 @@ def handle_verification_code(request, email_or_phone):
             current_user.email = email_or_phone
             del request.session["email_verification_code"]
         else:
-            messages.error(request, 'Invalid verification code!')
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-
+            return JsonResponse({'success': False, 'error_message': error_messages.INVALID_CODE})
         current_user.save()
-        return redirect(reverse('update_profile'))
+        return JsonResponse({'success': True})
     else:
         return render(request, "account/enter_verification_code.html")
 
@@ -248,7 +224,6 @@ def view_address(request):
 
 
 @login_required
-@transaction.atomic
 def create_address(request):
     current_user = request.user
 
@@ -261,18 +236,12 @@ def create_address(request):
         postal_code = request.POST.get("postal_code")
         type = request.POST.get("type")
         city = request.POST.get("city")
-        is_default = request.POST.get("is_default", False)
-
+        is_default = request.POST.get("is_default",False)
+        print(is_default)
         # Check if all required fields are provided
         required_fields = [full_name, phone_number, country, street_address, locality, postal_code, type, city]
         if all(required_fields):
             # Get the existing default address, if any
-            existing_default_address = Address.objects.filter(user=current_user, is_default=True).first()
-            if existing_default_address and is_default:
-                # If a new address is set as default, unset the existing default address
-                existing_default_address.is_default = False
-                existing_default_address.save()
-
             # Create a new address instance
             new_address = Address.objects.create(
                 user=current_user,
@@ -286,42 +255,42 @@ def create_address(request):
                 type=type,
                 is_default=is_default
             )
-            return redirect(reverse("view_address"))  # Assuming you have a view for viewing addresses
-
+            new_address.save()
+            return JsonResponse({'success': True})
         else:
-            messages.error(request, "Please provide all required fields.")
-            return redirect("create_address")
+            return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
 
-    return render(request, "account/address_manage.html")
-
+    return render(request, "account/address_manage.html",{"is_update": False})
 
 @login_required
-def update_address(request, id):
+def update_address(request,id):
     current_user = request.user
-
     address = Address.objects.filter(user=current_user, pk=id).first()
     if request.method == "POST":
-        address.full_name = request.POST.get("full_name")
-        address.phone_number = request.POST.get("phone_number")
-        address.street_address = request.POST.get("street_address")
-        address.locality = request.POST.get("locality")
-        address.country = request.POST.get("country")
-        address.postal_code = request.POST.get("postal_code")
-        address.type = request.POST.get("type")
-        address.city = request.POST.get("city")
+        full_name = request.POST.get("full_name")
+        phone_number = request.POST.get("phone_number")
+        street_address = request.POST.get("street_address")
+        locality = request.POST.get("locality")
+        country = request.POST.get("country")
+        postal_code = request.POST.get("postal_code")
+        type = request.POST.get("type")
+        city = request.POST.get("city")
         is_default = request.POST.get("is_default", False)
-        if is_default:
-            address.default_address = True
-            customer_addresses = (
-                Address.objects.exclude(id=address.id).filter(user=current_user).all()
-            )
-            customer_addresses.update(is_default=False)
-        address.save()
-        return redirect(reverse("view_address"))
-    return render(
-        request, "account/address_manage.html", {"address": address, "is_update": True}
-    )
-
+        required_fields = [full_name, phone_number, country, street_address, locality, postal_code, type, city]
+        if all(required_fields):
+            address.full_name= full_name
+            address.phone_number = phone_number
+            address.street_address = street_address
+            address.locality= locality
+            address.country = country
+            address.postal_code = postal_code
+            address.type = type
+            address.is_default = is_default
+            address.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
+    return render(request, "account/address_manage.html", {"address": address, "is_update": True})
 
 @login_required
 def delete_address(request, id):
@@ -338,10 +307,9 @@ def change_password(request):
     if request.method == "POST":
         password = request.POST.get("password")
         if password and check_password(password, current_password):
-            return redirect(reverse("set_new_password"))
+            return JsonResponse({'success': True})
         else:
-            messages.error(request, "Inccorect old password!")
-            return redirect(reverse("change_password"))
+            return JsonResponse({'success': False, 'error_message': error_messages.INVALID_CURRENT_PASSWORD})
     return render(request, "account/enter_current_password.html")
 
 
@@ -355,12 +323,9 @@ def set_new_password(request):
             current_user.set_password(new_password)
             current_user.save()
             update_session_auth_hash(request, current_user)
-            return redirect(reverse("update_profile"))
+            return JsonResponse({'success': True})
         else:
-            messages.error(
-                request, "New password must be different from the old password!"
-            )
-            return redirect(reverse("set_new_password"))
+            return JsonResponse({'success': False, 'error_message': error_messages.PASSWORDS_MUST_DIFFERENT})
     return render(request, "account/enter_new_password.html")
 
 
@@ -372,7 +337,8 @@ def view_account_notifications(request):
         if checked:
             current_user.receive_updates = True
             current_user.save()
-            return redirect(reverse("update_profile"))
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error_message': error_messages.GENERAL_ERROR})
     return render(
         request,
         "account/notification_setting.html",
@@ -389,11 +355,9 @@ def register_employee(request):
         email = request.POST.get("email")
         phone = request.POST.get("phone")
         if not (first_name and last_name and email and phone and username):
-            messages.error(request, "Please fill in all required information!")
-            return redirect(reverse("register_employee"))
+            return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
         if User.objects.filter(username=username).exists():
-            messages.error(request, "This username is taken! Please log in instead!")
-            return redirect(reverse("register_employee"))
+            return JsonResponse({'success': False, 'error_message': error_messages.USERNAME_IS_TAKEN})
         else:
 
             new_user = User.objects.create(
@@ -406,9 +370,9 @@ def register_employee(request):
             )
             new_user.save()
             Employee.objects.create(user=new_user).save()
-            return redirect(reverse("view_confirmation_page"))
-
+            return JsonResponse({'success': True})
     return render(request, "account/register_employee.html")
+
 
 
 def reset_password(request):

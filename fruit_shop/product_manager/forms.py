@@ -35,7 +35,7 @@ class ProductForm(forms.Form):
         required=False,
     )
     category = forms.ModelMultipleChoiceField(
-        queryset=Category.objects.filter(type='product'),
+        queryset=Category.objects.filter(type='product',parent_category__isnull=False),
         label="Categories",
         widget=forms.SelectMultiple(attrs={"class": "form-control"})
     )

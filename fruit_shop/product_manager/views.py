@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand
+from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category
 from django.contrib import messages
 from django.urls import reverse
 from common.utils import position_required, replace_string
@@ -17,6 +17,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
+from common import error_messages
 # from .utils import apply_discount
 # from django.contrib.auth.models import Permission
 # from django.contrib.contenttypes.models import ContentType
@@ -45,6 +46,10 @@ def category_filtered_view(request, category):
     )
     return render(request, "shop/shop.html", {"products": product_list})
 
+def get_your_products(request):
+    current_employee = request.user.employee
+    product_lists = Product.objects.filter(inventory_manager=current_employee)
+    return render(request,'shop/my_products.html',{'products':product_lists})
 
 
 @permission_required('fruit_shop_app.add_product',raise_exception=True)
@@ -67,8 +72,15 @@ def create_product(request):
                 inventory_manager=request.user.employee,
             )
             product.save()
-            category_ids = form.cleaned_data["category"]
-            product.categories.set(category_ids)
+            #if category has parent_category, also add to parent_category
+            categories = form.cleaned_data["category"]
+            all_categories = set(categories)
+            for category in categories:
+                current_category = category
+                while current_category.parent_category:
+                    all_categories.add(current_category.parent_category)
+                    current_category = current_category.parent_category
+            product.categories.set(all_categories)
             product_images = request.FILES.getlist(
                 "product_images"
             )  # Get list of uploaded images
@@ -109,12 +121,6 @@ def create_product(request):
 
     return render(request, "shop/create_product.html", {"form": form})
 
-def get_your_products(request):
-    current_employee = request.user.employee
-    product_lists = Product.objects.filter(inventory_manager=current_employee)
-    return render(request,'shop/my_products.html',{'products':product_lists})
-
-
 @permission_required('fruit_shop_app.change_product', raise_exception=True)
 def update_product(request,sku):
     product = get_object_or_404(Product, sku=sku)
@@ -124,12 +130,29 @@ def update_product(request,sku):
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            product = form.save(commit=False)  # Don't save yet
-            product.save()
+            product.product_name = form.cleaned_data["product_name"]
+            product.brand=form.cleaned_data["brand"]
+            product.price=form.cleaned_data["price"]
+            product.stock_quantity=form.cleaned_data["stock_quantity"]
+            product.unit=form.cleaned_data["unit"]
+            product.origin_country=form.cleaned_data["origin_country"]
+            product.information=form.cleaned_data["information"]
+            product.expiry_date=form.cleaned_data["expiry_date"]
 
             category_ids = form.cleaned_data["category"]
             product.categories.set(category_ids)
-
+            #if category has parent_category, also add to parent_category
+            categories = form.cleaned_data["category"]
+            all_categories = set(categories)
+            for category in categories:
+                current_category = category
+                while current_category.parent_category:
+                    all_categories.add(current_category.parent_category)
+                    current_category = current_category.parent_category
+            product.categories.set(all_categories)
+            product.save()
+            #delete all current images
+            ProductImage.objects.filter(product=product).delete()
             # Handle new product image uploads
             product_images = request.FILES.getlist("product_images")
             for img in product_images:
@@ -411,9 +434,12 @@ def create_brand(request):
         contact_person = request.POST.get("contact_person")
         email = request.POST.get("email")
         phone = request.POST.get("phone")
-        new_brand = Brand.objects.create(
-            brand_name=brand_name, contact_person=contact_person, email=email, phone=phone
-        )
-        new_brand.save()
-        return redirect(reverse("view_confirmation_page"))
+        fields = [brand_name,contact_person,email,phone]
+        if all(fields):
+            new_brand = Brand.objects.create(
+                brand_name=brand_name, contact_person=contact_person, email=email, phone=phone
+            )
+            new_brand.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
     return render(request, "account/create_brand.html")

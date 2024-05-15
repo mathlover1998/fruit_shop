@@ -5,6 +5,7 @@ import django.apps
 from django import forms
 from django.contrib.auth.models import Group, Permission
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.fields.related import ForeignKey
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from .models import *
@@ -141,7 +142,7 @@ class ProductForm(forms.ModelForm):
 class ProductFormAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == 'categories':
-            kwargs['queryset'] = Category.objects.filter(type='product')
+            kwargs['queryset'] = Category.objects.filter(type='product',parent_category__isnull=False)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
     inlines = [ProductImageInline]
     form = ProductForm
@@ -286,6 +287,10 @@ admin.site.register(Brand, BrandAdmin)
 
 # Category Section
 class CategoryAdmin(admin.ModelAdmin):
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name== 'parent_category':
+            kwargs['queryset'] = Category.objects.filter(parent_category__isnull=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     list_display = ("category_name",)
     search_fields = ("category_name",)
     fieldsets = (
@@ -391,6 +396,24 @@ class CommentAdmin(admin.ModelAdmin):
     has_add_permission = lambda self, request: False
 
 admin.site.register(Comment,CommentAdmin)
+
+@admin.register(ContactUsMessage)
+class ContactUsMessageAdmin(admin.ModelAdmin):
+    list_display = ['name','email',]
+    fieldsets = (
+        (
+            "Information",
+            {
+                "fields": (
+                    "name",
+                    "email",
+                    "subject",
+                    'content'
+                ),
+            },
+        ),
+    )
+    has_add_permission = lambda self, request: False
 
 
 # models = django.apps.apps.get_models()

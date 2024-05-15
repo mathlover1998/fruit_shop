@@ -87,7 +87,7 @@ def send_specific_email(request, choice: int, email_list, code=""):
         message = strip_tags(html_message)
     # mail with 6-digits verification code
     elif choice == 3:
-        subject = "Cole's Grocery Shop: Verification Code"
+        subject = f"Verification Code: {code}"
         html_message = render_to_string(
             "letters/verification_email.html",
             {"user": request.user.username, "code": code},
@@ -96,9 +96,9 @@ def send_specific_email(request, choice: int, email_list, code=""):
     #receive newsletter    
     elif choice==4:
         subject = (
-            "Cole's Grocery Shop: Thank you for subscribing to the Grocery Shop newsletter"
+            "Cole's Grocery Shop: Notification"
         )
-        message = "You will reveive further newsletter"
+        message = "Thank you for contacting us! We will respond to your inquiry as soon as possible."
         
     send_mail(
         subject=subject,

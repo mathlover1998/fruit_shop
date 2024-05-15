@@ -9,14 +9,8 @@
           <h2 class="text-center">Brand Form</h2>
         </div>
         <div class="card-body">
-          <form method="POST">
-            {% csrf_token %} {% if messages %}
-            <ul class="messages">
-              {% for message in messages %}
-              <li style="list-style-type: none" {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
-              {% endfor %}
-            </ul>
-            {% endif %}
+          <form method="POST" id='ajax-form'>
+            {% csrf_token %}
             <div class="form-group">
               <input type="text" class="form-control" placeholder="Please provide Brand's name" name="brand_name" required />
             </div>
@@ -36,5 +30,29 @@
     </div>
   </div>
 </div>
+<script>
+  const ajaxForm = document.getElementById('ajax-form');
+  ajaxForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(ajaxForm);
+    fetch("{% url 'create_brand' %}", {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        
+        window.location.href = "{% url 'index' %}";
+      } else {
+        alert(data.error_message);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("An error occurred. Please try again.");
+    });
+  });
+</script>
 
 {% endblock content %}

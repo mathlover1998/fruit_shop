@@ -51,7 +51,6 @@
     </li>
   </ul>
 </div>
-
 {% endblock nav_links %} 
 {% block side_cart_menu %}
 <div class="side">
@@ -76,7 +75,20 @@
 </div>
 {% endblock side_cart_menu %}
 
-
+{% block search-bar %}
+<div class="top-search">
+  <div class="container">
+    <div class="input-group">
+      <form action="{% url 'search_result' %}" method='get'>
+      <span class="input-group-addon"><i class="fa fa-search"></i></span>
+      <input type="text" class="form-control" name='q' placeholder="Type to search..." />
+      <span class="input-group-addon close-search"><i class="fa fa-times"></i></span>
+      <input type = 'submit' value = 'Search'>
+    </form>
+    </div>
+  </div>
+</div>
+{% endblock search-bar %}
 
 {% block instagram_feed %}
 
