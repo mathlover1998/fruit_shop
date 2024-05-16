@@ -38,7 +38,7 @@
                     <div class="single-product-details">
                         <h2>{{product.product_name}}</h2>
                         <p style ="color:grey">Brand: <span style="color:green">{{product.brand.brand_name}}</span>   |   SKU:{{product.sku}}</p>
-                        <h5> <del>$ 60.00</del> $40.79</h5>
+                        <h5> <del>{{product.price}} VND</del> {{product.updated_price}} VND</h5>
                         <p class="available-stock"><span> More than {{product.stock_quantity}} available / <a href="#">8 sold </a></span><p>
                                                 <h4>Short Description:</h4>
                                                 <p>{{product.information}} </p>
@@ -46,19 +46,18 @@
                                                         <li>
                                                                 <div class="form-group quantity-box">
                                                                         <label class="control-label">Quantity</label>
-                                                                        <input class="form-control" value="0" min="0" max="{{product.stock_quantity}}" type="number">
+                                                                        <input id='quantityInput' class="form-control" value="1" min="1" max="{{product.stock_quantity}}" type="number">
                                                                 </div>
                                                         </li>
                                                 </ul>
                                                 <div class="price-box-bar">
                                                         <div class="cart-and-bay-btn">
-                                                                <a class="btn hvr-hover" data-fancybox-close="" href="#">Buy New</a>
-                                                                <a class="btn hvr-hover" data-fancybox-close="" href="#">Add to cart</a>
+                                                            <a class="btn hvr-hover" href="#" onclick="addToCart({{product.id}})">Add to cart</a>
                                                         </div>
                                                 </div>
                                                 <div class="add-to-btn">
                                                         <div class="add-comp">
-                                                                <a class="btn hvr-hover" href="#"><i class="fas fa-heart"></i> Add to wishlist</a>
+                                                                <a class="btn hvr-hover" href="{% url 'update_wishlist_item' product_id=product.id %}"><i class="fas fa-heart"></i> Add to wishlist</a>
                                                                 <a class="btn hvr-hover" href="#"><i class="fas fa-sync-alt"></i> Add to Compare</a>
                                                         </div>
                                                         <div class="share-bar">
@@ -195,6 +194,11 @@
                 }
             });
         });
+        function addToCart(productId) {
+            var quantity = document.getElementById('quantityInput').value;
+            var url = "{% url 'update_cart_item' product_id=0 quantity=0 %}".replace('0', productId).replace('0', quantity);
+            window.location.href = url;
+        };
     </script>
     <!-- End Cart -->
     {% endblock content %}

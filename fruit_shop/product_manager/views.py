@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from common import error_messages
+import pandas as pd
 # from .utils import apply_discount
 # from django.contrib.auth.models import Permission
 # from django.contrib.contenttypes.models import ContentType
@@ -51,6 +52,19 @@ def get_your_products(request):
     product_lists = Product.objects.filter(inventory_manager=current_employee)
     return render(request,'shop/my_products.html',{'products':product_lists})
 
+def upload_file(request):
+    if request.method == 'POST':
+        excel_file = request.FILES['file']
+        # Read the Excel file using pandas
+        df = pd.read_excel(excel_file)
+        # Access specific row and column (replace indices with desired values)
+        specific_row = df.iloc[1]  # Access row at index 1 (second row)
+        # specific_column = df['Column_Name']  # Access column named 'Column_Name'
+        print(specific_row)
+        # Additional processing or display logic based on your needs
+        return HttpResponse('Noob')
+    return render(request, 'shop/manage_product.html')
+
 
 @permission_required('fruit_shop_app.add_product',raise_exception=True)
 def create_product(request):
@@ -68,7 +82,6 @@ def create_product(request):
                 unit=form.cleaned_data["unit"],
                 origin_country=form.cleaned_data["origin_country"],
                 information=form.cleaned_data["information"],
-                expiry_date=form.cleaned_data["expiry_date"],
                 inventory_manager=request.user.employee,
             )
             product.save()
@@ -117,16 +130,14 @@ def create_product(request):
                     product=product, image=cropped_image_path
                 ).save()
 
-            return redirect(reverse("get_all_products"))
+            return JsonResponse({'success': True})
 
-    return render(request, "shop/create_product.html", {"form": form})
+    return render(request, "shop/manage_product.html", {"form": form,'is_update':False})
 
 @permission_required('fruit_shop_app.change_product', raise_exception=True)
 def update_product(request,sku):
     product = get_object_or_404(Product, sku=sku)
     # Get current product images
-    current_images = product.images.all()
-
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
@@ -137,7 +148,6 @@ def update_product(request,sku):
             product.unit=form.cleaned_data["unit"]
             product.origin_country=form.cleaned_data["origin_country"]
             product.information=form.cleaned_data["information"]
-            product.expiry_date=form.cleaned_data["expiry_date"]
 
             category_ids = form.cleaned_data["category"]
             product.categories.set(category_ids)
@@ -190,9 +200,9 @@ def update_product(request,sku):
                         product=product, image=cropped_image_path
                     ).save()
                 except (ValidationError, OSError) as e:
-                    messages.error(request, f"Error saving image: {e}")
+                    return JsonResponse({'success': False, 'error_message': error_messages.INVALID_IMAGE})
 
-            return redirect("get_all_products")
+            return JsonResponse({'success': True})
 
     else:
         # Populate form with product data
@@ -201,7 +211,7 @@ def update_product(request,sku):
     return render(
         request,
         "shop/update_product.html",
-        {"form": form, "current_images": current_images, "product": product},
+        {"form": form, "product": product,'is_update':True},
     )
 
 
@@ -443,3 +453,4 @@ def create_brand(request):
             return JsonResponse({'success': True})
         return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
     return render(request, "account/create_brand.html")
+

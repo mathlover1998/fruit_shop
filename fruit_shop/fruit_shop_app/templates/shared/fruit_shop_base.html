@@ -43,7 +43,7 @@
     <li class="side-menu">
       <a href="#">
         <i class="fa fa-shopping-bag"></i>
-        <span class="badge">{{global_cart_items_count}}</span>
+        <span class="badge" style='color:black;'>{{global_cart_items_count}}</span>
         {% comment %}
         <p>My Cart</p>
         {% endcomment %}
@@ -76,18 +76,18 @@
 {% endblock side_cart_menu %}
 
 {% block search-bar %}
+<form id = 'searchForm' action="{% url 'search_result' %}" method='get'>
 <div class="top-search">
   <div class="container">
     <div class="input-group">
-      <form action="{% url 'search_result' %}" method='get'>
       <span class="input-group-addon"><i class="fa fa-search"></i></span>
       <input type="text" class="form-control" name='q' placeholder="Type to search..." />
       <span class="input-group-addon close-search"><i class="fa fa-times"></i></span>
-      <input type = 'submit' value = 'Search'>
-    </form>
+      <input type="submit" value="Search" style="display:none;">
     </div>
   </div>
 </div>
+</form>
 {% endblock search-bar %}
 
 {% block instagram_feed %}

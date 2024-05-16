@@ -18,6 +18,30 @@ admin.site.register(Permission)
 
 
 # filter email (has email, no email)
+
+class PriceRangeFilter(admin.SimpleListFilter):
+    title = _('price range')
+    parameter_name = 'price_range'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('0-100', _('0 to 100')),
+            ('101-500', _('101 to 500')),
+            ('501-1000', _('501 to 1000')),
+            ('1000+', _('1000+')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == '0-100':
+            return queryset.filter(price__gte=0, price__lte=100000)
+        if self.value() == '101-500':
+            return queryset.filter(price__gte=100001, price__lte=500000)
+        if self.value() == '501-1000':
+            return queryset.filter(price__gte=500001, price__lte=1000000)
+        if self.value() == '1000+':
+            return queryset.filter(price__gte=1001)
+        return queryset
+
 class EmailFilter(admin.SimpleListFilter):
     title = _(
         "Email Filter",
@@ -149,7 +173,7 @@ class ProductFormAdmin(admin.ModelAdmin):
     search_fields = ["product_name", "sku"]
     list_display = ['product_name','sku','price','brand','is_featured','is_active']
     list_per_page = 20
-    list_filter = ["is_active", "price", "stock_quantity"]
+    list_filter = ["is_active", PriceRangeFilter, "stock_quantity"]
     readonly_fields = ["create_date",'updated_price','updated_at']
     ordering = [
         "-create_date",

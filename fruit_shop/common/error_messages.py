@@ -16,3 +16,4 @@ PASSWORDS_MUST_DIFFERENT = "New password cannot be the same as your current pass
 REQUIRED_EMAIL_OR_PHONE = "Please enter your email address or phone number to proceed."
 GENERAL_ERROR = "An unexpected error occurred. Please refresh the page and try again."
 GENERAL_NOTIFICATION = "Thank you for your comments that help build our website"
+INVALID_IMAGE = "There seems to be a problem with the image you uploaded. Please try uploading a different image."

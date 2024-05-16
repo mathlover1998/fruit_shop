@@ -183,7 +183,7 @@ class Product(models.Model):
     information = models.TextField(null=True)
     create_date = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    expiry_date = models.DateTimeField(blank=True, null=True)
+    expiry_date = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=30))
     sku = models.CharField(max_length=10, unique=True, default="", blank=True)
     unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
@@ -216,12 +216,31 @@ class Product(models.Model):
             sku = "SP" + sku
             if not Product.objects.filter(sku=sku).exists():
                 return sku
+            
+
+    # def set_categories(self):
+    #     all_categories = set(self.categories)
+    #     for category in self.categories:
+    #         current_category = category
+    #         while current_category.parent_category:
+    #             all_categories.add(current_category.parent_category)
+    #             current_category = current_category.parent_category
+    #     self.categories.set(all_categories)
 
     def save(self, *args, **kwargs):
-        if self.updated_price == 0:  # Check if updated_price is not already set
+        # categories = kwargs.pop('categories', None)
+        if self.updated_price == 0: 
             self.updated_price = self.price
-        self.sku = self.generate_unique_sku()
+        if not self.sku:
+            self.sku = self.generate_unique_sku()
+        #only accept 10 featured products at a time
+        if Product.objects.filter(is_featured=True).count() >=10 and self.is_featured==True:
+            first_featured_product = Product.objects.filter(is_featured=True).first()
+            first_featured_product.is_featured = False
+            first_featured_product.save()
         super().save(*args, **kwargs)
+        # if categories is not None:
+        #     self.set_categories()
 
     class Meta:
         ordering = ["id"]
