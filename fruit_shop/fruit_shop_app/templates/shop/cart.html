@@ -23,18 +23,18 @@
               {% for item in cart_items %}
               <tr>
                 <td class="thumbnail-img">
-                  <a href="{% url 'get_product' product_id=item.product.id%}">
+                  <a href="{% url 'get_product' sku=item.product.sku%}">
                     <img class="img-fluid" src="{{ item.product.images.first.image.url }}" alt="Product Image" />
                   </a>
                 </td>
                 <td class="name-pr">
-                  <a href="{% url 'get_product' product_id=item.product.id%}">{{ item.product.product_name }}</a>
+                  <a href="{% url 'get_product' sku=item.product.sku%}">{{ item.product.product_name }}</a>
                 </td>
                 <td class="price-pr">
                   <p>{{ item.product.price }}đ</p>
                 </td>
                 <td class="quantity-box">
-                  <input type="number" data-product-id="{{ item.product.id }}" value="{{ item.quantity }}" min="1" step="1" class="c-input-text qty text" readonly/>
+                  <input id='quantityInput{{ item.product.id }}' data-product-id="{{ item.product.id }}" value="{{item.quantity}}" min="1" step="1" class="c-input-text qty text" type="number">
                 </td>
                 <td class="total-pr">
                   <p>{{ item.total_price }}đ</p>
@@ -61,11 +61,11 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-6 col-sm-6">
-        <div class="update-box">
-          <input value="Update Cart" type="button"/>
+      <div class="price-box-bar">
+        <div class="cart-and-bay-btn">
+            <a class="btn hvr-hover" href="#" onclick="addToCart({{ item.product.id }})">Update</a>
         </div>
-      </div>
+    </div>
     </div>
 
     <div class="row my-5">
@@ -99,6 +99,13 @@
     {% endif %}
   </div>
 </div>
-
+<script>
+  function addToCart(productId) {
+    var quantityInput = document.getElementById('quantityInput' + productId);
+    var quantity = quantityInput.value;
+    var url = "{% url 'update_cart_item' product_id=0 quantity=0 %}".replace('0', productId).replace('0', quantity);
+    window.location.href = url;
+  };
+</script>
 <!-- End Cart -->
 {% endblock content %}

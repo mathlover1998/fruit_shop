@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
+from django.http import HttpResponse,HttpResponseRedirect,JsonResponse,FileResponse
 from django.urls import reverse
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from common.utils import send_specific_email
+from common.utils import send_specific_email,validate_product_template_excel
 from django.views.decorators.csrf import csrf_exempt
 from common import error_messages
 from fruit_shop_app.models import ContactUsMessage,Product
+from django.conf import settings
+import os
 
 # Create your views here.
 def index(request):
@@ -68,3 +70,7 @@ def search_result(request):
         products = Product.objects.none()
     
     return render(request, 'shop/search-results.html', {'products': products, 'query': query})
+
+def download_template(request):
+    file_path = validate_product_template_excel()
+    return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')

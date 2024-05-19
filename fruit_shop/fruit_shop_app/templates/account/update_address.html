@@ -71,7 +71,7 @@
     ajaxForm.addEventListener('submit', function(event) {
       event.preventDefault();
       const formData = new FormData(ajaxForm);
-      fetch("{% url 'create_address' %}" , {
+      fetch("{% url 'update_address' id=address.id %}" , {
         method: 'POST',
         body: formData
       })

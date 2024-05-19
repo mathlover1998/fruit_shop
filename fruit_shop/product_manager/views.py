@@ -2,7 +2,7 @@ from django.shortcuts import render, HttpResponse, redirect
 from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category
 from django.contrib import messages
 from django.urls import reverse
-from common.utils import position_required, replace_string
+from common.utils import convert_to_csv,handle_uploaded_file
 from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseRedirect
@@ -19,9 +19,6 @@ from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from common import error_messages
 import pandas as pd
-# from .utils import apply_discount
-# from django.contrib.auth.models import Permission
-# from django.contrib.contenttypes.models import ContentType
 
 
 # Create your views here.
@@ -54,15 +51,44 @@ def get_your_products(request):
 
 def upload_file(request):
     if request.method == 'POST':
-        excel_file = request.FILES['file']
-        # Read the Excel file using pandas
-        df = pd.read_excel(excel_file)
-        # Access specific row and column (replace indices with desired values)
-        specific_row = df.iloc[1]  # Access row at index 1 (second row)
-        # specific_column = df['Column_Name']  # Access column named 'Column_Name'
-        print(specific_row)
-        # Additional processing or display logic based on your needs
-        return HttpResponse('Noob')
+        file_path = handle_uploaded_file(request.FILES['file'])
+        csv_file_path = convert_to_csv(file_path)
+        df = pd.read_csv(csv_file_path)
+        if df.empty:
+            return JsonResponse({'error': 'The uploaded file is empty or invalid'}, status=400)
+        for index, row in df.iterrows():
+            categories =Category.objects.filter(category_name=row.iloc[9])
+            brand = Brand.objects.filter(brand_name=row.iloc[8]).first()
+
+            common_args = {
+            "brand": brand,
+            "product_name": row.iloc[0],
+            "price": row.iloc[1],
+            "stock_quantity": row.iloc[4],
+            "origin_country": row.iloc[5],
+            "information": row.iloc[6],
+            "unit": row.iloc[3]
+            }
+
+            if row.iloc[7]:
+                common_args["sku"] = row.iloc[7]
+
+            product = Product.objects.create(**common_args)
+            product.save()
+            all_categories = set(categories)
+            for category in categories:
+                current_category = category
+                while current_category.parent_category:
+                    all_categories.add(current_category.parent_category)
+                    current_category = current_category.parent_category
+            product.categories.set(all_categories)
+            ProductImage.objects.create(product=product, image=row.iloc[2]).save()
+        # with open(csv_file_path, 'rb') as f:
+        #     response = HttpResponse(f.read(), content_type='text/csv')
+        #     response['Content-Disposition'] = f'attachment; filename={os.path.basename(csv_file_path)}'
+        #     return response
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+            
     return render(request, 'shop/manage_product.html')
 
 
@@ -337,7 +363,9 @@ def checkout(request):
     if request.method == "POST":
         # Assuming you have a form submission with necessary checkout details
         payment_method = request.POST.get("payment_method")
-        print(payment_method)
+        address_id = request.POST.get("address")
+        address = Address.objects.filter(user=request.user,pk=address)
+        print(address.street_address)
         # Check if payment method is cash on delivery
         if payment_method == "cash":
 
@@ -346,7 +374,7 @@ def checkout(request):
                 customer=request.user.customer,
                 total_amount=0,
                 status="pending",
-                shipping_address=request.POST.get("address"),
+                shipping_address=Address.objects.filter(pk=request.POST.get("address")),
                 
             )
             total_amount = 0
@@ -453,4 +481,3 @@ def create_brand(request):
             return JsonResponse({'success': True})
         return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
     return render(request, "account/create_brand.html")
-

@@ -157,6 +157,3 @@ def get_domain_name(request):
     if settings.DEBUG:
         host = 'example.com'
     return {'domain_name':host}
-
-# def search_bar(request):
-#     pass

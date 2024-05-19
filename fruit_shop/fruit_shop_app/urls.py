@@ -12,4 +12,5 @@ urlpatterns = [
     path('receive-newsletter/',views.register_newsletter,name='register_newsletter'),
     path('search/',views.search_result,name='search_result'),
     path('clear/',views.clear_session,name='clear_session'),
+    path('download-template/', views.download_template, name='download_template'),
 ]

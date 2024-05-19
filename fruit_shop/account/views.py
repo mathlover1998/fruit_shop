@@ -1,6 +1,6 @@
 import os, asyncio
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
-from fruit_shop_app.models import User, Customer, Address, Employee
+from fruit_shop_app.models import User, Customer, Address, Employee,Order
 from django.contrib import messages
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -18,6 +18,7 @@ from django.http import (
     HttpResponseForbidden,
     HttpResponseRedirect,
     HttpResponseBadRequest,
+    HttpResponseServerError
 )
 from django.core.serializers import serialize
 from django.contrib.auth import update_session_auth_hash
@@ -237,7 +238,6 @@ def create_address(request):
         type = request.POST.get("type")
         city = request.POST.get("city")
         is_default = request.POST.get("is_default",False)
-        print(is_default)
         # Check if all required fields are provided
         required_fields = [full_name, phone_number, country, street_address, locality, postal_code, type, city]
         if all(required_fields):
@@ -290,7 +290,7 @@ def update_address(request,id):
             return JsonResponse({'success': True})
         else:
             return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
-    return render(request, "account/address_manage.html", {"address": address, "is_update": True})
+    return render(request, "account/update_address.html", {"address": address, "is_update": True})
 
 @login_required
 def delete_address(request, id):
@@ -480,3 +480,9 @@ def set_new_password_reset_password(request, user_id):
             )
             return redirect(reverse("set_new_password"))
     return render(request, "account/enter_new_password.html")
+
+def view_order(request):
+
+    orders = Order.objects.filter(customer=request.user.customer).all()
+        
+    return render(request,'shop/order.html',{'orders':orders})

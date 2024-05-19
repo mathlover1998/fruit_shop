@@ -22,4 +22,5 @@ urlpatterns= [
     path('reset-password/',views.reset_password,name='reset_password'),
     path('verification-code-reset-password/<str:email_or_phone>/',views.handle_verification_code_reset_password,name='handle_verification_code_reset_password'),
     path('reset-password/confirm/',views.set_new_password_reset_password,name='set_new_password_reset_password'),#
+    path('order/',views.view_order,name='view_order'),
 ]

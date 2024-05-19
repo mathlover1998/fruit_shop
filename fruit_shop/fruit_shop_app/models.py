@@ -423,11 +423,14 @@ class Address(models.Model):
     is_default = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
+        #the first address always has is_default=True
         if not Address.objects.filter(user=self.user).exists():
             self.is_default = True
         else:
             if self.is_default:
                 Address.objects.filter(user=self.user).exclude(pk=self.pk).update(is_default=False)
+            if not Address.objects.filter(is_default=True).exists():
+                self.is_default=True
         super().save(*args, **kwargs)
     class Meta:
         ordering = ["id"]
@@ -447,7 +450,7 @@ class Order(models.Model):
         ("shipped", "Shipped"),
         ("cancelled", "Cancelled"),
     )
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE,related_name='customer')
     placed_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(choices=ORDER_STATUS, null=False, default="pending")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -497,7 +500,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True,related_name='order_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField(null=False, default=0)
     subtotal = models.IntegerField(null=False, default=0)
