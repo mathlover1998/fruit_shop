@@ -18,7 +18,7 @@ class MultipleFileField(forms.FileField):
         return result
 
 
-class CreateProductForm(forms.Form):
+class ProductForm(forms.Form):
 
     brand = forms.ModelChoiceField(
         queryset=Brand.objects.all(),
@@ -35,7 +35,7 @@ class CreateProductForm(forms.Form):
         required=False,
     )
     category = forms.ModelMultipleChoiceField(
-        queryset=Category.objects.all(),
+        queryset=Category.objects.filter(type='product',parent_category__isnull=False),
         label="Categories",
         widget=forms.SelectMultiple(attrs={"class": "form-control"})
     )
@@ -62,10 +62,5 @@ class CreateProductForm(forms.Form):
         widget=forms.Textarea(
             attrs={"class": "form-control", "rows": 3}
         ),  # Using Textarea widget
-        required=False,
-    )
-    expiry_date = forms.DateField(
-        label="Expiry Date",
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         required=False,
     )

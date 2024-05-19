@@ -132,6 +132,7 @@
           <div class="special-menu text-center">
             <div class="button-group filter-button-group">
               <button class="active" data-filter="*">All</button>
+              <button data-filter=".featured_product">Featured Products</button>
               {% for category, products in separated_category_products.items %}
               <button data-filter=".{{ category|snake_case_filter }}">{{category|snake_case_to_title_case}}</button>
               {% endfor %}
@@ -170,6 +171,35 @@
         </div>
         {% endfor %}
         {% endfor %}
+        {% if featured_products %}
+        {% for product in featured_products %}
+        <div class="col-lg-3 col-md-6 special-grid featured_product">
+          <div class="products-single fix">
+            <div class="box-img-hover">
+              <img src="{% if product.images.all %}{{ product.images.first.image.url }}{% else %}{% static 'images/default_fruit.jpg' %}{% endif %}" class="img-fluid" alt="Image" />
+              <div class="mask-icon">
+                <ul>
+                    <li>
+                        <a href="{% url 'get_product' sku=product.sku%}" data-toggle="tooltip" data-placement="right" title="View"><i class="fas fa-eye"></i></a>
+                      </li>
+                      <li>
+                        <a href="#" data-toggle="tooltip" data-placement="right" title="Compare"><i class="fas fa-sync-alt"></i></a>
+                      </li>
+                      <li>
+                        <a href="#" data-toggle="tooltip" data-placement="right" title="Add to Wishlist"><i class="far fa-heart"></i></a>
+                      </li>
+                </ul>
+                <a class="cart" href="{% url 'update_cart_item' product_id=product.id quantity=1 %}">Add to Cart</a>
+              </div>
+            </div>
+            <div class="why-text">
+              <h4>{{ product.product_name }}</h4>
+              <h5>{{ product.price }}đ</h5>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% endif %}
       </div>
     </div>
   </div>
@@ -182,6 +212,7 @@
           <div class="title-all text-center">
             <h1>Recently viewed</h1>
             <div class="row">
+              {% if recently_viewed_products %}
                 {% for product in recently_viewed_products %}
                 <div class="col-lg-3 col-md-6 special-grid">
                   <div class="products-single fix">
@@ -209,6 +240,13 @@
                   </div>
                 </div>
                 {% endfor %}
+                {% else %}
+                <div class="no-products-message">
+                    No products have been recently viewed.
+                </div>
+                {% endif %}
+
+                
             </div>
           </div>
         </div>

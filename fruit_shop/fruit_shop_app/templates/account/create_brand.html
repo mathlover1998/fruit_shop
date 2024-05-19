@@ -1,0 +1,58 @@
+{% extends "shared/fruit_shop_base.html" %} {% load static %} {% block heading_title %}Create Brand{% endblock heading_title %} 
+{% block heading_sub_title %}Create Brand{% endblock heading_sub_title %} {% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-center">Brand Form</h2>
+        </div>
+        <div class="card-body">
+          <form method="POST" id='ajax-form'>
+            {% csrf_token %}
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="Please provide Brand's name" name="brand_name" required />
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="Enter contact person" name="contact_person" required />
+            </div>
+            <div class="form-group">
+              <input type="email" class="form-control" placeholder="Enter Brand's email" name="email" required />
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Enter Brand's contact phone number" name="phone" required />
+              </div>
+            <input type="submit" class="btn btn-primary btn-block" value="Create" />
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const ajaxForm = document.getElementById('ajax-form');
+  ajaxForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(ajaxForm);
+    fetch("{% url 'create_brand' %}", {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        
+        window.location.href = "{% url 'index' %}";
+      } else {
+        alert(data.error_message);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("An error occurred. Please try again.");
+    });
+  });
+</script>
+
+{% endblock content %}

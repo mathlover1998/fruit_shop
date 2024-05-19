@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(py9y)mt4nwsukdwcye0nm95i_+*0__s32oe-!2a_@g+!4pekk'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -50,27 +50,28 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    "whitenoise.runserver_nostatic",
+    # "whitenoise.runserver_nostatic",
     'django.contrib.staticfiles',
     'fruit_shop_app',
     'account',
     'product_manager',
     'blog',
+    'common',
     # 'django_celery_beat'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'fruit_shop_app.middleware.CustomPermissionDeniedMiddleware',
-    'fruit_shop_app.middleware.CheckURLMiddleware',
-    'fruit_shop_app.middleware.CheckProductExistMiddleware',
+    'fruit_shop.middleware.CustomPermissionDeniedMiddleware',
+    'fruit_shop.middleware.CheckURLMiddleware',
+    'fruit_shop.middleware.CheckProductExistMiddleware',
     
 ]
 
@@ -79,7 +80,7 @@ ROOT_URLCONF = 'fruit_shop.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'templates')],
+        'DIRS': [os.path.join(BASE_DIR,'fruit_shop_app/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,15 +88,17 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'fruit_shop.context_processors.get_global_cart_data',
-                'fruit_shop.context_processors.get_separated_category_product',
-                'fruit_shop.context_processors.get_category_name_context',
-                'fruit_shop.context_processors.get_recently_viewed_products',
-                'fruit_shop.context_processors.get_latest_discounts',
-                'fruit_shop.context_processors.get_website_information',
+                'common.context_processors.get_global_cart_data',
+                'common.context_processors.get_separated_category_product',
+                'common.context_processors.get_category_name_context',
+                'common.context_processors.get_latest_discounts',
+                'common.context_processors.get_website_information',
+                'common.context_processors.get_featured_products_context',
+                'common.context_processors.get_recently_viewed_products',
+                'common.context_processors.get_domain_name',
             ],
             'libraries':{
-                'custom_filters': 'product_manager.custom_filters'
+                'custom_filters': 'common.custom_filters'
             }
         },
     },
@@ -115,17 +118,17 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # }
 
 # local postgresql database
-# DATABASES = {
+DATABASES = {
     
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'fruit_shop_db',
-#         'USER': 'admin',
-#         'PASSWORD': '1234',
-#         'HOST':'localhost',
-#         'PORT':'5432' 
-#     }
-# }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fruit_shop_db',
+        'USER': 'admin',
+        'PASSWORD': '1234',
+        'HOST':'localhost',
+        'PORT':'5432' 
+    }
+}
 
 
 # aws database (disabled)
@@ -142,13 +145,13 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 
 
 #render database
-DATABASES = {
+# DATABASES = {
     
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-    }
-}
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+#     }
+# }
     
 
 
@@ -210,5 +213,5 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # WHITENOISE_MANIFEST_STRICT = False
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+# STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 # STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"

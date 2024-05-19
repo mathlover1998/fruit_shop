@@ -5,14 +5,34 @@
 {% block heading_sub_title  %}Contact Us{% endblock heading_sub_title %}
 {% block content %}
  <!-- Start Contact Us  -->
+ <style>
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #f0ad4e;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        display: none;
+      }
+      
+      .notification.show {
+        display: block;
+      }
+ </style>
+ <div id="notification" class="notification"></div>
  <div class="contact-box-main">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 col-sm-12">
                 <div class="contact-form-right">
                     <h2>GET IN TOUCH</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed odio justo, ultrices ac nisl sed, lobortis porta elit. Fusce in metus ac ex venenatis ultricies at cursus mauris.</p>
-                    <form id="contactForm">
+                    <p>If you have questions, please provide information and contact us</p>
+                    <form method='post' id ='ajax-form'>
+                        {% csrf_token %}
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
@@ -22,26 +42,27 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" placeholder="Your Email" id="email" class="form-control" name="name" required data-error="Please enter your email">
+                                    <input type="text" placeholder="Your Email" id="email" class="form-control" name="email" required data-error="Please enter your email">
                                     <div class="help-block with-errors"></div>
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="subject" name="name" placeholder="Subject" required data-error="Please enter your Subject">
+                                    <input type="text" class="form-control" id="subject" name="subject" placeholder="Subject" required data-error="Please enter your Subject">
                                     <div class="help-block with-errors"></div>
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <textarea class="form-control" id="message" placeholder="Your Message" rows="4" data-error="Write your message" required></textarea>
+                                    <textarea class="form-control" id="message" placeholder="Your Message" rows="4" data-error="Write your message" name='content'></textarea>
                                     <div class="help-block with-errors"></div>
                                 </div>
                                 <div class="submit-button text-center">
-                                    <button class="btn hvr-hover" id="submit" type="submit">Send Message</button>
+                                    <input class="btn hvr-hover" id="submit" type="submit" value='Send Message'>
                                     <div id="msgSubmit" class="h3 text-center hidden"></div>
                                     <div class="clearfix"></div>
                                 </div>
+                                
                             </div>
                         </div>
                     </form>
@@ -50,16 +71,16 @@
             <div class="col-lg-4 col-sm-12">
                 <div class="contact-info-left">
                     <h2>CONTACT INFO</h2>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent urna diam, maximus ut ullamcorper quis, placerat id eros. Duis semper justo sed condimentum rutrum. Nunc tristique purus turpis. Maecenas vulputate. </p>
+                    <p>Contact information about our team</p>
                     <ul>
                         <li>
-                            <p><i class="fas fa-map-marker-alt"></i>Address: Michael I. Days 9000 <br>Preston Street Wichita,<br> KS 87213 </p>
+                            <p><i class="fas fa-map-marker-alt"></i>{{global_information.global_website_address}}</p>
                         </li>
                         <li>
-                            <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:+1-888705770">+1-888 705 770</a></p>
+                            <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:{{global_information.global_website_phone}}">{{global_information.global_website_phone}}</a></p>
                         </li>
                         <li>
-                            <p><i class="fas fa-envelope"></i>Email: <a href="mailto:contactinfo@gmail.com">contactinfo@gmail.com</a></p>
+                            <p><i class="fas fa-envelope"></i>Email: <a href="mailto:{{global_information.global_website_email}}">{{global_information.global_website_email}}</a></p>
                         </li>
                     </ul>
                 </div>
@@ -67,7 +88,43 @@
         </div>
     </div>
 </div>
-<!-- End Cart -->
+<script>
+    const ajaxForm = document.getElementById('ajax-form');
+    const notification = document.getElementById('notification');
+  
+    ajaxForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(ajaxForm);
+      fetch("{% url 'handle_contact_us' %}", {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+            
+          window.location.href = "{% url 'handle_contact_us' %}";
+        } else {
+            showNotification(data.error_message);
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        showNotification("An error occurred. Please try again.");
+      });
+    });
+  
+    function showNotification(message) {
+        notification.textContent = message;
+        if (!notification.classList.contains('notification')) {
+          notification.classList.add('notification');
+        }
+        notification.classList.add('show');
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 5000);
+      }
+  </script>
 
 
 

@@ -1,19 +1,21 @@
 {% extends "shared/fruit_shop_base.html" %}
 {% load static %}
 
-{% block title_box %}{% endblock title_box %}
+{% block heading_title %}Verify Code{% endblock heading_title %}
+{% block heading_sub_title %}Verify{% endblock heading_sub_title %}
 {% block content %}
+
 
 <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-md-12">
       <div class="card">
         <div class="card-header">
-          <h2 class="text-start">{{text}}</h2>
+          <h2 class="text-start">Vefiry code send via your email/phone</h2>
           
         </div>
         <div class="card-body">
-          <form method='POST'>
+          <form method='POST' id='ajax-form'>
             {% csrf_token %}
             {% if messages %}
               <ul class="messages" >
@@ -23,13 +25,37 @@
               </ul>
             {% endif %}
             <div class="mb-3">
-              <input type="text" class="form-control" placeholder="Enter code" name ='code'>
+              <input type="text" class="form-control" placeholder="Code" name="code" id="code">
             </div>
-            <input type="submit" class="btn btn-primary btn-block" value='Confirm'>
+            <input type="submit" class="btn btn-primary btn-sm btn-block" value="Confirm">
           </form>
         </div>
       </div>
     </div>
   </div>
 </div>
+<script>
+  const ajaxForm = document.getElementById('ajax-form');
+  ajaxForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(ajaxForm);
+    fetch("{% url 'handle_verification_code' %}", {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        
+        window.location.href = "{% url 'update_profile' %}";
+      } else {
+        alert(data.error_message);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("An error occurred. Please try again.");
+    });
+  });
+</script>
 {% endblock content %}

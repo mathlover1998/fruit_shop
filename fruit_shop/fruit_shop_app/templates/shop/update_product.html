@@ -10,10 +10,10 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-header">
-            <h2 class="text-center">{% if is_update %}Update {% else %}Create {% endif %}Product Form</h2>
+            <h2 class="text-center">Update Product Form</h2>
           </div>
           <div class="card-body">
-            <form method='POST' enctype="multipart/form-data" > 
+            <form method='POST' enctype="multipart/form-data" id='ajax-form'> 
               {% csrf_token %}
               {% for field in form %}
               <div class="form-group">
@@ -33,5 +33,28 @@
       </div>
     </div>
   </div>
-  
+  <script>
+    const ajaxForm = document.getElementById('ajax-form');
+    ajaxForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(ajaxForm);
+      fetch("{% url 'update_product' sku=product.sku%}", {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          
+          window.location.href = "{% url 'get_product' sku=product.sku %}";
+        } else {
+          alert(data.error_message);
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert("An error occurred. Please try again.");
+      });
+    });
+  </script>
 {% endblock content %}

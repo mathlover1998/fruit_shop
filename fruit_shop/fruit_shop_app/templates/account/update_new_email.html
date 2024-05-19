@@ -1,28 +1,9 @@
 {% extends "shared/fruit_shop_base.html" %}
 {% load static %}
 
-{% block heading_title %}REGISTER{% endblock heading_title %}
-{% block heading_sub_title %}Register{% endblock heading_sub_title %}
+{% block heading_title %}Change Email{% endblock heading_title %}
+{% block heading_sub_title %}Change Email{% endblock heading_sub_title %}
 {% block content %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const field = document.getElementById("check_filled_in");
-      
-      const submitButton = document.getElementById("submitButton");
-  
-      function checkFields() {
-        if (field.value.trim() !== "") {
-          submitButton.disabled = false;
-        } else {
-          submitButton.disabled = true;
-        }
-      }
-  
-      field.addEventListener("input", checkFields);
-      // Initial check
-      checkFields();
-    });
-  </script>
 <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-md-12">
@@ -32,12 +13,12 @@
           
         </div>
         <div class="card-body">
-          <form method='POST' enctype="multipart/form-data">
+          <form method='POST' enctype="multipart/form-data" id="ajax-form">
             {% csrf_token %}
             {% if messages %}
-              <ul class="messages" >
+              <ul class="messages">
                 {% for message in messages %}
-                  <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                  <li style="color: red; list-style-type: none;" {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
                 {% endfor %}
               </ul>
             {% endif %}
@@ -55,6 +36,46 @@
       </div>
     </div>
   </div>
-  {% comment %} <div class> {% endcomment %}
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const field = document.getElementById("check_filled_in");
+    
+    const submitButton = document.getElementById("submitButton");
+
+    function checkFields() {
+      if (field.value.trim() !== "") {
+        submitButton.disabled = false;
+      } else {
+        submitButton.disabled = true;
+      }
+    }
+
+    field.addEventListener("input", checkFields);
+    // Initial check
+    checkFields();
+  });
+
+  const ajaxForm = document.getElementById('ajax-form');
+  ajaxForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(ajaxForm);
+    fetch("{% url 'update_email' %}", {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = data.redirect_url;
+      } else {
+        alert(data.error_message);
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("An error occurred. Please try again.");
+    });
+  });
+</script>
 {% endblock content %}

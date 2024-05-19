@@ -13,15 +13,8 @@
             <h2 class="text-center">Login</h2>
           </div>
           <div class="card-body">
-            <form method='POST'>
+            <form id='ajax-form'method='POST'>
               {% csrf_token %}
-              {% if messages %}
-                <ul class="messages" >
-                  {% for message in messages %}
-                    <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
               <div class="form-group">
                   <input type="text" class="form-control" id="name" placeholder="Enter your Username" name="username" required>
               </div>
@@ -39,4 +32,27 @@
       </div>
     </div>
   </div>
+  <script>
+    const loginForm = document.getElementById('ajax-form');
+    loginForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(loginForm);
+      fetch("{% url 'handle_login' %}", {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "{% url 'index' %}";
+        } else {
+          alert(data.error_message);
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert("An error occurred. Please try again.");
+      });
+    });
+  </script>
 {% endblock content %}

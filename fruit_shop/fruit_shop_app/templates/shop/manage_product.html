@@ -1,0 +1,74 @@
+{% extends "shared/fruit_shop_base.html" %}
+{% load static %}
+
+{% block title_box %}
+{% endblock title_box %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h3>Upload File</h3>
+          <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+            {% csrf_token %}
+            <input type="file" name="file">
+            <br>
+            <input type="submit" value='Upload'>
+            <br>
+            <a href="{% url 'download_template' %}">Download Excel Template</a>
+        </form>
+        </div>
+      </div>
+    </div>
+      <div class="col-md-6">
+          <div class="card">
+              <div class="card-header">
+                  <h2 class="text-center">{% if is_update %}Update {% else %}Create {% endif %}Product Form</h2>
+              </div>
+              <div class="card-body">
+                  <form method='POST' enctype="multipart/form-data" id ='ajax-form'> 
+                      {% csrf_token %}
+                      {% for field in form %}
+                      <div class="form-group">
+                          {{ field.label_tag }} {{ field }} {% if field.errors %}
+                          <ul class="errors">
+                              {% for error in field.errors %}
+                              <li>{{ error }}</li>
+                              {% endfor %}
+                          </ul>
+                          {% endif %}
+                      </div>
+                      {% endfor %}
+                      <input type="submit" class="btn btn-primary btn-block" value={% if is_update %}'Update'{% else %}'Create'{% endif %}>
+                  </form>
+              </div>
+          </div>
+      </div>
+  <script>
+    const ajaxForm = document.getElementById('ajax-form');
+    ajaxForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(ajaxForm);
+      const isUpdate = {{is_update|lower }};
+      fetch("{% url 'create_product' %}", {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          
+          window.location.href = "{% url 'get_your_products' %}";
+        } else {
+          alert(data.error_message);
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert("An error occurred. Please try again.");
+      });
+    });
+  </script>
+{% endblock content %}
