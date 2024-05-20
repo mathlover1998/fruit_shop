@@ -204,7 +204,7 @@ def convert_to_csv(file_path):
 
 
 def validate_product_template_excel():
-    template_path = os.path.join(settings.MEDIA_ROOT, 'templates/template.xlsx')
+    template_path = os.path.join(settings.STATIC_ROOT, 'templates/template.xlsx')
 
     # Load the workbook and select the active worksheet
     workbook = openpyxl.load_workbook(template_path)
