@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(py9y)mt4nwsukdwcye0nm95i_+*0__s32oe-!2a_@g+!4pekk'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'product_manager',
     'blog',
     'common',
+    'storages',
     # 'django_celery_beat'
 ]
 
@@ -118,17 +119,17 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # }
 
 # local postgresql database
-DATABASES = {
+# DATABASES = {
     
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fruit_shop_db',
-        'USER': 'admin',
-        'PASSWORD': '1234',
-        'HOST':'localhost',
-        'PORT':'5432' 
-    }
-}
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'fruit_shop_db',
+#         'USER': 'admin',
+#         'PASSWORD': '1234',
+#         'HOST':'localhost',
+#         'PORT':'5432' 
+#     }
+# }
 
 
 # aws database (disabled)
@@ -145,13 +146,13 @@ DATABASES = {
 
 
 #render database
-# DATABASES = {
+DATABASES = {
     
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-#     }
-# }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    }
+}
     
 
 
@@ -175,6 +176,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'fruit_shop_app.User'
+
+
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -202,9 +206,6 @@ STATICFILES_DIRS = (
 #     },
 # }
 
-
-
-
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'
 
@@ -215,3 +216,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # WHITENOISE_MANIFEST_STRICT = False
 # STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 # STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+#AWS configuration
+AWS_ACCESS_KEY_ID=os.environ.get('AWS_ACCESS_KEY')
+AWS_SECRET_ACCESS_KEY=os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'cole-grocery-shop-98'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_FILE_OVERWRITE = False
+
+STORAGES = {
+
+    # Media file (image) management   
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+    },
+    
+    # CSS and JS file management
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+    },
+}
