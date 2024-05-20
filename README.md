@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 6. Create .env file
 (sample variables in .env.example file)
-or you can contact [https://www.facebook.com/ColeTran87645/]https://www.facebook.com/ColeTran87645/ to get actual variables.
+or you can contact [https://www.facebook.com/ColeTran87645/](https://www.facebook.com/ColeTran87645/) to get actual variables.
 
 ## Usage
 1. Run the application:
