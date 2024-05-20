@@ -1,0 +1,143 @@
+{% extends "shared/fruit_shop_base.html" %} {% load static %} {% block title_box %} {% endblock title_box %} {% block content %}
+
+<div class="container mt-4">
+  <ul class="nav nav-tabs" id="orderTabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="all-tab" data-toggle="tab" href="#all" role="tab" aria-controls="all" aria-selected="false">All</a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" id="pending-tab" data-toggle="tab" href="#pending" role="tab" aria-controls="pending" aria-selected="true">Pending</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="complete-tab" data-toggle="tab" href="#complete" role="tab" aria-controls="complete" aria-selected="false">Complete</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="refunded-tab" data-toggle="tab" href="#refunded" role="tab" aria-controls="refunded" aria-selected="false">Refunded</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="failed-tab" data-toggle="tab" href="#failed" role="tab" aria-controls="failed" aria-selected="false">Failed</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="shipped-tab" data-toggle="tab" href="#shipped" role="tab" aria-controls="shipped" aria-selected="false">Shipped</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="cancelled-tab" data-toggle="tab" href="#cancelled" role="tab" aria-controls="cancelled" aria-selected="false">Cancelled</a>
+    </li>
+  </ul>
+  <div class="tab-content" id="orderTabsContent">
+    <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+      <!-- All Orders -->
+      <div class="card">
+        <div class="card-header">All Orders</div>
+        <div class="card-body">
+          <!-- Display all orders here -->
+          {% for order in orders %}
+            <div class="col-lg-8 col-sm-12">
+                {% if order.status == 'pending' %}
+                <span class="badge badge-warning">Pending</span>
+                {% endif %}
+          </div>
+          <div class="table-main table-responsive">
+            <table class="table">
+              <tbody>
+                {% for item in order.order_items.all %}
+                <tr>
+                  <td class="thumbnail-img">
+                    <a href="{% url 'get_product' sku=item.product.sku %}">
+                      <img class="img-fluid" src="{{ item.product.images.first.image.url }}" alt="" />
+                    </a>
+                  </td>
+                  <td class="name-pr">
+                    <a href="{% url 'get_product' sku=item.product.sku %}"> {{ item.product.product_name }} </a>
+                  </td>
+                  <td class="price-pr">
+                    <p>{{ item.product.price }} VND</p>
+                  </td>
+                  <td class="price-pr">
+                    <p>{{ item.quantity }}</p>
+                  </td>
+                  <td class="price-pr">
+                    <p>{{ item.subtotal }} VND</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="row my-5">
+          <div class="col-lg-8 col-sm-12"></div>
+            <div class="col-lg-4 col-sm-12">
+                <hr />
+                <div class="d-flex gr-total">
+                  <h5>Order Total</h5>
+                  <div class="ml-auto h5">{{ order.total_amount }} VND</div>
+                </div>
+                <hr />
+              </div>
+            </div>
+            {% endfor %}
+        </div>
+        </div>
+      </div>
+    <div class="tab-pane fade" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+      <!-- Pending Orders -->
+      <div class="card">
+        <div class="card-header">Pending Orders</div>
+        <div class="card-body">
+          <!-- Display pending orders here -->
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="complete" role="tabpanel" aria-labelledby="complete-tab">
+      <!-- Completed Orders -->
+      <div class="card">
+        <div class="card-header">Completed Orders</div>
+        <div class="card-body">
+          <!-- Display completed orders here -->
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="refunded" role="tabpanel" aria-labelledby="refunded-tab">
+      <!-- Refunded Orders -->
+      <div class="card">
+        <div class="card-header">Refunded Orders</div>
+        <div class="card-body">
+          <!-- Display refunded orders here -->
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="failed" role="tabpanel" aria-labelledby="failed-tab">
+      <!-- Failed Orders -->
+      <div class="card">
+        <div class="card-header">Failed Orders</div>
+        <div class="card-body">
+          <!-- Display failed orders here -->
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="shipped" role="tabpanel" aria-labelledby="shipped-tab">
+      <!-- Shipped Orders -->
+      <div class="card">
+        <div class="card-header">Shipped Orders</div>
+        <div class="card-body">
+          <!-- Display shipped orders here -->
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
+      <!-- Cancelled Orders -->
+      <div class="card">
+        <div class="card-header">Cancelled Orders</div>
+        <div class="card-body">
+          <!-- Display cancelled orders here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock content %}

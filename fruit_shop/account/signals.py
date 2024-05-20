@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from fruit_shop_app.models import User,Employee
 from django.core.mail import send_mail
 from django.conf import settings
-from fruit_shop.utils import generate_random_password
+from common.utils import generate_random_password
 # from django.contrib.auth.hashers import make_password
 
 @receiver(pre_save,sender=User)

@@ -2,14 +2,18 @@ import random, string, os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from django.core.mail import send_mail
-import re
+import re, openpyxl
 from functools import wraps
 from django.http import HttpResponseForbidden
-from fruit_shop_app.models import Employee
+from fruit_shop_app.models import Employee,Category,Brand,UNIT
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from datetime import timedelta
-
+from django.conf import settings
+import pandas as pd
+from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.styles import PatternFill
+from openpyxl.formatting.rule import FormulaRule
 
 def is_phone_number(input_str):
 
@@ -87,7 +91,7 @@ def send_specific_email(request, choice: int, email_list, code=""):
         message = strip_tags(html_message)
     # mail with 6-digits verification code
     elif choice == 3:
-        subject = "Cole's Grocery Shop: Verification Code"
+        subject = f"Verification Code: {code}"
         html_message = render_to_string(
             "letters/verification_email.html",
             {"user": request.user.username, "code": code},
@@ -96,9 +100,9 @@ def send_specific_email(request, choice: int, email_list, code=""):
     #receive newsletter    
     elif choice==4:
         subject = (
-            "Cole's Grocery Shop: Thank you for subscribing to the Grocery Shop newsletter"
+            "Cole's Grocery Shop: Notification"
         )
-        message = "You will reveive further newsletter"
+        message = "Thank you for contacting us! We will respond to your inquiry as soon as possible."
         
     send_mail(
         subject=subject,
@@ -183,3 +187,88 @@ def role_required(allowed_roles=[]):
         return _wrapped_view
 
     return decorator
+
+def handle_uploaded_file(f):
+    file_path = os.path.join(settings.MEDIA_ROOT, f.name)
+    with open(file_path, 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+    return file_path
+
+
+def convert_to_csv(file_path):
+    csv_file_path = os.path.splitext(file_path)[0] + '.csv'
+    df = pd.read_excel(file_path)
+    df.to_csv(csv_file_path, index=False)
+    return csv_file_path
+
+
+def validate_product_template_excel():
+    template_path = os.path.join(settings.MEDIA_ROOT, 'templates/template.xlsx')
+
+    # Load the workbook and select the active worksheet
+    workbook = openpyxl.load_workbook(template_path)
+    sheet = workbook["Product"]
+    #remove all existing validation
+
+    #handle product price
+    price_dv = DataValidation(
+        type='whole',
+        operator="between",
+        formula1="0", 
+        formula2="9999999999", 
+        showErrorMessage=True
+    )
+    price_dv.error = 'Invalid input'
+    price_dv.errorTitle = 'Invalid Entry'
+    price_dv.prompt = 'Please enter a number between 0 and 999999999'
+    sheet.add_data_validation(price_dv)
+    price_dv.add("B2:B1048576")
+
+    #handle unit type
+    unit_names = list(unit[0] for unit in UNIT)
+    unit_dv = DataValidation(
+        type='list',
+        formula1=f'"{",".join(unit_names)}"'
+    )
+    sheet.add_data_validation(unit_dv)
+    unit_dv.add("D2:D1048576")
+
+    #handle stock quantity
+    stock_dv = DataValidation(
+        type='whole',
+        operator="between",
+        formula1="0", 
+        formula2="999999", 
+        showErrorMessage=True
+    )
+    stock_dv.error = 'Invalid input'
+    stock_dv.errorTitle = 'Invalid Entry'
+    stock_dv.prompt = 'Please enter a number between 0 and 999999'
+    sheet.add_data_validation(stock_dv)
+    stock_dv.add("E2:E1048576")
+
+    #handle brand
+    brand_names = list(Brand.objects.values_list('brand_name', flat=True))
+    brand_dv = DataValidation(
+        type="list",
+        formula1=f'"{",".join(brand_names)}"'
+    )
+    sheet.add_data_validation(brand_dv)
+    brand_dv.add("I2:I1048576")
+
+    #handle category
+    category_names = list(Category.objects.filter(parent_category__isnull=False).values_list('category_name', flat=True))
+    category_dv = DataValidation(
+        type="list",
+        formula1=f'"{",".join(category_names)}"'
+    )
+    sheet.add_data_validation(category_dv)
+    category_dv.add("J2:J1048576")
+
+    #save to new file
+    modified_template_path = os.path.join(settings.MEDIA_ROOT, 'templates/modified_template.xlsx')
+    workbook.save(modified_template_path)
+
+    return modified_template_path
+

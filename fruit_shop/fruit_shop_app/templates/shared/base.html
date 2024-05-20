@@ -37,7 +37,13 @@
         if (selectedOption) {
           window.location.href = selectedOption;
         }
-      }
+      };
+      function handleEnterKey(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();  // Prevent the default form submission
+            document.getElementById('searchForm').submit();  // Submit the form
+        }
+    }
     </script>
   </head>
 
@@ -56,7 +62,7 @@
               </select>
             </div>
             <div class="right-phone-box">
-              <p>Call US : <a href="#"> +84 978 350 027</a></p>
+              <p>Call US : <a href="tel:{{global_information.global_website_phone}}">{{global_information.global_website_phone}}</a></p>
             </div>
             <div class="our-link">
               <ul>
@@ -118,17 +124,9 @@
     </header>
     <!-- End Main Top -->
 
-    <!-- Start Top Search -->
-    <div class="top-search">
-      <div class="container">
-        <div class="input-group">
-          <span class="input-group-addon"><i class="fa fa-search"></i></span>
-          <input type="text" class="form-control" placeholder="Search" />
-          <span class="input-group-addon close-search"><i class="fa fa-times"></i></span>
-        </div>
-      </div>
-    </div>
-    <!-- End Top Search -->
+    {% block search-bar %}
+    
+    {% endblock search-bar %}
 
     <!-- Start All Title Box -->
     {% block title_box %}
@@ -175,40 +173,35 @@
             <div class="col-lg-4 col-md-12 col-sm-12">
               <div class="footer-top-box">
                 <h3>Newsletter</h3>
-                <form class="newsletter-box">
+                <form class="newsletter-box" method='post' action="{% url 'register_newsletter' %}">
+                  
                   <div class="form-group">
-                    <input class="" type="email" name="Email" placeholder="Email Address*" />
+                    <input class="" type="email" name="email" placeholder="Email Address*" />
                     <i class="fa fa-envelope"></i>
                   </div>
-                  <button class="btn hvr-hover" type="submit">Submit</button>
+                  <div class="form-group ">
+                    <input class="btn hvr-hover" type="submit" value='Submit'>
+                  </div>
+                  {% comment %} <button class="btn hvr-hover" type="submit">Submit</button> {% endcomment %}
                 </form>
               </div>
             </div>
             <div class="col-lg-4 col-md-12 col-sm-12">
               <div class="footer-top-box">
                 <h3>Social Media</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <hr>
                 <ul>
                   <li>
-                    <a href="#"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+                    <a href={% if global_information.facebook %}"{{global_information.facebook}}"{% else %}"#"{% endif %}><i class="fab fa-facebook" aria-hidden="true"></i></a>
                   </li>
                   <li>
-                    <a href="#"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+                    <a href={% if global_information.twitter %}"{{global_information.facebook}}"{% else %}"#"{% endif %}><i class="fab fa-twitter" aria-hidden="true"></i></a>
                   </li>
                   <li>
-                    <a href="#"><i class="fab fa-linkedin" aria-hidden="true"></i></a>
+                    <a href={% if global_information.linkedin %}"{{global_information.linkedin}}"{% else %}"#"{% endif %}><i class="fab fa-linkedin" aria-hidden="true"></i></a>
                   </li>
                   <li>
-                    <a href="#"><i class="fab fa-google-plus" aria-hidden="true"></i></a>
-                  </li>
-                  <li>
-                    <a href="#"><i class="fa fa-rss" aria-hidden="true"></i></a>
-                  </li>
-                  <li>
-                    <a href="#"><i class="fab fa-pinterest-p" aria-hidden="true"></i></a>
-                  </li>
-                  <li>
-                    <a href="#"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+                    <a href={% if global_information.instagram %}"{{global_information.instagram}}"{% else %}"#"{% endif %}><i class="fab fa-instagram" aria-hidden="true"></i></a>
                   </li>
                 </ul>
               </div>
@@ -220,10 +213,8 @@
               <div class="footer-widget">
                 <h4>About Cole's Grocery Shop</h4>
                 <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat.
+                  {{domain_name}} website is owned by Cole Tran and developed by Cole Tran
                 </p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
               </div>
             </div>
             <div class="col-lg-4 col-md-12 col-sm-12">
@@ -234,7 +225,7 @@
                     <p><i class="fas fa-regular fa-address-card"></i><a href="{% url 'view_about_us '%}">About Us</a></p>
                   </li>
                   <li>
-                    <p><i class="fas fa-location-arrow"></i><a href="#">Our Location</a></p>
+                    <p><i class="fas fa-location-arrow"></i><a href="{% url 'view_location' %}">Our Location</a></p>
                   </li>
                   <li>
                     <p><i class="fas fa-greater-than"></i><a href="#">Terms &amp; Conditions</a></p>
@@ -259,10 +250,10 @@
                     </p>
                   </li>
                   <li>
-                    <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:+1-888705770">+1-888 705 770</a></p>
+                    <p><i class="fas fa-phone-square"></i>Phone: <a href="tel:{{global_information.global_website_phone}}">{{global_information.global_website_phone}}</a></p>
                   </li>
                   <li>
-                    <p><i class="fas fa-envelope"></i>Email: <a href="mailto:contactinfo@gmail.com">contactinfo@gmail.com</a></p>
+                    <p><i class="fas fa-envelope"></i>Email: <a href="mailto:{{global_information.global_website_email}}">{{global_information.global_website_email}}</a></p>
                   </li>
                 </ul>
               </div>
@@ -275,7 +266,7 @@
 
     <!-- Start copyright  -->
     <div class="footer-copyright">
-      <p class="footer-company">All Rights Reserved. &copy; 2018 <a href="#">Cole's Grocery Shop</a> Design By : <a href="https://html.design/">html design</a></p>
+      <p class="footer-company">All Rights Reserved. &copy; 2023 <a href="#">Cole's Grocery Shop</p>
     </div>
     <!-- End copyright  -->
 

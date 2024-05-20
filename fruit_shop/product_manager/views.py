@@ -1,9 +1,9 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction
+from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category
 from django.contrib import messages
 from django.urls import reverse
-from fruit_shop.utils import position_required, replace_string
-from .forms import CreateProductForm
+from common.utils import convert_to_csv,handle_uploaded_file
+from .forms import ProductForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -17,9 +17,8 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
-# from .utils import apply_discount
-# from django.contrib.auth.models import Permission
-# from django.contrib.contenttypes.models import ContentType
+from common import error_messages
+import pandas as pd
 
 
 # Create your views here.
@@ -45,13 +44,59 @@ def category_filtered_view(request, category):
     )
     return render(request, "shop/shop.html", {"products": product_list})
 
+def get_your_products(request):
+    current_employee = request.user.employee
+    product_lists = Product.objects.filter(inventory_manager=current_employee)
+    return render(request,'shop/my_products.html',{'products':product_lists})
+
+def upload_file(request):
+    if request.method == 'POST':
+        file_path = handle_uploaded_file(request.FILES['file'])
+        csv_file_path = convert_to_csv(file_path)
+        df = pd.read_csv(csv_file_path)
+        if df.empty:
+            return JsonResponse({'error': 'The uploaded file is empty or invalid'}, status=400)
+        for index, row in df.iterrows():
+            categories =Category.objects.filter(category_name=row.iloc[9])
+            brand = Brand.objects.filter(brand_name=row.iloc[8]).first()
+
+            common_args = {
+            "brand": brand,
+            "product_name": row.iloc[0],
+            "price": row.iloc[1],
+            "stock_quantity": row.iloc[4],
+            "origin_country": row.iloc[5],
+            "information": row.iloc[6],
+            "unit": row.iloc[3]
+            }
+
+            if row.iloc[7]:
+                common_args["sku"] = row.iloc[7]
+
+            product = Product.objects.create(**common_args)
+            product.save()
+            all_categories = set(categories)
+            for category in categories:
+                current_category = category
+                while current_category.parent_category:
+                    all_categories.add(current_category.parent_category)
+                    current_category = current_category.parent_category
+            product.categories.set(all_categories)
+            ProductImage.objects.create(product=product, image=row.iloc[2]).save()
+        # with open(csv_file_path, 'rb') as f:
+        #     response = HttpResponse(f.read(), content_type='text/csv')
+        #     response['Content-Disposition'] = f'attachment; filename={os.path.basename(csv_file_path)}'
+        #     return response
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+            
+    return render(request, 'shop/manage_product.html')
 
 
 @permission_required('fruit_shop_app.add_product',raise_exception=True)
 def create_product(request):
-    form = CreateProductForm()
+    form = ProductForm()
     if request.method == "POST":
-        form = CreateProductForm(request.POST, request.FILES)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product_name = form.cleaned_data["product_name"]
 
@@ -63,12 +108,18 @@ def create_product(request):
                 unit=form.cleaned_data["unit"],
                 origin_country=form.cleaned_data["origin_country"],
                 information=form.cleaned_data["information"],
-                expiry_date=form.cleaned_data["expiry_date"],
                 inventory_manager=request.user.employee,
             )
             product.save()
-            category_ids = form.cleaned_data["category"]
-            product.categories.set(category_ids)
+            #if category has parent_category, also add to parent_category
+            categories = form.cleaned_data["category"]
+            all_categories = set(categories)
+            for category in categories:
+                current_category = category
+                while current_category.parent_category:
+                    all_categories.add(current_category.parent_category)
+                    current_category = current_category.parent_category
+            product.categories.set(all_categories)
             product_images = request.FILES.getlist(
                 "product_images"
             )  # Get list of uploaded images
@@ -105,31 +156,39 @@ def create_product(request):
                     product=product, image=cropped_image_path
                 ).save()
 
-            return redirect(reverse("get_all_products"))
+            return JsonResponse({'success': True})
 
-    return render(request, "shop/create_product.html", {"form": form})
-
-def get_your_products(request):
-    current_employee = request.user.employee
-    product_lists = Product.objects.filter(inventory_manager=current_employee)
-    return render(request,'shop/my_products.html',{'products':product_lists})
-
+    return render(request, "shop/manage_product.html", {"form": form,'is_update':False})
 
 @permission_required('fruit_shop_app.change_product', raise_exception=True)
 def update_product(request,sku):
     product = get_object_or_404(Product, sku=sku)
     # Get current product images
-    current_images = product.images.all()
-
     if request.method == "POST":
-        form = CreateProductForm(request.POST, request.FILES)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            product = form.save(commit=False)  # Don't save yet
-            product.save()
+            product.product_name = form.cleaned_data["product_name"]
+            product.brand=form.cleaned_data["brand"]
+            product.price=form.cleaned_data["price"]
+            product.stock_quantity=form.cleaned_data["stock_quantity"]
+            product.unit=form.cleaned_data["unit"]
+            product.origin_country=form.cleaned_data["origin_country"]
+            product.information=form.cleaned_data["information"]
 
             category_ids = form.cleaned_data["category"]
             product.categories.set(category_ids)
-
+            #if category has parent_category, also add to parent_category
+            categories = form.cleaned_data["category"]
+            all_categories = set(categories)
+            for category in categories:
+                current_category = category
+                while current_category.parent_category:
+                    all_categories.add(current_category.parent_category)
+                    current_category = current_category.parent_category
+            product.categories.set(all_categories)
+            product.save()
+            #delete all current images
+            ProductImage.objects.filter(product=product).delete()
             # Handle new product image uploads
             product_images = request.FILES.getlist("product_images")
             for img in product_images:
@@ -167,18 +226,18 @@ def update_product(request,sku):
                         product=product, image=cropped_image_path
                     ).save()
                 except (ValidationError, OSError) as e:
-                    messages.error(request, f"Error saving image: {e}")
+                    return JsonResponse({'success': False, 'error_message': error_messages.INVALID_IMAGE})
 
-            return redirect("get_all_products")
+            return JsonResponse({'success': True})
 
     else:
         # Populate form with product data
-        form = CreateProductForm(initial=model_to_dict(product))
+        form = ProductForm(initial=model_to_dict(product))
 
     return render(
         request,
         "shop/update_product.html",
-        {"form": form, "current_images": current_images, "product": product},
+        {"form": form, "product": product,'is_update':True},
     )
 
 
@@ -186,13 +245,15 @@ def update_product(request,sku):
 def get_product(request,sku):
     product = get_object_or_404(Product, sku=sku)
     product_id = product.id
+    comments = Comment.objects.filter(product=product)
     recently_viewed = request.session.get("recently_viewed", {})
     if str(product.id) not in recently_viewed:
         recently_viewed[str(product_id)] = product_id
 
     request.session["recently_viewed"] = recently_viewed
     request.session.set_expiry(timedelta(days=7))
-    return render(request, "shop/product.html", {"product": product})
+
+    return render(request, "shop/product.html", {"product": product,'comments':comments})
 
 
 def update_cart_item(request, product_id, quantity=1):
@@ -302,7 +363,9 @@ def checkout(request):
     if request.method == "POST":
         # Assuming you have a form submission with necessary checkout details
         payment_method = request.POST.get("payment_method")
-        print(payment_method)
+        address_id = request.POST.get("address")
+        address = Address.objects.filter(user=request.user,pk=address)
+        print(address.street_address)
         # Check if payment method is cash on delivery
         if payment_method == "cash":
 
@@ -311,7 +374,7 @@ def checkout(request):
                 customer=request.user.customer,
                 total_amount=0,
                 status="pending",
-                shipping_address=request.POST.get("address"),
+                shipping_address=Address.objects.filter(pk=request.POST.get("address")),
                 
             )
             total_amount = 0
@@ -364,8 +427,57 @@ def create_discount(request):
 
 def apply_discount_view(request):
     products_with_category_discount = Product.objects.filter(categories__discount__is_active=True)
-
-# You can then use 'products_with_brand_discount' as needed
+    # You can then use 'products_with_brand_discount' as needed
     for product in products_with_category_discount:
         print(product.product_name)
     return render(request, 'shop/discount_applied.html')
+
+@login_required
+def create_comment_on_product(request, sku):
+    user = request.user
+    product = Product.objects.filter(sku=sku).first()
+    if request.method == 'POST':
+        comment = Comment.objects.create(
+            user=user,
+            product=product,
+            content=request.POST.get('content')
+        )
+        comment.save()
+        return redirect(reverse('get_product', kwargs={'sku': sku}))
+    
+    return render(request, 'shop/product.html')
+
+    
+@login_required
+def delete_comment_on_product(request,sku):
+    comment_id = request.GET.get('comment_id')
+    comment = Comment.objects.filter(id= comment_id)
+    comment.delete()
+    return redirect(reverse('get_product', kwargs={'sku': sku}))
+
+@login_required
+def update_comment_on_product(request, sku):
+    comment_id = request.POST.get('comment_id')
+    comment = Comment.objects.get(id=comment_id)
+    if request.method == 'POST':
+        comment.content = request.POST.get('content')
+        comment.save()
+        return redirect(reverse('get_product', kwargs={'sku': sku}))
+    return render(request, 'shop/edit_comment.html', {'comment': comment})
+
+@permission_required('fruit_shop_app.add_brand',raise_exception=True)
+def create_brand(request):
+    if request.method == "POST":
+        brand_name = request.POST.get("brand_name")
+        contact_person = request.POST.get("contact_person")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        fields = [brand_name,contact_person,email,phone]
+        if all(fields):
+            new_brand = Brand.objects.create(
+                brand_name=brand_name, contact_person=contact_person, email=email, phone=phone
+            )
+            new_brand.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
+    return render(request, "account/create_brand.html")

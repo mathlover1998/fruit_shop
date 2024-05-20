@@ -15,6 +15,9 @@
     <a href="{% url 'view_user_account'%}" class="nav-link dropdown-toggle" data-toggle="dropdown"><img src="{{user.image.url}}" alt="Avatar" class="rounded-circle img-fluid" style="height:15px;width=15px" /> Welcome, {{user.username}}</a></a>
       <ul class="dropdown-menu">
         {% if user.employee %}
+        {% if perms.fruit_shop_app.can_add_brand %}
+        <li><a href="{% url 'create_brand'%}">Add Brand</a></li>
+        {% endif %}
         <li><a href="{% url 'create_product'%}">Add Product</a></li>
         <li><a href="{% url 'get_your_products'%}">My Products</a></li>
         {% else %}
@@ -40,7 +43,7 @@
     <li class="side-menu">
       <a href="#">
         <i class="fa fa-shopping-bag"></i>
-        <span class="badge">{{global_cart_items_count}}</span>
+        <span class="badge" style='color:black;'>{{global_cart_items_count}}</span>
         {% comment %}
         <p>My Cart</p>
         {% endcomment %}
@@ -48,7 +51,6 @@
     </li>
   </ul>
 </div>
-
 {% endblock nav_links %} 
 {% block side_cart_menu %}
 <div class="side">
@@ -73,7 +75,20 @@
 </div>
 {% endblock side_cart_menu %}
 
-
+{% block search-bar %}
+<form id = 'searchForm' action="{% url 'search_result' %}" method='get'>
+<div class="top-search">
+  <div class="container">
+    <div class="input-group">
+      <span class="input-group-addon"><i class="fa fa-search"></i></span>
+      <input type="text" class="form-control" name='q' placeholder="Type to search..." />
+      <span class="input-group-addon close-search"><i class="fa fa-times"></i></span>
+      <input type="submit" value="Search" style="display:none;">
+    </div>
+  </div>
+</div>
+</form>
+{% endblock search-bar %}
 
 {% block instagram_feed %}
 
@@ -85,7 +100,7 @@
           <div class="ins-inner-box">
             <img src=" {{instagram_image.url}} " alt="" />
             <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab "></i></a>
             </div>
           </div>
         </div>
@@ -95,7 +110,7 @@
           <div class="ins-inner-box">
             <img src=" {% static 'images/instagram-img-01.jpg' %} " alt="" />
             <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab "></i></a>
             </div>
           </div>
         </div>
@@ -103,7 +118,7 @@
           <div class="ins-inner-box">
             <img src=" {% static 'images/instagram-img-02.jpg' %} " alt="" />
             <div class="hov-in">
-              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab "></i></a>
             </div>
           </div>
         </div>

@@ -1,0 +1,26 @@
+{% extends "shared/fruit_shop_base.html" %}
+{% load static %}
+
+{% block title_box %}
+{% endblock title_box %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <h3>Upload File</h3>
+          <form method="post" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+            {% csrf_token %}
+            {{ upload_form.as_p }}
+            <input type="submit" value='Upload'>
+        </form>
+        </div>
+      </div>
+    </div>
+      
+              </div>
+          </div>
+      </div>
+{% endblock content %}

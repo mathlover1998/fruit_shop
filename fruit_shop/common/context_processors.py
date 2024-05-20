@@ -1,7 +1,8 @@
 from fruit_shop_app.models import Product, Category, Discount,WebsiteInfo
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
-
+import os
+from django.conf import settings
 
 def get_global_cart_data(request):
     cart = request.session.get("cart", {})
@@ -46,48 +47,6 @@ def get_separated_category_product(request):
     return {"separated_category_products": global_categories}
 
 
-# def get_category_name_context(request):
-#     categories = Category.objects.all().values_list("category_name", flat=True)
-#     data = {}
-#     for category in categories:
-#         products = Product.objects.filter(
-#             categories__category_name=category, is_active=True
-#         ).annotate(category_count=Count("categories"))
-#         data[f"{category.replace(' ', '_').lower()}_count"] = len(products)
-#     return {"category_context": data}
-
-# def get_category_name_context(request):
-#     categories_with_subcategories = Category.objects.filter(sub_categories__isnull=False).distinct()
-
-#     data = []
-
-#     for category in categories_with_subcategories:
-#         subcategories = category.sub_categories.all()
-#         subcategory_data = []
-
-#         for subcategory in subcategories:
-#             products = Product.objects.filter(
-#                 categories__category_name=subcategory.category_name, is_active=True
-#             ).annotate(category_count=Count("categories"))
-#             subcategory_count = len(products)
-#             subcategory_data.append({
-#                 "name": subcategory.category_name,
-#                 "count": subcategory_count
-#             })
-
-#         category_products = Product.objects.filter(
-#             categories__category_name=category.category_name, is_active=True
-#         ).annotate(category_count=Count("categories"))
-#         category_count = len(category_products)
-
-#         category_dict = {
-#             "name": category.category_name,
-#             "count": category_count,
-#             "subcategories": subcategory_data
-#         }
-#         data.append(category_dict)
-
-#     return {"category_context": data}
 def get_category_name_context(request):
     categories_with_subcategories = Category.objects.filter(sub_categories__isnull=False).distinct()
     data = {}
@@ -124,16 +83,16 @@ def get_category_name_context(request):
 
 def get_recently_viewed_products(request):
     products = request.session.get("recently_viewed", {})
-    recently_view = []
-    if not products:
-        return {"cart_items": [], "cart_items_count": 0, "total_price": 0}
-    for key, value in products.items():
-
-        product = get_object_or_404(Product, pk=value)
-
-        recently_view.append({"product": product})
-
-    return {"recently_viewed_products": recently_view}
+    recently_viewed = []
+    if products:
+        for key, value in products.items():
+            try:
+                product = get_object_or_404(Product, pk=value)
+                recently_viewed.append({"product": product})
+            except Product.DoesNotExist:  
+                del products[key]
+                request.session["recently_viewed"] = products
+    return {"recently_viewed_products": recently_viewed}
 
 
 def get_latest_discounts(request):
@@ -152,13 +111,17 @@ def get_website_information(request):
         website_info = None
     
     data = {
+        'facebook': os.environ.get('FACEBOOK'),
+        'instagram': os.environ.get('INSTAGRAM'),
+        'twitter': os.environ.get('TWITTER'),
+        'linkedin': os.environ.get('LINKEDIN'),
         'global_instagram_images': [],
         'global_slide_images': [],
         'global_category_images': [],
         'global_about_images': [],
-        'global_website_address': None,
-        'global_website_email': None,
-        'global_website_phone': None,
+        'global_website_address': os.environ.get('WEBSITE_ADDRESS'),
+        'global_website_email': os.environ.get('WEBSITE_EMAIL'),
+        'global_website_phone': os.environ.get('WEBSITE_PHONE'),
     }
 
     if website_info:
@@ -180,3 +143,17 @@ def get_website_information(request):
             data['global_website_phone'] = website_info.phone
     
     return {'global_information': data}
+
+def get_featured_products_context(request):
+    try:
+        products = Product.objects.filter(is_featured=True)
+    except Product.DoesNotExist:
+        products = []
+        
+    return {"featured_products":products}
+
+def get_domain_name(request):
+    host = request.get_host()
+    if settings.DEBUG:
+        host = 'example.com'
+    return {'domain_name':host}

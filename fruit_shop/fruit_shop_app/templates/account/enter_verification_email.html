@@ -1,8 +1,8 @@
 {% extends "shared/fruit_shop_base.html" %}
 {% load static %}
 
-{% block heading_title %}REGISTER{% endblock heading_title %}
-{% block heading_sub_title %}Register{% endblock heading_sub_title %}
+{% block heading_title %}Verify email{% endblock heading_title %}
+{% block heading_sub_title %}Verify{% endblock heading_sub_title %}
 {% block content %}
 
 <div class="container mt-5">
@@ -13,15 +13,9 @@
             <h2 class="text-center">Enter your email to verify</h2>
           </div>
           <div class="card-body">
-            <form method='POST'>
+            <form method='POST' id='ajax-form'>
               {% csrf_token %}
-              {% if messages %}
-                <ul class="messages" >
-                  {% for message in messages %}
-                    <li style = 'list-style-type: none;' {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
+              
               
               <div class="form-group">
                 <input type="email" class="form-control" id="name" placeholder="Enter your email" name="email" required>
@@ -33,4 +27,27 @@
       </div>
     </div>
   </div>
+  <script>
+    const ajaxForm = document.getElementById('ajax-form');
+    ajaxForm.addEventListener('submit',function (event) {
+      event.preventDefault();
+      const formData = new FormData(ajaxForm);
+      fetch("{% url 'collect_customer_registration_email' %}",{
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success){
+          window.location.href = "{% url 'index' %}";
+        } else{
+          alert(data.error_message);
+        }
+      })
+      .catch(error => {
+        console.error(error); // Handle any errors
+        alert("An error occurred. Please try again.");
+      });
+    });
+  </script>
 {% endblock content %}

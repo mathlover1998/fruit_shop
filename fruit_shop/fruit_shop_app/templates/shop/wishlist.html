@@ -17,6 +17,7 @@
                                     <th>Product Name</th>
                                     <th>Unit Price </th>
                                     <th>Stock</th>
+                                    <th>Quantity</th>
                                     <th>Add Item</th>
                                     <th>Remove</th>
                                 </tr>
@@ -25,22 +26,27 @@
                                 {% for wishlist in wishlist_items %}
                                 <tr>
                                     <td class="thumbnail-img">
-                                        <a href="{% url 'get_product' product_id=wishlist.product.id%}">
+                                        <a href="{% url 'get_product' sku=wishlist.product.sku %}">
 									<img class="img-fluid" src="{{ wishlist.product.images.first.image.url }}" alt="" />
 								</a>
                                     </td>
                                     <td class="name-pr">
-                                        <a href="{% url 'get_product' product_id=wishlist.product.id%}">
+                                        <a href="{% url 'get_product' sku=wishlist.product.sku %}">
 									{{wishlist.product.product_name}}
 								</a>
                                     </td>
                                     <td class="price-pr">
-                                        <p>{{wishlist.product.price}}đ</p>
+                                        <p>{{wishlist.product.price}} VND</p>
                                     </td>
-                                    <td class="quantity-box">In Stock</td>
+                                    <td class="quantity-box">{% if wishlist.product.stock_quantity > 0 %}In Stock{% else %}Out Of Stock{% endif %}</td>
+                                    <td>
+                                        <input id='quantityInput' value="1" min="1" max="{{product.stock_quantity}}" type="number">
+                                    </td>
                                     <td class="add-pr">
-                                        <a class="btn hvr-hover" href="{% url 'update_cart_item' product_id=wishlist.product.id quantity=1 %}">Add to Cart</a>
+                                        <a class="btn hvr-hover" href="#" onclick="addToCart({{wishlist.product.id}})">Add to cart</a>
+                                        
                                     </td>
+                                    
                                     <td class="remove-pr">
                                         <a href="{% url 'delete_wishlist_item' product_id=wishlist.product.id %}">
 									<i class="fas fa-times"></i>
@@ -56,5 +62,12 @@
             </div>
         </div>
     </div>
+    <script>
+    function addToCart(productId) {
+        var quantity = document.getElementById('quantityInput').value;
+        var url = "{% url 'update_cart_item' product_id=0 quantity=0 %}".replace('0', productId).replace('0', quantity);
+        window.location.href = url;
+    };
+</script>
     <!-- End Wishlist -->
     {% endblock content %}

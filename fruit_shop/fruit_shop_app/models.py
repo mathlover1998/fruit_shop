@@ -11,17 +11,6 @@ from django.utils import timezone
 # Create your models here.
 GENDER = (("male", "Male"), ("female", "Female"), ("other", "Other"))
 
-# POSITION = (
-#     ("employee", "Employee"),
-#     ("inventory_manager", "Inventory Manager"),
-#     ("sales_associate", "Sales Associate"),
-#     ("cashier", "Cashier"),
-#     ("store_manager", "Store Manager"),
-#     ("assistant_manager", "Assistant Manager"),
-#     ("delivery_driver", "Delivery Driver"),
-#     ("produce_specialist", "Produce Specialist"),
-#     ("customer_service_representative", "Customer Service Representative"),
-# )
 
 UNIT = (
     ("kg", "Kilogram"),
@@ -47,17 +36,15 @@ class User(AbstractUser, PermissionsMixin):
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
     approval_email_sent = models.BooleanField(default=False)
-    groups = models.ManyToManyField(
-        Group,
-        blank=True,
-        related_name="user_memberships",  # Specify a unique related_name
-    )
-    # user_permissions = models.ManyToManyField(Permission, blank=True, related_name="user_permissions")
+    # groups = models.ManyToManyField(
+    #     Group,
+    #     blank=True,
+    #     related_name="user_memberships",  # Specify a unique related_name
+    # )
 
     def save(self, *args, **kwargs):
-        # Set default password if password is not provided
         if not self.pk and not self.password:
-            self.set_password("012198218")  # Default password
+            self.set_password("012198218")
         super().save(*args, **kwargs)
 
     def get_full_name(self):
@@ -133,7 +120,9 @@ class ConfirmationToken(models.Model):
 
 #
 class Category(models.Model):
+    CATEGORY_TYPE = (('product','Product'),('blog','Blog'))
     category_name = models.CharField(max_length=255, unique=True)
+    type = models.CharField(choices=CATEGORY_TYPE,default='product')
     description = models.TextField(null=False, default="")
     parent_category = models.ForeignKey(
         "self",
@@ -193,10 +182,12 @@ class Product(models.Model):
     origin_country = models.CharField(max_length=40, default="")
     information = models.TextField(null=True)
     create_date = models.DateTimeField(default=timezone.now)
-    expiry_date = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    expiry_date = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=30))
     sku = models.CharField(max_length=10, unique=True, default="", blank=True)
     unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
     inventory_manager = models.ForeignKey(
         Employee,
         on_delete=models.SET_NULL,
@@ -225,12 +216,31 @@ class Product(models.Model):
             sku = "SP" + sku
             if not Product.objects.filter(sku=sku).exists():
                 return sku
+            
+
+    # def set_categories(self):
+    #     all_categories = set(self.categories)
+    #     for category in self.categories:
+    #         current_category = category
+    #         while current_category.parent_category:
+    #             all_categories.add(current_category.parent_category)
+    #             current_category = current_category.parent_category
+    #     self.categories.set(all_categories)
 
     def save(self, *args, **kwargs):
-        if self.updated_price == 0:  # Check if updated_price is not already set
+        # categories = kwargs.pop('categories', None)
+        if self.updated_price == 0: 
             self.updated_price = self.price
-        self.sku = self.generate_unique_sku()
+        if not self.sku:
+            self.sku = self.generate_unique_sku()
+        #only accept 10 featured products at a time
+        if Product.objects.filter(is_featured=True).count() >=10 and self.is_featured==True:
+            first_featured_product = Product.objects.filter(is_featured=True).first()
+            first_featured_product.is_featured = False
+            first_featured_product.save()
         super().save(*args, **kwargs)
+        # if categories is not None:
+        #     self.set_categories()
 
     class Meta:
         ordering = ["id"]
@@ -247,12 +257,23 @@ class ProductImage(models.Model):
     image = models.ImageField(
         upload_to="images/product_images/", default="images/default/default_fruit.jpg"
     )
+    is_main_image = models.BooleanField(default=False)
+    
+    def save(self, *args, **kwargs):
+        if not ProductImage.objects.filter(product=self.product).exists():
+            self.is_main_image = True
+        else:
+            if self.is_main_image:
+                ProductImage.objects.filter(product=self.product).exclude(pk=self.pk).update(is_main_image=False)
+        super().save(*args, **kwargs)
+
 
     class Meta:
         db_table = "ProductImages"
         managed = True
         verbose_name = "ProductImage"
         verbose_name_plural = "ProductImages"
+        
 
 
 class Discount(models.Model):
@@ -401,17 +422,23 @@ class Address(models.Model):
     )  # Home, Work, Other
     is_default = models.BooleanField(default=False)
 
+    def save(self, *args, **kwargs):
+        #the first address always has is_default=True
+        if not Address.objects.filter(user=self.user).exists():
+            self.is_default = True
+        else:
+            if self.is_default:
+                Address.objects.filter(user=self.user).exclude(pk=self.pk).update(is_default=False)
+            if not Address.objects.filter(is_default=True).exists():
+                self.is_default=True
+        super().save(*args, **kwargs)
     class Meta:
         ordering = ["id"]
         db_table = "Addresses"
         managed = True
         verbose_name = "Address"
         verbose_name_plural = "Addresses"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "is_default"], name="unique_default_address_per_user"
-            ),  # Ensures only one default address per user
-        ]
+        
 
 
 class Order(models.Model):
@@ -423,7 +450,7 @@ class Order(models.Model):
         ("shipped", "Shipped"),
         ("cancelled", "Cancelled"),
     )
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE,related_name='customer')
     placed_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(choices=ORDER_STATUS, null=False, default="pending")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -473,7 +500,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True,related_name='order_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField(null=False, default=0)
     subtotal = models.IntegerField(null=False, default=0)
@@ -518,3 +545,99 @@ class StoreLocation(models.Model):
         managed = True
         verbose_name = "Store Location"
         verbose_name_plural = "Store Locations"
+
+class Tag(models.Model):
+    name = models.CharField(max_length=255, null=False)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "Tags"
+        managed = True
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+
+
+class Blog(models.Model):
+    title = models.CharField(
+        null=False, max_length=100, default="", help_text="Title of blog"
+    )
+    subtitle = models.CharField(max_length=255, null=False, default="")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blogs")
+    date = models.DateField(auto_now_add=True)
+    content = models.TextField(null=True)
+    slug = models.CharField(max_length=255, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    published_at = models.DateTimeField(default=timezone.now)
+    categories = models.ManyToManyField(Category, related_name="blogs")
+    tags = models.ManyToManyField(Tag, related_name="blogs")
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "Blogs"
+        managed = True
+        verbose_name = "Blog"
+        verbose_name_plural = "Blogs"
+
+
+class BlogImage(models.Model):
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(
+        upload_to="images/blog_images/", default="images/default/default_fruit.jpg"
+    )
+    is_main_image = models.BooleanField(default=False)
+    def clean(self):
+        if self.is_main_image:
+            if self.blog.images.filter(is_main_image=True).exclude(pk=self.pk).exists():
+                raise ValidationError("Each product can only have one main image.")
+    
+    def save(self, *args, **kwargs):
+        if not BlogImage.objects.filter(blog=self.blog).exists():
+            self.is_main_image = True
+        else:
+            if self.is_main_image:
+                BlogImage.objects.filter(blog=self.blog).exclude(pk=self.pk).update(is_main_image=False)
+        super().save(*args, **kwargs)
+
+    class Meta:
+        db_table = "BlogImages"
+        managed = True
+        verbose_name = "Blog Image"
+        verbose_name_plural = "Blog Images"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["blog", "is_main_image"],
+                name="unique_main_image_per_blog",
+            )
+        ]
+
+class Comment(models.Model):
+    user = models.ForeignKey(User,models.CASCADE,null=False,related_name='comments')
+    product = models.ForeignKey(Product,null=True,blank=True,on_delete=models.CASCADE,related_name='comments')
+    blog = models.ForeignKey(Blog,null=True,blank=True,on_delete=models.CASCADE,related_name='comments')
+    content = models.TextField(null=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_approved = models.BooleanField(default=True)
+    parent_comment = models.ForeignKey('self',null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
+    
+    class Meta:
+        ordering = ["id"]
+        db_table = "Comments"
+        managed = True
+        verbose_name = "Comment"
+        verbose_name_plural = "Comments"
+
+
+class ContactUsMessage(models.Model):
+    name = models.CharField(null=False,max_length=100)
+    email = models.EmailField(max_length=100, null=False)
+    subject = models.CharField(max_length=255,null=False)
+    content = models.TextField(null=False)
+
+    class Meta:
+        ordering = ["id"]
+        db_table = "ContactUsMessages"
+        managed = True
+        verbose_name = "Contact Us Message"
+        verbose_name_plural = "Contact Us Messages"

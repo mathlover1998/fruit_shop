@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect
-from fruit_shop.utils import send_code_via_phone, generate_verification_code
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponse,HttpResponseRedirect,JsonResponse,FileResponse
 from django.urls import reverse
-from fruit_shop_app.models import Brand,Product
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-
+from common.utils import send_specific_email,validate_product_template_excel
+from django.views.decorators.csrf import csrf_exempt
+from common import error_messages
+from fruit_shop_app.models import ContactUsMessage,Product
+from django.conf import settings
+import os
 
 # Create your views here.
 def index(request):
@@ -17,24 +20,23 @@ def view_about_us (request):
 
 
 def handle_contact_us(request):
+    if request.method=='POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        content = request.POST.get('content')
+        required_fields = [name,email,subject,content]
+        if all(required_fields):
+            ContactUsMessage.objects.create(name=name,email=email,subject=subject,content=content).save()
+            send_specific_email(request=request,email_list=[email],choice=4)
+            return JsonResponse({'success':True,'success_message':error_messages.GENERAL_NOTIFICATION})
+        return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
     return render(request, "pages/contact_us.html")
+    
 
 def view_location(request):
     return render(request,'pages/location.html')
 
-
-def brand_register(request):
-    if request.method == "POST":
-        brand_name = request.POST.get("brand_name")
-        contact_person = request.POST.get("contact_person")
-        email = request.POST.get("email")
-        phone = request.POST.get("phone")
-        new_brand = Brand.objects.create(
-            brand_name=brand_name, contact_person=contact_person, email=email, phone=phone
-        )
-        new_brand.save()
-        return redirect(reverse("view_confirmation_page"))
-    return render(request, "account/brand_register.html")
 
 
 def view_confirmation_page(request):
@@ -50,3 +52,25 @@ def clear_session(request):
     expired_sessions.delete()
     Session.objects.all().delete()
     return HttpResponse("Sessions cleared successfully")
+
+@csrf_exempt
+def register_newsletter(request):
+    if request.method=='POST':
+        email= request.POST.get('email')
+        send_specific_email(request=request,choice=4,email_list=[email])
+        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+    
+
+def search_result(request):
+    query = request.GET.get('q')
+    
+    if query:
+        products = Product.objects.filter(product_name__icontains=query)
+    else:
+        products = Product.objects.none()
+    
+    return render(request, 'shop/search-results.html', {'products': products, 'query': query})
+
+def download_template(request):
+    file_path = validate_product_template_excel()
+    return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')

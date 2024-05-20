@@ -5,7 +5,7 @@ urlpatterns = [
     path("", views.get_all_products, name="get_all_products"),
     path('my-products/',views.get_your_products,name='get_your_products'),
     path("create/", views.create_product, name="create_product"),
-    path("<str:sku>/",views.get_product,name="get_product"),#
+    
     path("filter/<str:category>/",views.category_filtered_view,name='category_filtered_view'),#
     path('wishlist',views.get_wishlist,name='get_wishlist'),
     path('wishlist/add/<int:product_id>/', views.update_wishlist_item, name='update_wishlist_item'),
@@ -16,5 +16,10 @@ urlpatterns = [
     path('checkout/',views.checkout,name='checkout'),
     path('<str:sku>/update/',views.update_product, name="update_product"),
     path('discount/apply-discount/',views.apply_discount_view,name='apply_discount_view'),
-
+    path('<str:sku>/comment/',views.create_comment_on_product,name='create_comment_on_product'),
+    path('<str:sku>/comment/edit/', views.update_comment_on_product, name='update_comment_on_product'),
+    path('<str:sku>/comment/delete/',views.delete_comment_on_product,name='delete_comment_on_product'),
+    path('brand/register/',views.create_brand,name='create_brand'),
+    path('upload/',views.upload_file,name='upload_file'),
+    path("<str:sku>/",views.get_product,name="get_product"),#
 ]
