@@ -23,10 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(py9y)mt4nwsukdwcye0nm95i_+*0__s32oe-!2a_@g+!4pekk'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # "whitenoise.runserver_nostatic",
     'django.contrib.staticfiles',
     'fruit_shop_app',
     'account',
@@ -63,7 +62,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -119,17 +117,17 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # }
 
 # local postgresql database
-# DATABASES = {
+DATABASES = {
     
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'fruit_shop_db',
-#         'USER': 'admin',
-#         'PASSWORD': '1234',
-#         'HOST':'localhost',
-#         'PORT':'5432' 
-#     }
-# }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fruit_shop_db',
+        'USER': 'admin',
+        'PASSWORD': '1234',
+        'HOST':'localhost',
+        'PORT':'5432' 
+    }
+}
 
 
 # aws database (disabled)
@@ -146,13 +144,13 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 
 
 #render database
-DATABASES = {
+# DATABASES = {
     
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-    }
-}
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+#     }
+# }
     
 
 
@@ -218,21 +216,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 #AWS configuration
-AWS_ACCESS_KEY_ID=os.environ.get('AWS_ACCESS_KEY')
-AWS_SECRET_ACCESS_KEY=os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = 'cole-grocery-shop-98'
-AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
-AWS_S3_FILE_OVERWRITE = False
+# AWS_ACCESS_KEY_ID=os.environ.get('AWS_ACCESS_KEY')
+# AWS_SECRET_ACCESS_KEY=os.environ.get('AWS_SECRET_ACCESS_KEY')
+# AWS_STORAGE_BUCKET_NAME = 'cole-grocery-shop-98'
+# AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+# AWS_S3_FILE_OVERWRITE = False
 
-STORAGES = {
+# STORAGES = {
 
-    # Media file (image) management   
-    "default": {
-        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
-    },
+#     # Media file (image) management   
+#     "default": {
+#         "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+#     },
     
-    # CSS and JS file management
-    "staticfiles": {
-        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
-    },
-}
+#     # CSS and JS file management
+#     "staticfiles": {
+#         "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+#     },
+# }

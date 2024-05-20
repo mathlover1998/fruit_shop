@@ -218,14 +218,6 @@ class Product(models.Model):
                 return sku
             
 
-    # def set_categories(self):
-    #     all_categories = set(self.categories)
-    #     for category in self.categories:
-    #         current_category = category
-    #         while current_category.parent_category:
-    #             all_categories.add(current_category.parent_category)
-    #             current_category = current_category.parent_category
-    #     self.categories.set(all_categories)
 
     def save(self, *args, **kwargs):
         # categories = kwargs.pop('categories', None)
@@ -283,6 +275,7 @@ class Discount(models.Model):
         ("category", "Category"),
         ("specific_products", "Specific Products"),
         ("brand", "Brand"),
+        ('order','Order')
     )
     code = models.CharField(max_length=20, null=True)
     description = models.TextField(blank=True)
@@ -297,8 +290,9 @@ class Discount(models.Model):
     )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, blank=True, null=True
-    )  # Assuming a categories model
+    )
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, blank=True, null=True)
+    
     products = models.ManyToManyField(Product, related_name="discounts",blank=True)
     valid_from = models.DateTimeField(default=timezone.now)
     valid_to = models.DateTimeField(blank=True, null=True)
@@ -335,6 +329,9 @@ class Discount(models.Model):
         elif self.applies_to == "all_products":
 
             products_to_discount = Product.objects.all()
+        elif self.applies_to =='order':
+            pass
+
         elif self.applies_to == "specific_products":
             products_to_discount = Product.objects.filter(discounts__isnull=True)  # Filter products without discounts
             for product in products_to_discount:

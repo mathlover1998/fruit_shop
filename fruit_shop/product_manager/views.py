@@ -57,6 +57,9 @@ def upload_file(request):
         if df.empty:
             return JsonResponse({'error': 'The uploaded file is empty or invalid'}, status=400)
         for index, row in df.iterrows():
+            print(row.iloc[2])
+            # image = Image.open(img)
+            # image_path = os.path.join(settings.MEDIA_ROOT, "images/product_images/", f"{uuid4().hex}.jpg")
             categories =Category.objects.filter(category_name=row.iloc[9])
             brand = Brand.objects.filter(brand_name=row.iloc[8]).first()
 
@@ -67,11 +70,12 @@ def upload_file(request):
             "stock_quantity": row.iloc[4],
             "origin_country": row.iloc[5],
             "information": row.iloc[6],
-            "unit": row.iloc[3]
+            "unit": row.iloc[3],
+            "inventory_manager":request.user.employee
             }
 
-            if row.iloc[7]:
-                common_args["sku"] = row.iloc[7]
+            # if row.iloc[7]:
+            #     common_args["sku"] = row.iloc[7]
 
             product = Product.objects.create(**common_args)
             product.save()
@@ -82,7 +86,7 @@ def upload_file(request):
                     all_categories.add(current_category.parent_category)
                     current_category = current_category.parent_category
             product.categories.set(all_categories)
-            ProductImage.objects.create(product=product, image=row.iloc[2]).save()
+            # ProductImage.objects.create(product=product, image=row.iloc[2]).save()
         # with open(csv_file_path, 'rb') as f:
         #     response = HttpResponse(f.read(), content_type='text/csv')
         #     response['Content-Disposition'] = f'attachment; filename={os.path.basename(csv_file_path)}'
@@ -125,7 +129,7 @@ def create_product(request):
             )  # Get list of uploaded images
             for img in product_images:
                 image = Image.open(img)
-
+                print(img)
                 # Get dimensions and calculate center coordinates
                 width, height = image.size
                 center_x = width // 2
