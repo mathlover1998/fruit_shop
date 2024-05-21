@@ -40,7 +40,7 @@
                     <div class="products-single fix">
                       <div class="box-img-hover">
                         <div class="type-lb">
-                          {% if product.create_date|is_recent %}
+                          {% if product.price|is_sale:product.updated_price %}
                           <p class="new">New{% else %}</p>
                           <p class="sale">Long Ago</p>
                           {% endif %}
@@ -81,7 +81,7 @@
                       <div class="products-single fix">
                         <div class="box-img-hover">
                           <div class="type-lb">
-                            {% if product.create_date|is_recent %}
+                            {% if product.price|is_sale:product.updated_price %}
                             <p class="new">New{% else %}</p>
                             <p class="sale">Long Ago</p>
                             {% endif %}

@@ -1,6 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
 from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category
-from django.contrib import messages
 from django.urls import reverse
 from common.utils import convert_to_csv,handle_uploaded_file
 from .forms import ProductForm
@@ -9,7 +8,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from PIL import Image
-import os, json
+import os, json, requests
 from django.conf import settings
 from uuid import uuid4
 from datetime import timedelta
@@ -49,6 +48,7 @@ def get_your_products(request):
     product_lists = Product.objects.filter(inventory_manager=current_employee)
     return render(request,'shop/my_products.html',{'products':product_lists})
 
+
 def upload_file(request):
     if request.method == 'POST':
         file_path = handle_uploaded_file(request.FILES['file'])
@@ -58,9 +58,6 @@ def upload_file(request):
             if df.empty:
                 return JsonResponse({'error': 'The uploaded file is empty or invalid'}, status=400)
             for index, row in df.iterrows():
-                print(row.iloc[2])
-                # image = Image.open(img)
-                # image_path = os.path.join(settings.MEDIA_ROOT, "images/product_images/", f"{uuid4().hex}.jpg")
                 categories =Category.objects.filter(category_name=row.iloc[9])
                 brand = Brand.objects.filter(brand_name=row.iloc[8]).first()
 
@@ -87,19 +84,24 @@ def upload_file(request):
                         all_categories.add(current_category.parent_category)
                         current_category = current_category.parent_category
                 product.categories.set(all_categories)
-                # ProductImage.objects.create(product=product, image=row.iloc[2]).save()
-            # with open(csv_file_path, 'rb') as f:
-            #     response = HttpResponse(f.read(), content_type='text/csv')
-            #     response['Content-Disposition'] = f'attachment; filename={os.path.basename(csv_file_path)}'
-            #     return response
-            
+
+                local_file_path = row.iloc[2]
+                if local_file_path:
+                    filename = f'{row.iloc[0]}_{uuid4().hex}.jpg'
+                    image_file_path = os.path.join("images/product_images/", filename)
+                    full_path =os.path.join(settings.MEDIA_ROOT, image_file_path)
+                    with open(local_file_path, 'rb') as f:
+                        image_data = f.read()
+                    with open(full_path, 'wb') as f:
+                        f.write(image_data)
+                    ProductImage.objects.create(product=product, image=image_file_path).save()
+
             return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         finally:
             if os.path.exists(file_path):
                 os.remove(file_path)
             if os.path.exists(csv_file_path):
                 os.remove(csv_file_path)
-            
     return render(request, 'shop/manage_product.html')
 
 
@@ -136,7 +138,6 @@ def create_product(request):
             )  # Get list of uploaded images
             for img in product_images:
                 image = Image.open(img)
-                print(img)
                 # Get dimensions and calculate center coordinates
                 width, height = image.size
                 center_x = width // 2

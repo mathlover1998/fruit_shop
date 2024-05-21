@@ -211,9 +211,6 @@ MEDIA_URL = '/media/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# WHITENOISE_MANIFEST_STRICT = False
-# STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-# STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 #AWS configuration
 # AWS_ACCESS_KEY_ID=os.environ.get('AWS_ACCESS_KEY')

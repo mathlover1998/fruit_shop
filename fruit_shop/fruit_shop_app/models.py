@@ -183,7 +183,6 @@ class Product(models.Model):
     information = models.TextField(null=True)
     create_date = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    expiry_date = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=30))
     sku = models.CharField(max_length=10, unique=True, default="", blank=True)
     unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
@@ -217,22 +216,19 @@ class Product(models.Model):
             if not Product.objects.filter(sku=sku).exists():
                 return sku
             
-
+    
 
     def save(self, *args, **kwargs):
-        # categories = kwargs.pop('categories', None)
         if self.updated_price == 0: 
             self.updated_price = self.price
         if not self.sku:
             self.sku = self.generate_unique_sku()
         #only accept 10 featured products at a time
-        if Product.objects.filter(is_featured=True).count() >=10 and self.is_featured==True:
+        if Product.objects.filter(is_featured=True).count() >=10 and self.is_featured:
             first_featured_product = Product.objects.filter(is_featured=True).first()
             first_featured_product.is_featured = False
             first_featured_product.save()
         super().save(*args, **kwargs)
-        # if categories is not None:
-        #     self.set_categories()
 
     class Meta:
         ordering = ["id"]
@@ -320,7 +316,6 @@ class Discount(models.Model):
         
         super().save(*args, **kwargs)
         if self.applies_to == "category":
-
             products_to_discount = Product.objects.filter(categories=self.category)
 
         elif self.applies_to == "brand":
@@ -329,20 +324,21 @@ class Discount(models.Model):
         elif self.applies_to == "all_products":
 
             products_to_discount = Product.objects.all()
-        elif self.applies_to =='order':
-            pass
-
         elif self.applies_to == "specific_products":
-            products_to_discount = Product.objects.filter(discounts__isnull=True)  # Filter products without discounts
-            for product in products_to_discount:
-                product.apply_discount(self)
-            self.products.add(*products_to_discount)
-            
-            return
+            products_to_discount = self.products.all()
         # Apply the discount to selected products
         for product in products_to_discount:
-            product.apply_discount(self)
-            
+            if product.discounts.exists():
+                current_discounted_price = product.updated_price
+                discount = product.price * self.discount_value / 100 if self.discount_type == "percentage" else self.discount_value
+                new_discount_amount = min(discount, self.maximum_discount_amount)
+                # new_discount_amount = min(product.price * self.discount_value / 100 if self.discount_type == "percentage" else self.discount_value, self.maximum_discount_amount)
+                new_discounted_price = product.price - new_discount_amount
+                if new_discounted_price < current_discounted_price:
+                    product.apply_discount(self)
+            else:
+                product.apply_discount(self)
+
         
 
     class Meta:
@@ -470,23 +466,6 @@ class Order(models.Model):
         max_length=255, null=True, blank=True
     )  # Optional for storing transaction ID
 
-    def apply_discount(self, discount):
-        # Calculate discount amount based on the discount type and value
-        if discount.discount_type == "percentage":
-            discount_amount = (discount.discount_value / 100) * self.total_amount
-        elif discount.discount_type == "fixed_amount":
-            discount_amount = min(discount.discount_value, self.total_amount)
-
-        # Update the total amount of the order after applying the discount
-        self.total_amount -= discount_amount
-        self.save()
-
-        # Optionally, store information about the applied discount
-        # For example, you can update the discount_applied field of each order item
-        order_items = self.orderitem_set.all()
-        for order_item in order_items:
-            order_item.discount_applied = discount.code
-            order_item.save()
 
     class Meta:
         ordering = ["-placed_at"]

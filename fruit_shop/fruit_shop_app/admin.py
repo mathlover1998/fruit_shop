@@ -200,7 +200,6 @@ class ProductFormAdmin(admin.ModelAdmin):
                     "origin_country",
                     "information",
                     ("create_date", "updated_at"),
-                    "expiry_date"
                 ),
             },
         ),

@@ -6,9 +6,8 @@ from django.utils import timezone
 from common.utils import send_specific_email,validate_product_template_excel
 from django.views.decorators.csrf import csrf_exempt
 from common import error_messages
-from fruit_shop_app.models import ContactUsMessage,Product
-from django.conf import settings
-import os
+from fruit_shop_app.models import ContactUsMessage,Product,Discount
+
 
 # Create your views here.
 def index(request):
@@ -74,3 +73,11 @@ def search_result(request):
 def download_template(request):
     file_path = validate_product_template_excel()
     return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')
+
+
+def get_discount_product(request):
+    discount = Discount.objects.filter(code='test004').first()
+    print(discount)
+    products = discount.products.all()
+    print(products)
+    return HttpResponse('noob')
