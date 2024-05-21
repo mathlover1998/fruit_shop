@@ -224,7 +224,7 @@ class DiscountForm(forms.ModelForm):
             "Between 0.01 and 1 if percentage option is selected"
         )
         self.fields["applies_to"].help_text = (
-            "Defines what the discount applies to (all products, specific category, or specific products)."
+            "Defines what the discount applies to (all products, specific category, or specific brand)."
         )
         self.fields["maximum_discount_amount"].help_text = (
             "The maximum value to reduce"
@@ -238,10 +238,6 @@ class DiscountForm(forms.ModelForm):
         self.fields["brand"].help_text = (
             "Select brand if and only if applies_to be selected as Brand"
         )
-        self.fields["products"].help_text = (
-            "Select products if and only if applies_to be selected as Product"
-        )
-    
 
     class Meta:
         model = Discount
@@ -250,11 +246,6 @@ class DiscountForm(forms.ModelForm):
 
 
 class DiscountAdmin(admin.ModelAdmin):
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == 'products':
-            # Filter products based on the current logged-in account (inventory_manager)
-            kwargs['queryset'] = request.user.employee.managed_product.all()
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
     
     form = DiscountForm
     list_display = ("code", "discount_type","applies_to", "valid_from", "valid_to", "is_active")
@@ -276,7 +267,6 @@ class DiscountAdmin(admin.ModelAdmin):
                     "applies_to",
                     "category",
                     'brand',
-                    'products',
                 ),
             },
         ),

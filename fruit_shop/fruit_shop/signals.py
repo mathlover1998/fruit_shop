@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-from fruit_shop_app.models import Employee,User
+from fruit_shop_app.models import Employee,User,Discount
 from django.contrib.auth.hashers import make_password
 from .utils import generate_random_password
 from django.contrib.contenttypes.models import ContentType

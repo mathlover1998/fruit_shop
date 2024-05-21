@@ -3,9 +3,7 @@ from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.core.validators import MinValueValidator, MaxValueValidator, EmailValidator
 import random
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import Group
 from django.utils import timezone
 
 # Create your models here.
@@ -269,9 +267,7 @@ class Discount(models.Model):
     APPLIES_TO_CHOICES = (
         ("all_products", "All Products"),
         ("category", "Category"),
-        ("specific_products", "Specific Products"),
         ("brand", "Brand"),
-        ('order','Order')
     )
     code = models.CharField(max_length=20, null=True)
     description = models.TextField(blank=True)
@@ -282,14 +278,12 @@ class Discount(models.Model):
         max_digits=7, decimal_places=2, null=False, default=0.00
     )
     applies_to = models.CharField(
-        max_length=20, choices=APPLIES_TO_CHOICES, default="all_products"
+        max_length=20, choices=APPLIES_TO_CHOICES, null=True,blank=True
     )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, blank=True, null=True
     )
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, blank=True, null=True)
-    
-    products = models.ManyToManyField(Product, related_name="discounts",blank=True)
     valid_from = models.DateTimeField(default=timezone.now)
     valid_to = models.DateTimeField(blank=True, null=True)
     minimum_purchase = models.DecimalField(
@@ -317,15 +311,10 @@ class Discount(models.Model):
         super().save(*args, **kwargs)
         if self.applies_to == "category":
             products_to_discount = Product.objects.filter(categories=self.category)
-
         elif self.applies_to == "brand":
-            
             products_to_discount = Product.objects.filter(brand=self.brand)
         elif self.applies_to == "all_products":
-
             products_to_discount = Product.objects.all()
-        elif self.applies_to == "specific_products":
-            products_to_discount = self.products.all()
         # Apply the discount to selected products
         for product in products_to_discount:
             if product.discounts.exists():
@@ -447,6 +436,7 @@ class Order(models.Model):
     placed_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(choices=ORDER_STATUS, null=False, default="pending")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, null=True, blank=True)
     billing_address = models.ForeignKey(
         Address,
         on_delete=models.SET_NULL,
@@ -466,7 +456,28 @@ class Order(models.Model):
         max_length=255, null=True, blank=True
     )  # Optional for storing transaction ID
 
+    def apply_discount(self, discount_code):
+        try:
+            discount = Discount.objects.get(code=discount_code, is_active=True)
+            self.discount = discount
+            self.save()
+            self.update_total_price()
+        except Discount.DoesNotExist:
+            raise ValueError("Invalid or inactive discount code.")
 
+    def update_total_price(self):
+        total = sum(item.price for item in self.items.all())
+        if self.discount:
+            if self.discount.discount_type == "percentage":
+                discount_amount = total * self.discount.discount_value / 100
+            elif self.discount.discount_type == "fixed_amount":
+                discount_amount = self.discount.discount_value
+
+            discount_amount = min(discount_amount, self.discount.maximum_discount_amount)
+            total -= discount_amount
+
+        self.total_price = total
+        self.save()
     class Meta:
         ordering = ["-placed_at"]
         db_table = "Orders"
@@ -480,7 +491,15 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField(null=False, default=0)
     subtotal = models.IntegerField(null=False, default=0)
-    discount_applied = models.CharField(max_length=30, default="", null=False)
+
+    def save(self, *args, **kwargs):
+        self.price = self.product.updated_price * self.quantity
+        super().save(*args, **kwargs)
+        self.order.update_total_price()
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.product_name} for Order #{self.order.id}"
+
 
     class Meta:
         ordering = ["id"]
@@ -617,3 +636,4 @@ class ContactUsMessage(models.Model):
         managed = True
         verbose_name = "Contact Us Message"
         verbose_name_plural = "Contact Us Messages"
+
