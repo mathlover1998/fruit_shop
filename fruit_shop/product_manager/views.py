@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category
+from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category,Discount,WishlistItem
 from django.urls import reverse
 from common.utils import convert_to_csv,handle_uploaded_file
 from .forms import ProductForm
@@ -20,16 +20,6 @@ from common import error_messages
 import pandas as pd
 
 
-# Create your views here.
-def calculate_total_price(cart):
-    total_price = 0
-
-    for product_id, item_data in cart.items():
-        product = get_object_or_404(Product, pk=product_id)
-        quantity = item_data["quantity"]
-        total_price += product.price * quantity
-
-    return total_price
 
 
 def get_all_products(request):
@@ -284,16 +274,44 @@ def get_cart(request):
     cart = request.session.get("cart", {})
     cart_items = []
     total_price = 0
+    discount_amount = 0  # Initialize discount amount to zero
+    
     # Retrieve product details for items in the cart
     for item_id, item_data in cart.items():
         product = get_object_or_404(Product, pk=item_id)
         quantity = item_data["quantity"]
-        item_total_price = product.price * quantity
+        item_total_price = product.updated_price * quantity
         total_price += item_total_price
         cart_items.append(
             {"product": product, "quantity": quantity, "total_price": item_total_price}
         )
-    context = {"cart_items": cart_items, "total_price": total_price}
+    
+    # Check if a coupon code is applied
+    coupon_code = request.session.get('coupon_code')
+    if coupon_code:
+        try:
+            discount = Discount.objects.get(code=coupon_code, is_active=True)
+            # Calculate the discount amount based on the coupon
+            if discount.discount_type == "percentage":
+                discount_amount = total_price * discount.discount_value / 100
+            elif discount.discount_type == "fixed_amount":
+                discount_amount = min(discount.discount_value, total_price)
+                # request.session['discount_amount'] = discount_amount
+        except Discount.DoesNotExist:
+            # If the coupon code is invalid or inactive, remove it from the session
+            del request.session['coupon_code']
+            # Reset discount amount to zero
+            discount_amount = 0
+    request.session['discount_amount'] = int(discount_amount)
+    # Calculate the total price after applying the discount
+    grand_total = total_price - discount_amount
+    
+    context = {
+        "cart_items": cart_items,
+        "total_price": total_price,
+        "discount_amount": discount_amount,
+        "grand_total": grand_total,
+    }
 
     return render(request, "shop/cart.html", context)
 
@@ -317,38 +335,24 @@ def delete_cart_item(request, product_id):
 @login_required
 def update_wishlist_item(request, product_id):
     product_id_ = str(product_id)
-    wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
-    if product_id_ not in wishlist:
-        # Use dynamic keys for each product instead of 'product_id'
-        wishlist[product_id_] = product_id_
-
-    response = HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-    response.set_cookie("wishlist", json.dumps(wishlist), max_age=timedelta(days=30))
-    return response
+    product = get_object_or_404(Product,pk=product_id_)
+    if WishlistItem.objects.filter(user= request.user,product = product).exists():
+        pass
+    WishlistItem.objects.create(user= request.user,product = product).save()
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 @login_required
 def get_wishlist(request):
-    wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
-    wishlist_items = []
-
-    for key, value in wishlist.items():
-        product = get_object_or_404(Product, pk=value)
-        wishlist_items.append({"product": product})
-
+    wishlist_items = WishlistItem.objects.filter(user= request.user).all()
     return render(request, "shop/wishlist.html", {"wishlist_items": wishlist_items})
 
 
 @login_required
 def delete_wishlist_item(request, product_id):
-    wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
-
-    if str(product_id) in wishlist:
-        del wishlist[str(product_id)]
-
-    response = HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-    response.set_cookie("wishlist", json.dumps(wishlist), max_age=timedelta(days=30))
-    return response
+    product = get_object_or_404(Product,pk=product_id)
+    WishlistItem.objects.filter(user = request.user,product=product).first().delete()
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 @login_required
@@ -359,11 +363,11 @@ def checkout(request):
     cart = request.session.get("cart", {})
     cart_items = []
     total_price = 0
-
+    discount_amount = request.session.get('discount_amount', None)
     for item_id, item_data in cart.items():
         product = get_object_or_404(Product, pk=item_id)
         quantity = item_data["quantity"]
-        item_total_price = product.price * quantity
+        item_total_price = product.updated_price * quantity
         total_price += item_total_price
         cart_items.append(
             {
@@ -372,56 +376,74 @@ def checkout(request):
                 "total_price": item_total_price,
             }
         )
+
     if request.method == "POST":
-        # Assuming you have a form submission with necessary checkout details
+        selected_shipping_option = request.POST.get("selected_shipping_option")
+
         payment_method = request.POST.get("payment_method")
         address_id = request.POST.get("address")
-        address = Address.objects.filter(user=request.user,pk=address)
-        print(address.street_address)
-        # Check if payment method is cash on delivery
-        if payment_method == "cash":
+        address = get_object_or_404(Address, user=current_user, pk=address_id)
 
-            order = Order.objects.create(
-                payment_method = payment_method,
-                customer=request.user.customer,
-                total_amount=0,
-                status="pending",
-                shipping_address=Address.objects.filter(pk=request.POST.get("address")),
-                
-            )
-            total_amount = 0
-            for item_id, item_data in cart.items():
-                product = Product.objects.get(pk=item_id)
-                quantity = item_data["quantity"]
-                subtotal = product.price * quantity
-                total_amount += subtotal
+        order = Order.objects.create(
+            payment_method=payment_method,
+            customer=current_user.customer,
+            total_amount=0,  # Initially set to 0
+            status="pending",
+            shipping_address=address,
+        )
 
-                OrderItem.objects.create(
-                    order=order,
-                    product=product,
-                    quantity=quantity,
-                    subtotal=subtotal,
-                )
+        total_amount = 0
+        for item_id, item_data in cart.items():
+            product = get_object_or_404(Product, pk=item_id)
+            quantity = item_data["quantity"]
+            subtotal = product.updated_price * quantity
+            total_amount += subtotal
 
-                product.stock_quantity -= quantity
-                product.save()
-
-            order.total_amount = total_amount
-            order.save()
-
-            transaction = Transaction.objects.create(
+            OrderItem.objects.create(
                 order=order,
-                payment_method=payment_method,
-                amount_paid=0,
+                product=product,
+                quantity=quantity,
+                subtotal=subtotal,
             )
-            transaction.save()
-            order.payment_transaction = transaction.pk
-            order.save()
-            request.session["cart"] = {}
 
-            return redirect(reverse("view_confirmation_page"))
-        else:
-            return HttpResponse("Payment method not supported yet.")
+            product.stock_quantity -= quantity
+            product.save()
+
+        coupon_code = request.session.get('coupon_code', None)
+        # Check for the coupon code in the session
+        if coupon_code:
+            try:
+                discount = Discount.objects.get(code=coupon_code, is_active=True)
+                order.apply_discount(coupon_code)
+
+            except Discount.DoesNotExist:
+                pass
+
+        # Update the total amount of the order to be the grand total
+        if selected_shipping_option == 'standard':
+            grand_total = total_price - discount_amount
+        elif selected_shipping_option =='express':
+            grand_total = total_price - discount_amount + 35000
+        
+        order.total_amount = grand_total
+        order.save()
+
+
+        transaction = Transaction.objects.create(
+            order=order,
+            payment_method=payment_method,
+            amount_paid=0,
+        )
+        transaction.save()
+        order.payment_transaction = transaction.pk
+        order.save()
+
+        # Clear the cart and coupon code from the session
+        request.session["cart"] = {}
+        request.session.pop('coupon_code', None)
+
+        
+        return redirect(reverse("view_confirmation_page"))
 
     return render(
         request,
@@ -430,19 +452,10 @@ def checkout(request):
             "address_list": address_list,
             "cart_items": cart_items,
             "total_price": total_price,
+            'discount_amount': discount_amount
         },
     )
 
-
-def create_discount(request):
-    pass
-
-def apply_discount_view(request):
-    products_with_category_discount = Product.objects.filter(categories__discount__is_active=True)
-    # You can then use 'products_with_brand_discount' as needed
-    for product in products_with_category_discount:
-        print(product.product_name)
-    return render(request, 'shop/discount_applied.html')
 
 @login_required
 def create_comment_on_product(request, sku):
@@ -493,3 +506,17 @@ def create_brand(request):
             return JsonResponse({'success': True})
         return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
     return render(request, "account/create_brand.html")
+
+
+@csrf_exempt
+def apply_coupon(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        coupon_code = data.get('coupon_code')
+        try:
+            discount = Discount.objects.get(code=coupon_code, is_active=True)
+            request.session['coupon_code'] = coupon_code
+            return JsonResponse({'success': True})
+        except Discount.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Invalid coupon code'})
+    return JsonResponse({'success': False, 'message': 'Invalid request'})

@@ -90,7 +90,7 @@ TEMPLATES = [
                 'common.context_processors.get_global_cart_data',
                 'common.context_processors.get_separated_category_product',
                 'common.context_processors.get_category_name_context',
-                'common.context_processors.get_latest_discounts',
+                'common.context_processors.get_coupon_discounts',
                 'common.context_processors.get_website_information',
                 'common.context_processors.get_featured_products_context',
                 'common.context_processors.get_recently_viewed_products',
@@ -109,48 +109,27 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 # local postgresql database
-DATABASES = {
-    
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fruit_shop_db',
-        'USER': 'admin',
-        'PASSWORD': '1234',
-        'HOST':'localhost',
-        'PORT':'5432' 
-    }
-}
-
-
-# aws database (disabled)
-# DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'cole_fruit_shop_db',
-    #     'USER': 'coletran',
-    #     'PASSWORD': 'Bunnie123',
-    #     'HOST':'database-2.clbdt0uzsyg9.ap-southeast-2.rds.amazonaws.com',
-    #     'PORT':'5432' 
-    # }
-# }
-
-
-#render database
 # DATABASES = {
     
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+#         'NAME': 'fruit_shop_db',
+#         'USER': 'admin',
+#         'PASSWORD': '1234',
+#         'HOST':'localhost',
+#         'PORT':'5432' 
 #     }
 # }
+
+#render database
+DATABASES = {
+    
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    }
+}
     
 
 
@@ -176,8 +155,6 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'fruit_shop_app.User'
 
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -197,12 +174,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "fruit_shop_app/static"),
 )
-
-# STORAGES = {
-#     "staticfiles": {
-#         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-#     },
-# }
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 MEDIA_URL = '/media/'

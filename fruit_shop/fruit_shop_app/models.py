@@ -34,11 +34,6 @@ class User(AbstractUser, PermissionsMixin):
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
     approval_email_sent = models.BooleanField(default=False)
-    # groups = models.ManyToManyField(
-    #     Group,
-    #     blank=True,
-    #     related_name="user_memberships",  # Specify a unique related_name
-    # )
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.password:
@@ -134,7 +129,6 @@ class Category(models.Model):
         return self.category_name
 
     def clean(self):
-        # Check if the parent category is a subcategory
         if self.parent_category:
             if self.parent_category.parent_category:
                 raise ValidationError(
@@ -142,7 +136,7 @@ class Category(models.Model):
                 )
 
     def save(self, *args, **kwargs):
-        self.full_clean()  # Validate the instance before saving
+        self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -286,9 +280,7 @@ class Discount(models.Model):
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, blank=True, null=True)
     valid_from = models.DateTimeField(default=timezone.now)
     valid_to = models.DateTimeField(blank=True, null=True)
-    minimum_purchase = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.00, null=False
-    )
+    
     maximum_discount_amount = models.DecimalField(
         max_digits=8, decimal_places=2, default=0.00, null=False
     )
@@ -315,6 +307,8 @@ class Discount(models.Model):
             products_to_discount = Product.objects.filter(brand=self.brand)
         elif self.applies_to == "all_products":
             products_to_discount = Product.objects.all()
+        else:
+            products_to_discount = []
         # Apply the discount to selected products
         for product in products_to_discount:
             if product.discounts.exists():
@@ -466,7 +460,7 @@ class Order(models.Model):
             raise ValueError("Invalid or inactive discount code.")
 
     def update_total_price(self):
-        total = sum(item.price for item in self.items.all())
+        total = sum(item.product.updated_price for item in self.order_items.all())
         if self.discount:
             if self.discount.discount_type == "percentage":
                 discount_amount = total * self.discount.discount_value / 100
@@ -478,6 +472,9 @@ class Order(models.Model):
 
         self.total_price = total
         self.save()
+    
+    def __str__(self):
+        return self.customer.user.username
     class Meta:
         ordering = ["-placed_at"]
         db_table = "Orders"
@@ -637,3 +634,14 @@ class ContactUsMessage(models.Model):
         verbose_name = "Contact Us Message"
         verbose_name_plural = "Contact Us Messages"
 
+
+class WishlistItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True,related_name='wishlist_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        
+        db_table = "WishlistItems"
+        managed = True
+        verbose_name = "Wishlist Item"
+        verbose_name_plural = "Wishlist Items"

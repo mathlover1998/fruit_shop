@@ -16,7 +16,7 @@ def get_global_cart_data(request):
     for key, value in cart.items():
         product = get_object_or_404(Product, pk=key)
         quantity = value["quantity"]
-        item_total_price = product.price * quantity
+        item_total_price = product.updated_price * quantity
 
         cart_items.append(
             {"product": product, "quantity": quantity, "total_price": item_total_price}
@@ -95,11 +95,11 @@ def get_recently_viewed_products(request):
     return {"recently_viewed_products": recently_viewed}
 
 
-def get_latest_discounts(request):
-    largest_discount_list = Discount.objects.order_by("-valid_to")[:5]
-    if not largest_discount_list:
+def get_coupon_discounts(request):
+    discount_list = Discount.objects.filter(is_active=True,applies_to__isnull=True)
+    if not discount_list:
         return {"discount_list": []}
-    return {"discount_list": largest_discount_list}
+    return {"discount_list": discount_list}
 
 
 

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse,FileResponse
 from django.urls import reverse
 from django.contrib.sessions.models import Session
@@ -6,8 +6,8 @@ from django.utils import timezone
 from common.utils import send_specific_email,validate_product_template_excel
 from django.views.decorators.csrf import csrf_exempt
 from common import error_messages
-from fruit_shop_app.models import ContactUsMessage,Product,Discount
-
+from fruit_shop_app.models import ContactUsMessage,Product,Discount,Order
+import json
 
 # Create your views here.
 def index(request):
@@ -50,7 +50,9 @@ def clear_session(request):
     expired_sessions = Session.objects.filter(expire_date__lt=timezone.now())
     expired_sessions.delete()
     Session.objects.all().delete()
-    return HttpResponse("Sessions cleared successfully")
+    response = HttpResponse("Cookie Cleared")
+    response.delete_cookie('cookie_name')
+    return response
 
 @csrf_exempt
 def register_newsletter(request):
@@ -75,9 +77,3 @@ def download_template(request):
     return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')
 
 
-def get_discount_product(request):
-    discount = Discount.objects.filter(code='test004').first()
-    print(discount)
-    products = discount.products.all()
-    print(products)
-    return HttpResponse('noob')

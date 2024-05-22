@@ -13,8 +13,6 @@ from django.utils.translation import gettext_lazy as _
 
 admin.site.register(Permission)
 
-# filter to get the most product sold
-# filter to get the most category that have all products sold
 
 
 # filter email (has email, no email)
@@ -229,9 +227,6 @@ class DiscountForm(forms.ModelForm):
         self.fields["maximum_discount_amount"].help_text = (
             "The maximum value to reduce"
         )
-        self.fields["minimum_purchase"].help_text = (
-            "Minimum purchase amount required to qualify for the discount"
-        )
         self.fields["category"].help_text = (
             "Select category if and only if applies_to be selected as Category"
         )
@@ -261,7 +256,6 @@ class DiscountAdmin(admin.ModelAdmin):
                     "description",
                     ("discount_type", "discount_value"),
                     'maximum_discount_amount',
-                    "minimum_purchase",
                     "is_active",
                     ("valid_from", "valid_to"),
                     "applies_to",
