@@ -3,7 +3,7 @@ from django.http import HttpResponse,HttpResponseRedirect,JsonResponse,FileRespo
 from django.urls import reverse
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from common.utils import send_specific_email,validate_product_template_excel
+from common.utils import send_specific_email,modify_excel_file,download_file_from_s3
 from django.views.decorators.csrf import csrf_exempt
 from common import error_messages
 from fruit_shop_app.models import ContactUsMessage,Product,Discount,Order
@@ -73,7 +73,9 @@ def search_result(request):
     return render(request, 'shop/search-results.html', {'products': products, 'query': query})
 
 def download_template(request):
-    file_path = validate_product_template_excel()
-    return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')
+    file_path = modify_excel_file()
+    download_file_from_s3()
+    # return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')
+    return HttpResponse('Noob')
 
 

@@ -4,16 +4,16 @@ from twilio.base.exceptions import TwilioRestException
 from django.core.mail import send_mail
 import re, openpyxl
 from functools import wraps
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden,HttpResponse
 from fruit_shop_app.models import Employee,Category,Brand,UNIT
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from datetime import timedelta
 from django.conf import settings
 import pandas as pd
+from io import BytesIO
+import boto3
 from openpyxl.worksheet.datavalidation import DataValidation
-from openpyxl.styles import PatternFill
-from openpyxl.formatting.rule import FormulaRule
+import botocore.exceptions
 
 def is_phone_number(input_str):
 
@@ -203,15 +203,88 @@ def convert_to_csv(file_path):
     return csv_file_path
 
 
-def validate_product_template_excel():
-    template_path = os.path.join(settings.STATIC_ROOT, 'templates/template.xlsx')
+# def modify_excel_file():
 
-    # Load the workbook and select the active worksheet
-    workbook = openpyxl.load_workbook(template_path)
+#     template_path = os.path.join(settings.STATIC_ROOT, 'templates/template.xlsx')
+#     workbook = openpyxl.load_workbook(template_path)
+#     sheet = workbook["Product"]
+
+#     #handle product price
+#     price_dv = DataValidation(
+#         type='whole',
+#         operator="between",
+#         formula1="0", 
+#         formula2="9999999999", 
+#         showErrorMessage=True
+#     )
+#     price_dv.error = 'Invalid input'
+#     price_dv.errorTitle = 'Invalid Entry'
+#     price_dv.prompt = 'Please enter a number between 0 and 999999999'
+#     sheet.add_data_validation(price_dv)
+#     price_dv.add("B2:B1048576")
+
+#     #handle unit type
+#     unit_names = list(unit[0] for unit in UNIT)
+#     unit_dv = DataValidation(
+#         type='list',
+#         formula1=f'"{",".join(unit_names)}"'
+#     )
+#     sheet.add_data_validation(unit_dv)
+#     unit_dv.add("D2:D1048576")
+
+#     #handle stock quantity
+#     stock_dv = DataValidation(
+#         type='whole',
+#         operator="between",
+#         formula1="0", 
+#         formula2="999999", 
+#         showErrorMessage=True
+#     )
+#     stock_dv.error = 'Invalid input'
+#     stock_dv.errorTitle = 'Invalid Entry'
+#     stock_dv.prompt = 'Please enter a number between 0 and 999999'
+#     sheet.add_data_validation(stock_dv)
+#     stock_dv.add("E2:E1048576")
+
+#     #handle brand
+#     brand_names = list(Brand.objects.values_list('brand_name', flat=True))
+#     brand_dv = DataValidation(
+#         type="list",
+#         formula1=f'"{",".join(brand_names)}"'
+#     )
+#     sheet.add_data_validation(brand_dv)
+#     brand_dv.add("I2:I1048576")
+
+#     #handle category
+#     category_names = list(Category.objects.filter(parent_category__isnull=False).values_list('category_name', flat=True))
+#     category_dv = DataValidation(
+#         type="list",
+#         formula1=f'"{",".join(category_names)}"'
+#     )
+#     sheet.add_data_validation(category_dv)
+#     category_dv.add("J2:J1048576")
+
+#     #save to new file
+#     modified_template_path = os.path.join(settings.MEDIA_ROOT, 'templates/modified_template.xlsx')
+#     workbook.save(modified_template_path)
+
+#     return modified_template_path
+
+#using it only when use s3 bucket
+def modify_excel_file():
+    read_object_key = "templates/product_template.xlsx"
+    media_object_key = "images/products.xlsx"  # new file name
+
+    s3_client = boto3.client('s3')
+
+    # Get object from read bucket
+    response = s3_client.get_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=read_object_key)
+    file_content = response['Body'].read()
+
+    # Read data from in-memory file using openpyxl
+    workbook = openpyxl.load_workbook(BytesIO(file_content))
     sheet = workbook["Product"]
-    #remove all existing validation
 
-    #handle product price
     price_dv = DataValidation(
         type='whole',
         operator="between",
@@ -265,10 +338,31 @@ def validate_product_template_excel():
     )
     sheet.add_data_validation(category_dv)
     category_dv.add("J2:J1048576")
+    # Implement your validation/modification logic here (modify `sheet`)
+    # Example: Add a value to the first cell
 
-    #save to new file
-    modified_template_path = os.path.join(settings.MEDIA_ROOT, 'templates/modified_template.xlsx')
-    workbook.save(modified_template_path)
+    # Create new in-memory file object
+    output_buffer = BytesIO()
+    workbook.save(output_buffer)
 
-    return modified_template_path
+    # Move the buffer cursor to the beginning
+    output_buffer.seek(0)
 
+    # Save new file to media bucket
+    s3_client.put_object(Body=output_buffer.getvalue(), Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=media_object_key)
+
+def download_file_from_s3():
+    media_object_key = "images/products.xlsx"
+    local_file_path = r"C:\Users\Cole\Desktop\New folder"
+    # Create an S3 client
+    s3 = boto3.client('s3')
+    # Download the file from S3
+    try:
+        # Download the file from S3
+        s3.download_file(settings.AWS_STORAGE_BUCKET_NAME, media_object_key, local_file_path)
+        print(f"File downloaded successfully to: {local_file_path}")
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            print("The object does not exist.")
+        else:
+            raise
