@@ -13,7 +13,7 @@ import pandas as pd
 from io import BytesIO
 import boto3
 from openpyxl.worksheet.datavalidation import DataValidation
-import botocore.exceptions
+from PIL import Image
 
 def is_phone_number(input_str):
 
@@ -55,7 +55,6 @@ def is_real_phone_number(phone_number, account_sid, auth_token):
         number = client.lookups.phone_numbers(phone_number).fetch()
         return True
     except Exception as e:
-        print("Error:", e)
         return False
 
 
@@ -70,7 +69,7 @@ def send_code_via_phone(code, receiver, account_sid, auth_token):
             to=f"{receiver}",
         )
     except TwilioRestException as e:
-        print("An error was occurred: ", e)
+        pass
 
 
 def send_specific_email(request, choice: int, email_list, code=""):
@@ -349,6 +348,28 @@ def modify_excel_file():
     output_buffer.seek(0)
 
     # Save new file to media bucket
-    s3_client.put_object(Body=output_buffer.getvalue(), Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=media_object_key)
+    upload_file_to_s3(bucket=settings.AWS_STORAGE_BUCKET_NAME,data=output_buffer.getvalue(),object_name=media_object_key)
     return media_object_key
 
+def upload_file_to_s3(data, bucket, object_name):
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.put_object(Bucket=bucket, Key=object_name, Body=data)
+    except boto3.exceptions.S3UploadFailedError as e:
+        raise
+
+
+def crop_image(img):
+    image = Image.open(img)
+    # Get dimensions and calculate center coordinates
+    width, height = image.size
+    new_size = min(width, height)  # Choose the smaller dimension
+
+    # Calculate the left, upper, right, and lower coordinates for cropping
+    left = (width - new_size) // 2
+    upper = (height - new_size) // 2
+    right = left + new_size
+    lower = upper + new_size
+
+    # Crop the image to the center
+    return image.crop((left, upper, right, lower))

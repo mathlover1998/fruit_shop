@@ -18,6 +18,10 @@ from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from common import error_messages
 import pandas as pd
+import boto3
+from io import BytesIO
+from common.utils import upload_file_to_s3,crop_image
+from .tasks import process_upload
 
 
 
@@ -39,6 +43,7 @@ def get_your_products(request):
     return render(request,'shop/my_products.html',{'products':product_lists})
 
 
+@transaction.atomic
 def upload_file(request):
     if request.method == 'POST':
         file_path = handle_uploaded_file(request.FILES['file'])
@@ -95,6 +100,8 @@ def upload_file(request):
     return render(request, 'shop/manage_product.html')
 
 
+
+
 @permission_required('fruit_shop_app.add_product',raise_exception=True)
 def create_product(request):
     form = ProductForm()
@@ -102,7 +109,6 @@ def create_product(request):
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product_name = form.cleaned_data["product_name"]
-
             product = Product(
                 brand=form.cleaned_data["brand"],
                 product_name=product_name,
@@ -127,40 +133,29 @@ def create_product(request):
                 "product_images"
             )  # Get list of uploaded images
             for img in product_images:
-                image = Image.open(img)
-                # Get dimensions and calculate center coordinates
-                width, height = image.size
-                center_x = width // 2
-                center_y = height // 2
+                cropped_image =crop_image(img)
+                image_name = f"images/product_images/{uuid4().hex}.jpg"
 
-                # Determine the desired size for the centered crop
-                desired_width = 255
-                desired_height = 241
-                half_width = desired_width // 2
-                half_height = desired_height // 2
-
-                # Calculate the cropping box coordinates
-                left = center_x - half_width
-                top = center_y - half_height
-                right = center_x + half_width
-                bottom = center_y + half_height
-
-                # Crop the image to the center
-                cropped_image = image.crop((left, top, right, bottom))
-
-                # Save the cropped image
-                cropped_image_path = os.path.join(
-                    settings.MEDIA_ROOT, "images/product_images/", f"{uuid4().hex}.jpg"
-                )
-                cropped_image.save(cropped_image_path)
-
-                ProductImage.objects.create(
-                    product=product, image=cropped_image_path
-                ).save()
-
+                # Save the cropped image (default media file)
+                # cropped_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+                # cropped_image.save(cropped_image_path)
+                # ProductImage.objects.create(product=product, image=cropped_image_path).save()
+   
+                #save cropped image (s3)
+                # Save the cropped image to an in-memory file
+                in_memory_file = BytesIO()
+                cropped_image.save(in_memory_file, format='JPEG')
+                in_memory_file.seek(0)
+                # Upload the image to S3
+                upload_file_to_s3(data= in_memory_file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=image_name)
+                # Save the image URL to the database
+                ProductImage.objects.create(product=product, image=image_name).save()
             return JsonResponse({'success': True})
 
     return render(request, "shop/manage_product.html", {"form": form,'is_update':False})
+
+
+
 
 @permission_required('fruit_shop_app.change_product', raise_exception=True)
 def update_product(request,sku):
@@ -194,42 +189,22 @@ def update_product(request,sku):
             # Handle new product image uploads
             product_images = request.FILES.getlist("product_images")
             for img in product_images:
-                image = Image.open(img)
-                width, height = image.size
-                center_x = width // 2
-                center_y = height // 2
-
-                # Determine the desired size for the centered crop
-                desired_width = 255
-                desired_height = 241
-                half_width = desired_width // 2
-                half_height = desired_height // 2
-
-                # Calculate the cropping box coordinates
-                left = center_x - half_width
-                top = center_y - half_height
-                right = center_x + half_width
-                bottom = center_y + half_height
-
-                # Crop the image to the center
-                cropped_image = image.crop((left, top, right, bottom))
-                # Perform image processing (similar to create_product)
-
-                try:
-                    # Save the cropped image
-                    cropped_image_path = os.path.join(
-                        settings.MEDIA_ROOT,
-                        "images/product_images/",
-                        f"{uuid4().hex}.jpg",
-                    )
-                    cropped_image.save(cropped_image_path)
-
-                    ProductImage.objects.create(
-                        product=product, image=cropped_image_path
-                    ).save()
-                except (ValidationError, OSError) as e:
-                    return JsonResponse({'success': False, 'error_message': error_messages.INVALID_IMAGE})
-
+                cropped_image =crop_image(img)
+                image_name = f"images/product_images/{uuid4().hex}.jpg"
+                # Save the cropped image (default media file)
+                # cropped_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+                # cropped_image.save(cropped_image_path)
+                # ProductImage.objects.create(product=product, image=cropped_image_path).save()
+   
+                #save cropped image (s3)
+                # Save the cropped image to an in-memory file
+                in_memory_file = BytesIO()
+                cropped_image.save(in_memory_file, format='JPEG')
+                in_memory_file.seek(0)
+                # Upload the image to S3
+                upload_file_to_s3(data= in_memory_file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=image_name)
+                # Save the image URL to the database
+                ProductImage.objects.create(product=product, image=image_name).save()            
             return JsonResponse({'success': True})
 
     else:

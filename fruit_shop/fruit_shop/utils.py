@@ -51,7 +51,6 @@ def is_real_phone_number(phone_number, account_sid, auth_token):
         number = client.lookups.phone_numbers(phone_number).fetch()
         return True
     except Exception as e:
-        print("Error:", e)
         return False
 
 
@@ -66,7 +65,7 @@ def send_code_via_phone(code, receiver, account_sid, auth_token):
             to=f"{receiver}",
         )
     except TwilioRestException as e:
-        print("An error was occurred: ", e)
+        raise
 
 
 def send_specific_email(request, choice: int, email_list, code=""):

@@ -235,7 +235,7 @@ class ProductImage(models.Model):
         Product, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField(
-        upload_to="images/product_images/", default="images/default/default_fruit.jpg"
+        upload_to="images/product_images/", default="images/default/default_fruit.jpg",max_length=1000
     )
     is_main_image = models.BooleanField(default=False)
     

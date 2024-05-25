@@ -428,9 +428,6 @@ def reset_password(request):
 def handle_verification_code_reset_password(request, email_or_phone):
     if request.method == "POST":
         if request.session.get("phone_verification_code"):
-            print(
-                f'phone_verification_code: {request.session.get("phone_verification_code")}'
-            )
             user = User.objects.filter(phone=email_or_phone).first()
 
             if (
@@ -445,7 +442,6 @@ def handle_verification_code_reset_password(request, email_or_phone):
                 )
         elif request.session.get("email_verification_code"):
             user = User.objects.filter(email=email_or_phone).first()
-            print(f"email: {user.id}")
             if (
                 request.POST.get("code")
                 == request.session.get("email_verification_code")
