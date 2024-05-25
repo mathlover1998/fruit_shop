@@ -4,7 +4,7 @@ from twilio.base.exceptions import TwilioRestException
 from django.core.mail import send_mail
 import re, openpyxl
 from functools import wraps
-from django.http import HttpResponseForbidden,HttpResponse
+from django.http import HttpResponseForbidden,HttpResponse,Http404
 from fruit_shop_app.models import Employee,Category,Brand,UNIT
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -350,19 +350,5 @@ def modify_excel_file():
 
     # Save new file to media bucket
     s3_client.put_object(Body=output_buffer.getvalue(), Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=media_object_key)
+    return media_object_key
 
-def download_file_from_s3():
-    media_object_key = "images/products.xlsx"
-    local_file_path = r"C:\Users\Cole\Desktop\New folder"
-    # Create an S3 client
-    s3 = boto3.client('s3')
-    # Download the file from S3
-    try:
-        # Download the file from S3
-        s3.download_file(settings.AWS_STORAGE_BUCKET_NAME, media_object_key, local_file_path)
-        print(f"File downloaded successfully to: {local_file_path}")
-    except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] == "404":
-            print("The object does not exist.")
-        else:
-            raise
