@@ -1,5 +1,5 @@
 # from django.shortcuts import render, get_object_or_404, redirect
-# from .models import Blog, Comment, Tag
+# from fruit_shop_app.models import Blog, Comment, Tag
 # from django.http import HttpResponse
 # from django.contrib.auth.decorators import login_required, user_passes_test
 # from django.db.models import Count

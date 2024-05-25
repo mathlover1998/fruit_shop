@@ -4,6 +4,7 @@ from fruit_shop_app.models import User,Employee
 from django.core.mail import send_mail
 from django.conf import settings
 from common.utils import generate_random_password
+import os
 # from django.contrib.auth.hashers import make_password
 
 @receiver(pre_save,sender=User)
@@ -17,7 +18,7 @@ def employee_approval_notification(sender,instance, **kwargs):
             'Account Approved',
             # 'Your account has been approved.',
             f'Your account has been approved.Your password is: {new_password}',
-            settings.EMAIL_HOST_USER,  # sender's email
+            os.environ.get('EMAIL_HOST'),  # sender's email
             [instance.email],  # recipient's email
             fail_silently=False,
         )

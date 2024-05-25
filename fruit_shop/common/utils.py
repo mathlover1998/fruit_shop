@@ -4,16 +4,16 @@ from twilio.base.exceptions import TwilioRestException
 from django.core.mail import send_mail
 import re, openpyxl
 from functools import wraps
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden,HttpResponse,Http404
 from fruit_shop_app.models import Employee,Category,Brand,UNIT
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from datetime import timedelta
 from django.conf import settings
 import pandas as pd
+from io import BytesIO
+import boto3
 from openpyxl.worksheet.datavalidation import DataValidation
-from openpyxl.styles import PatternFill
-from openpyxl.formatting.rule import FormulaRule
+from PIL import Image
 
 def is_phone_number(input_str):
 
@@ -55,7 +55,6 @@ def is_real_phone_number(phone_number, account_sid, auth_token):
         number = client.lookups.phone_numbers(phone_number).fetch()
         return True
     except Exception as e:
-        print("Error:", e)
         return False
 
 
@@ -70,7 +69,7 @@ def send_code_via_phone(code, receiver, account_sid, auth_token):
             to=f"{receiver}",
         )
     except TwilioRestException as e:
-        print("An error was occurred: ", e)
+        pass
 
 
 def send_specific_email(request, choice: int, email_list, code=""):
@@ -203,15 +202,88 @@ def convert_to_csv(file_path):
     return csv_file_path
 
 
-def validate_product_template_excel():
-    template_path = os.path.join(settings.MEDIA_ROOT, 'templates/template.xlsx')
+# def modify_excel_file():
 
-    # Load the workbook and select the active worksheet
-    workbook = openpyxl.load_workbook(template_path)
+#     template_path = os.path.join(settings.STATIC_ROOT, 'templates/template.xlsx')
+#     workbook = openpyxl.load_workbook(template_path)
+#     sheet = workbook["Product"]
+
+#     #handle product price
+#     price_dv = DataValidation(
+#         type='whole',
+#         operator="between",
+#         formula1="0", 
+#         formula2="9999999999", 
+#         showErrorMessage=True
+#     )
+#     price_dv.error = 'Invalid input'
+#     price_dv.errorTitle = 'Invalid Entry'
+#     price_dv.prompt = 'Please enter a number between 0 and 999999999'
+#     sheet.add_data_validation(price_dv)
+#     price_dv.add("B2:B1048576")
+
+#     #handle unit type
+#     unit_names = list(unit[0] for unit in UNIT)
+#     unit_dv = DataValidation(
+#         type='list',
+#         formula1=f'"{",".join(unit_names)}"'
+#     )
+#     sheet.add_data_validation(unit_dv)
+#     unit_dv.add("D2:D1048576")
+
+#     #handle stock quantity
+#     stock_dv = DataValidation(
+#         type='whole',
+#         operator="between",
+#         formula1="0", 
+#         formula2="999999", 
+#         showErrorMessage=True
+#     )
+#     stock_dv.error = 'Invalid input'
+#     stock_dv.errorTitle = 'Invalid Entry'
+#     stock_dv.prompt = 'Please enter a number between 0 and 999999'
+#     sheet.add_data_validation(stock_dv)
+#     stock_dv.add("E2:E1048576")
+
+#     #handle brand
+#     brand_names = list(Brand.objects.values_list('brand_name', flat=True))
+#     brand_dv = DataValidation(
+#         type="list",
+#         formula1=f'"{",".join(brand_names)}"'
+#     )
+#     sheet.add_data_validation(brand_dv)
+#     brand_dv.add("I2:I1048576")
+
+#     #handle category
+#     category_names = list(Category.objects.filter(parent_category__isnull=False).values_list('category_name', flat=True))
+#     category_dv = DataValidation(
+#         type="list",
+#         formula1=f'"{",".join(category_names)}"'
+#     )
+#     sheet.add_data_validation(category_dv)
+#     category_dv.add("J2:J1048576")
+
+#     #save to new file
+#     modified_template_path = os.path.join(settings.MEDIA_ROOT, 'templates/modified_template.xlsx')
+#     workbook.save(modified_template_path)
+
+#     return modified_template_path
+
+#using it only when use s3 bucket
+def modify_excel_file():
+    read_object_key = "templates/product_template.xlsx"
+    media_object_key = "images/products.xlsx"  # new file name
+
+    s3_client = boto3.client('s3')
+
+    # Get object from read bucket
+    response = s3_client.get_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=read_object_key)
+    file_content = response['Body'].read()
+
+    # Read data from in-memory file using openpyxl
+    workbook = openpyxl.load_workbook(BytesIO(file_content))
     sheet = workbook["Product"]
-    #remove all existing validation
 
-    #handle product price
     price_dv = DataValidation(
         type='whole',
         operator="between",
@@ -265,10 +337,39 @@ def validate_product_template_excel():
     )
     sheet.add_data_validation(category_dv)
     category_dv.add("J2:J1048576")
+    # Implement your validation/modification logic here (modify `sheet`)
+    # Example: Add a value to the first cell
 
-    #save to new file
-    modified_template_path = os.path.join(settings.MEDIA_ROOT, 'templates/modified_template.xlsx')
-    workbook.save(modified_template_path)
+    # Create new in-memory file object
+    output_buffer = BytesIO()
+    workbook.save(output_buffer)
 
-    return modified_template_path
+    # Move the buffer cursor to the beginning
+    output_buffer.seek(0)
 
+    # Save new file to media bucket
+    upload_file_to_s3(bucket=settings.AWS_STORAGE_BUCKET_NAME,data=output_buffer.getvalue(),object_name=media_object_key)
+    return media_object_key
+
+def upload_file_to_s3(data, bucket, object_name):
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.put_object(Bucket=bucket, Key=object_name, Body=data)
+    except boto3.exceptions.S3UploadFailedError as e:
+        raise
+
+
+def crop_image(img):
+    image = Image.open(img)
+    # Get dimensions and calculate center coordinates
+    width, height = image.size
+    new_size = min(width, height)  # Choose the smaller dimension
+
+    # Calculate the left, upper, right, and lower coordinates for cropping
+    left = (width - new_size) // 2
+    upper = (height - new_size) // 2
+    right = left + new_size
+    lower = upper + new_size
+
+    # Crop the image to the center
+    return image.crop((left, upper, right, lower))

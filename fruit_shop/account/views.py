@@ -428,11 +428,8 @@ def reset_password(request):
 def handle_verification_code_reset_password(request, email_or_phone):
     if request.method == "POST":
         if request.session.get("phone_verification_code"):
-            print(
-                f'phone_verification_code: {request.session.get("phone_verification_code")}'
-            )
             user = User.objects.filter(phone=email_or_phone).first()
-            print(f"phone: {user.id}")
+
             if (
                 request.POST.get("code")
                 == request.session.get("phone_verification_code")
@@ -444,11 +441,7 @@ def handle_verification_code_reset_password(request, email_or_phone):
                     kwargs={"user_id": user.id},
                 )
         elif request.session.get("email_verification_code"):
-            print(
-                f'email_verification_code: {request.session.get("email_verification_code")}'
-            )
             user = User.objects.filter(email=email_or_phone).first()
-            print(f"email: {user.id}")
             if (
                 request.POST.get("code")
                 == request.session.get("email_verification_code")
@@ -467,7 +460,6 @@ def handle_verification_code_reset_password(request, email_or_phone):
 def set_new_password_reset_password(request, user_id):
     if request.method == "POST":
         user = get_object_or_404(User, id=user_id)
-        print(user)
         new_password = request.POST.get("password")
         if new_password and not check_password(new_password, user.password):
             user.set_password(new_password)

@@ -3,9 +3,7 @@ from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.core.validators import MinValueValidator, MaxValueValidator, EmailValidator
 import random
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.contrib.auth.models import Permission
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import Group
 from django.utils import timezone
 
 # Create your models here.
@@ -36,11 +34,6 @@ class User(AbstractUser, PermissionsMixin):
     receive_updates = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
     approval_email_sent = models.BooleanField(default=False)
-    # groups = models.ManyToManyField(
-    #     Group,
-    #     blank=True,
-    #     related_name="user_memberships",  # Specify a unique related_name
-    # )
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.password:
@@ -136,7 +129,6 @@ class Category(models.Model):
         return self.category_name
 
     def clean(self):
-        # Check if the parent category is a subcategory
         if self.parent_category:
             if self.parent_category.parent_category:
                 raise ValidationError(
@@ -144,7 +136,7 @@ class Category(models.Model):
                 )
 
     def save(self, *args, **kwargs):
-        self.full_clean()  # Validate the instance before saving
+        self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -183,7 +175,6 @@ class Product(models.Model):
     information = models.TextField(null=True)
     create_date = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    expiry_date = models.DateTimeField(default=timezone.now() + timezone.timedelta(days=30))
     sku = models.CharField(max_length=10, unique=True, default="", blank=True)
     unit = models.CharField(choices=UNIT, default="unit")
     is_active = models.BooleanField(default=True)
@@ -217,30 +208,19 @@ class Product(models.Model):
             if not Product.objects.filter(sku=sku).exists():
                 return sku
             
-
-    # def set_categories(self):
-    #     all_categories = set(self.categories)
-    #     for category in self.categories:
-    #         current_category = category
-    #         while current_category.parent_category:
-    #             all_categories.add(current_category.parent_category)
-    #             current_category = current_category.parent_category
-    #     self.categories.set(all_categories)
+    
 
     def save(self, *args, **kwargs):
-        # categories = kwargs.pop('categories', None)
         if self.updated_price == 0: 
             self.updated_price = self.price
         if not self.sku:
             self.sku = self.generate_unique_sku()
         #only accept 10 featured products at a time
-        if Product.objects.filter(is_featured=True).count() >=10 and self.is_featured==True:
+        if Product.objects.filter(is_featured=True).count() >=10 and self.is_featured:
             first_featured_product = Product.objects.filter(is_featured=True).first()
             first_featured_product.is_featured = False
             first_featured_product.save()
         super().save(*args, **kwargs)
-        # if categories is not None:
-        #     self.set_categories()
 
     class Meta:
         ordering = ["id"]
@@ -255,7 +235,7 @@ class ProductImage(models.Model):
         Product, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField(
-        upload_to="images/product_images/", default="images/default/default_fruit.jpg"
+        upload_to="images/product_images/", default="images/default/default_fruit.jpg",max_length=1000
     )
     is_main_image = models.BooleanField(default=False)
     
@@ -281,7 +261,6 @@ class Discount(models.Model):
     APPLIES_TO_CHOICES = (
         ("all_products", "All Products"),
         ("category", "Category"),
-        ("specific_products", "Specific Products"),
         ("brand", "Brand"),
     )
     code = models.CharField(max_length=20, null=True)
@@ -293,18 +272,15 @@ class Discount(models.Model):
         max_digits=7, decimal_places=2, null=False, default=0.00
     )
     applies_to = models.CharField(
-        max_length=20, choices=APPLIES_TO_CHOICES, default="all_products"
+        max_length=20, choices=APPLIES_TO_CHOICES, null=True,blank=True
     )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, blank=True, null=True
-    )  # Assuming a categories model
+    )
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, blank=True, null=True)
-    products = models.ManyToManyField(Product, related_name="discounts",blank=True)
     valid_from = models.DateTimeField(default=timezone.now)
     valid_to = models.DateTimeField(blank=True, null=True)
-    minimum_purchase = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.00, null=False
-    )
+    
     maximum_discount_amount = models.DecimalField(
         max_digits=8, decimal_places=2, default=0.00, null=False
     )
@@ -326,26 +302,26 @@ class Discount(models.Model):
         
         super().save(*args, **kwargs)
         if self.applies_to == "category":
-
             products_to_discount = Product.objects.filter(categories=self.category)
-
         elif self.applies_to == "brand":
-            
             products_to_discount = Product.objects.filter(brand=self.brand)
         elif self.applies_to == "all_products":
-
             products_to_discount = Product.objects.all()
-        elif self.applies_to == "specific_products":
-            products_to_discount = Product.objects.filter(discounts__isnull=True)  # Filter products without discounts
-            for product in products_to_discount:
-                product.apply_discount(self)
-            self.products.add(*products_to_discount)
-            
-            return
+        else:
+            products_to_discount = []
         # Apply the discount to selected products
         for product in products_to_discount:
-            product.apply_discount(self)
-            
+            if product.discounts.exists():
+                current_discounted_price = product.updated_price
+                discount = product.price * self.discount_value / 100 if self.discount_type == "percentage" else self.discount_value
+                new_discount_amount = min(discount, self.maximum_discount_amount)
+                # new_discount_amount = min(product.price * self.discount_value / 100 if self.discount_type == "percentage" else self.discount_value, self.maximum_discount_amount)
+                new_discounted_price = product.price - new_discount_amount
+                if new_discounted_price < current_discounted_price:
+                    product.apply_discount(self)
+            else:
+                product.apply_discount(self)
+
         
 
     class Meta:
@@ -454,6 +430,7 @@ class Order(models.Model):
     placed_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(choices=ORDER_STATUS, null=False, default="pending")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, null=True, blank=True)
     billing_address = models.ForeignKey(
         Address,
         on_delete=models.SET_NULL,
@@ -473,24 +450,31 @@ class Order(models.Model):
         max_length=255, null=True, blank=True
     )  # Optional for storing transaction ID
 
-    def apply_discount(self, discount):
-        # Calculate discount amount based on the discount type and value
-        if discount.discount_type == "percentage":
-            discount_amount = (discount.discount_value / 100) * self.total_amount
-        elif discount.discount_type == "fixed_amount":
-            discount_amount = min(discount.discount_value, self.total_amount)
+    def apply_discount(self, discount_code):
+        try:
+            discount = Discount.objects.get(code=discount_code, is_active=True)
+            self.discount = discount
+            self.save()
+            self.update_total_price()
+        except Discount.DoesNotExist:
+            raise ValueError("Invalid or inactive discount code.")
 
-        # Update the total amount of the order after applying the discount
-        self.total_amount -= discount_amount
+    def update_total_price(self):
+        total = sum(item.product.updated_price for item in self.order_items.all())
+        if self.discount:
+            if self.discount.discount_type == "percentage":
+                discount_amount = total * self.discount.discount_value / 100
+            elif self.discount.discount_type == "fixed_amount":
+                discount_amount = self.discount.discount_value
+
+            discount_amount = min(discount_amount, self.discount.maximum_discount_amount)
+            total -= discount_amount
+
+        self.total_price = total
         self.save()
-
-        # Optionally, store information about the applied discount
-        # For example, you can update the discount_applied field of each order item
-        order_items = self.orderitem_set.all()
-        for order_item in order_items:
-            order_item.discount_applied = discount.code
-            order_item.save()
-
+    
+    def __str__(self):
+        return self.customer.user.username
     class Meta:
         ordering = ["-placed_at"]
         db_table = "Orders"
@@ -504,7 +488,15 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     quantity = models.IntegerField(null=False, default=0)
     subtotal = models.IntegerField(null=False, default=0)
-    discount_applied = models.CharField(max_length=30, default="", null=False)
+
+    def save(self, *args, **kwargs):
+        self.price = self.product.updated_price * self.quantity
+        super().save(*args, **kwargs)
+        self.order.update_total_price()
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.product_name} for Order #{self.order.id}"
+
 
     class Meta:
         ordering = ["id"]
@@ -641,3 +633,15 @@ class ContactUsMessage(models.Model):
         managed = True
         verbose_name = "Contact Us Message"
         verbose_name_plural = "Contact Us Messages"
+
+
+class WishlistItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True,related_name='wishlist_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        
+        db_table = "WishlistItems"
+        managed = True
+        verbose_name = "Wishlist Item"
+        verbose_name_plural = "Wishlist Items"

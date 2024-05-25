@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(py9y)mt4nwsukdwcye0nm95i_+*0__s32oe-!2a_@g+!4pekk'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -35,13 +35,6 @@ ALLOWED_HOSTS = ["*"]
 
 LOGIN_URL = '/account/login/'
 
-EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_PORT = os.environ.get('EMAIL_PORT')
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', '').lower() == 'true'  # Convert to bool
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -50,19 +43,25 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # "whitenoise.runserver_nostatic",
     'django.contrib.staticfiles',
     'fruit_shop_app',
     'account',
     'product_manager',
     'blog',
     'common',
-    # 'django_celery_beat'
+    'storages',
 ]
+
+# CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+# CELERY_RESULT_BACKEND = 'rpc://'
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'UTC'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -91,7 +90,7 @@ TEMPLATES = [
                 'common.context_processors.get_global_cart_data',
                 'common.context_processors.get_separated_category_product',
                 'common.context_processors.get_category_name_context',
-                'common.context_processors.get_latest_discounts',
+                'common.context_processors.get_coupon_discounts',
                 'common.context_processors.get_website_information',
                 'common.context_processors.get_featured_products_context',
                 'common.context_processors.get_recently_viewed_products',
@@ -110,48 +109,27 @@ WSGI_APPLICATION = 'fruit_shop.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 # local postgresql database
-DATABASES = {
-    
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fruit_shop_db',
-        'USER': 'admin',
-        'PASSWORD': '1234',
-        'HOST':'localhost',
-        'PORT':'5432' 
-    }
-}
-
-
-# aws database (disabled)
-# DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'cole_fruit_shop_db',
-    #     'USER': 'coletran',
-    #     'PASSWORD': 'Bunnie123',
-    #     'HOST':'database-2.clbdt0uzsyg9.ap-southeast-2.rds.amazonaws.com',
-    #     'PORT':'5432' 
-    # }
-# }
-
-
-#render database
 # DATABASES = {
     
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+#         'NAME': 'fruit_shop_db',
+#         'USER': 'admin',
+#         'PASSWORD': '1234',
+#         'HOST':'localhost',
+#         'PORT':'5432' 
 #     }
 # }
+
+#render database
+DATABASES = {
+    
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        **dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    }
+}
     
 
 
@@ -176,6 +154,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'fruit_shop_app.User'
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -190,28 +169,40 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
-STATIC_URL = '/static/'
+
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "fruit_shop_app/static"),
 )
 
-# STORAGES = {
-#     "staticfiles": {
-#         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-#     },
-# }
 
-
-
-
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
-MEDIA_URL = '/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# WHITENOISE_MANIFEST_STRICT = False
-# STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-# STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+#AWS configuration
+AWS_ACCESS_KEY_ID=os.environ.get('AWS_ACCESS_KEY')
+AWS_SECRET_ACCESS_KEY=os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'cole-grocery-shop-98'
+AWS_S3_REGION_NAME = 'ap-southeast-1'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (AWS_STORAGE_BUCKET_NAME,AWS_S3_REGION_NAME)
+AWS_S3_FILE_OVERWRITE = False
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+
+STORAGES = {
+
+    # Media file (image) management   
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+    },
+    
+    # CSS and JS file management
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+    },
+}

@@ -1,14 +1,15 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse,FileResponse
 from django.urls import reverse
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from common.utils import send_specific_email,validate_product_template_excel
+from common.utils import send_specific_email,modify_excel_file
 from django.views.decorators.csrf import csrf_exempt
 from common import error_messages
-from fruit_shop_app.models import ContactUsMessage,Product
+from fruit_shop_app.models import ContactUsMessage,Product,Discount,Order
+import json
 from django.conf import settings
-import os
+from urllib.parse import urljoin
 
 # Create your views here.
 def index(request):
@@ -51,7 +52,9 @@ def clear_session(request):
     expired_sessions = Session.objects.filter(expire_date__lt=timezone.now())
     expired_sessions.delete()
     Session.objects.all().delete()
-    return HttpResponse("Sessions cleared successfully")
+    response = HttpResponse("Cookie Cleared")
+    response.delete_cookie('cookie_name')
+    return response
 
 @csrf_exempt
 def register_newsletter(request):
@@ -72,5 +75,11 @@ def search_result(request):
     return render(request, 'shop/search-results.html', {'products': products, 'query': query})
 
 def download_template(request):
-    file_path = validate_product_template_excel()
-    return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')
+    file_path = modify_excel_file()
+    response = redirect(urljoin('https://'+settings.AWS_S3_CUSTOM_DOMAIN +'/',file_path))
+    response['Content-Disposition'] = 'attachment; filename="products.xlsx"'
+    return response
+    # return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='modified_template.xlsx')
+
+
+

@@ -13,8 +13,6 @@ from django.utils.translation import gettext_lazy as _
 
 admin.site.register(Permission)
 
-# filter to get the most product sold
-# filter to get the most category that have all products sold
 
 
 # filter email (has email, no email)
@@ -200,7 +198,6 @@ class ProductFormAdmin(admin.ModelAdmin):
                     "origin_country",
                     "information",
                     ("create_date", "updated_at"),
-                    "expiry_date"
                 ),
             },
         ),
@@ -225,13 +222,10 @@ class DiscountForm(forms.ModelForm):
             "Between 0.01 and 1 if percentage option is selected"
         )
         self.fields["applies_to"].help_text = (
-            "Defines what the discount applies to (all products, specific category, or specific products)."
+            "Defines what the discount applies to (all products, specific category, or specific brand)."
         )
         self.fields["maximum_discount_amount"].help_text = (
             "The maximum value to reduce"
-        )
-        self.fields["minimum_purchase"].help_text = (
-            "Minimum purchase amount required to qualify for the discount"
         )
         self.fields["category"].help_text = (
             "Select category if and only if applies_to be selected as Category"
@@ -239,10 +233,6 @@ class DiscountForm(forms.ModelForm):
         self.fields["brand"].help_text = (
             "Select brand if and only if applies_to be selected as Brand"
         )
-        self.fields["products"].help_text = (
-            "Select products if and only if applies_to be selected as Product"
-        )
-    
 
     class Meta:
         model = Discount
@@ -251,11 +241,6 @@ class DiscountForm(forms.ModelForm):
 
 
 class DiscountAdmin(admin.ModelAdmin):
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == 'products':
-            # Filter products based on the current logged-in account (inventory_manager)
-            kwargs['queryset'] = request.user.employee.managed_product.all()
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
     
     form = DiscountForm
     list_display = ("code", "discount_type","applies_to", "valid_from", "valid_to", "is_active")
@@ -271,13 +256,11 @@ class DiscountAdmin(admin.ModelAdmin):
                     "description",
                     ("discount_type", "discount_value"),
                     'maximum_discount_amount',
-                    "minimum_purchase",
                     "is_active",
                     ("valid_from", "valid_to"),
                     "applies_to",
                     "category",
                     'brand',
-                    'products',
                 ),
             },
         ),

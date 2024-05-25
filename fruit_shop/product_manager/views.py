@@ -1,6 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category
-from django.contrib import messages
+from fruit_shop_app.models import Product,ProductImage,Order,OrderItem,Address,Transaction,Comment,Brand,Category,Discount,WishlistItem
 from django.urls import reverse
 from common.utils import convert_to_csv,handle_uploaded_file
 from .forms import ProductForm
@@ -9,7 +8,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from PIL import Image
-import os, json
+import os, json, requests
 from django.conf import settings
 from uuid import uuid4
 from datetime import timedelta
@@ -19,18 +18,12 @@ from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from common import error_messages
 import pandas as pd
+import boto3
+from io import BytesIO
+from common.utils import upload_file_to_s3,crop_image
+from .tasks import process_upload
 
 
-# Create your views here.
-def calculate_total_price(cart):
-    total_price = 0
-
-    for product_id, item_data in cart.items():
-        product = get_object_or_404(Product, pk=product_id)
-        quantity = item_data["quantity"]
-        total_price += product.price * quantity
-
-    return total_price
 
 
 def get_all_products(request):
@@ -49,47 +42,64 @@ def get_your_products(request):
     product_lists = Product.objects.filter(inventory_manager=current_employee)
     return render(request,'shop/my_products.html',{'products':product_lists})
 
+
+@transaction.atomic
 def upload_file(request):
     if request.method == 'POST':
         file_path = handle_uploaded_file(request.FILES['file'])
         csv_file_path = convert_to_csv(file_path)
-        df = pd.read_csv(csv_file_path)
-        if df.empty:
-            return JsonResponse({'error': 'The uploaded file is empty or invalid'}, status=400)
-        for index, row in df.iterrows():
-            categories =Category.objects.filter(category_name=row.iloc[9])
-            brand = Brand.objects.filter(brand_name=row.iloc[8]).first()
+        try:
+            df = pd.read_csv(csv_file_path)
+            if df.empty:
+                return JsonResponse({'error': 'The uploaded file is empty or invalid'}, status=400)
+            for index, row in df.iterrows():
+                categories =Category.objects.filter(category_name=row.iloc[9])
+                brand = Brand.objects.filter(brand_name=row.iloc[8]).first()
 
-            common_args = {
-            "brand": brand,
-            "product_name": row.iloc[0],
-            "price": row.iloc[1],
-            "stock_quantity": row.iloc[4],
-            "origin_country": row.iloc[5],
-            "information": row.iloc[6],
-            "unit": row.iloc[3]
-            }
+                common_args = {
+                "brand": brand,
+                "product_name": row.iloc[0],
+                "price": row.iloc[1],
+                "stock_quantity": row.iloc[4],
+                "origin_country": row.iloc[5],
+                "information": row.iloc[6],
+                "unit": row.iloc[3],
+                "inventory_manager":request.user.employee
+                }
 
-            if row.iloc[7]:
-                common_args["sku"] = row.iloc[7]
+                # if row.iloc[7]:
+                #     common_args["sku"] = row.iloc[7]
 
-            product = Product.objects.create(**common_args)
-            product.save()
-            all_categories = set(categories)
-            for category in categories:
-                current_category = category
-                while current_category.parent_category:
-                    all_categories.add(current_category.parent_category)
-                    current_category = current_category.parent_category
-            product.categories.set(all_categories)
-            ProductImage.objects.create(product=product, image=row.iloc[2]).save()
-        # with open(csv_file_path, 'rb') as f:
-        #     response = HttpResponse(f.read(), content_type='text/csv')
-        #     response['Content-Disposition'] = f'attachment; filename={os.path.basename(csv_file_path)}'
-        #     return response
-        return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-            
+                product = Product.objects.create(**common_args)
+                product.save()
+                all_categories = set(categories)
+                for category in categories:
+                    current_category = category
+                    while current_category.parent_category:
+                        all_categories.add(current_category.parent_category)
+                        current_category = current_category.parent_category
+                product.categories.set(all_categories)
+
+                local_file_path = row.iloc[2]
+                if local_file_path:
+                    filename = f'{row.iloc[0]}_{uuid4().hex}.jpg'
+                    image_file_path = os.path.join("images/product_images/", filename)
+                    full_path =os.path.join(settings.MEDIA_ROOT, image_file_path)
+                    with open(local_file_path, 'rb') as f:
+                        image_data = f.read()
+                    with open(full_path, 'wb') as f:
+                        f.write(image_data)
+                    ProductImage.objects.create(product=product, image=image_file_path).save()
+
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+        finally:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            if os.path.exists(csv_file_path):
+                os.remove(csv_file_path)
     return render(request, 'shop/manage_product.html')
+
+
 
 
 @permission_required('fruit_shop_app.add_product',raise_exception=True)
@@ -99,7 +109,6 @@ def create_product(request):
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product_name = form.cleaned_data["product_name"]
-
             product = Product(
                 brand=form.cleaned_data["brand"],
                 product_name=product_name,
@@ -124,41 +133,29 @@ def create_product(request):
                 "product_images"
             )  # Get list of uploaded images
             for img in product_images:
-                image = Image.open(img)
+                cropped_image =crop_image(img)
+                image_name = f"images/product_images/{uuid4().hex}.jpg"
 
-                # Get dimensions and calculate center coordinates
-                width, height = image.size
-                center_x = width // 2
-                center_y = height // 2
-
-                # Determine the desired size for the centered crop
-                desired_width = 255
-                desired_height = 241
-                half_width = desired_width // 2
-                half_height = desired_height // 2
-
-                # Calculate the cropping box coordinates
-                left = center_x - half_width
-                top = center_y - half_height
-                right = center_x + half_width
-                bottom = center_y + half_height
-
-                # Crop the image to the center
-                cropped_image = image.crop((left, top, right, bottom))
-
-                # Save the cropped image
-                cropped_image_path = os.path.join(
-                    settings.MEDIA_ROOT, "images/product_images/", f"{uuid4().hex}.jpg"
-                )
-                cropped_image.save(cropped_image_path)
-
-                ProductImage.objects.create(
-                    product=product, image=cropped_image_path
-                ).save()
-
+                # Save the cropped image (default media file)
+                # cropped_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+                # cropped_image.save(cropped_image_path)
+                # ProductImage.objects.create(product=product, image=cropped_image_path).save()
+   
+                #save cropped image (s3)
+                # Save the cropped image to an in-memory file
+                in_memory_file = BytesIO()
+                cropped_image.save(in_memory_file, format='JPEG')
+                in_memory_file.seek(0)
+                # Upload the image to S3
+                upload_file_to_s3(data= in_memory_file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=image_name)
+                # Save the image URL to the database
+                ProductImage.objects.create(product=product, image=image_name).save()
             return JsonResponse({'success': True})
 
     return render(request, "shop/manage_product.html", {"form": form,'is_update':False})
+
+
+
 
 @permission_required('fruit_shop_app.change_product', raise_exception=True)
 def update_product(request,sku):
@@ -192,42 +189,22 @@ def update_product(request,sku):
             # Handle new product image uploads
             product_images = request.FILES.getlist("product_images")
             for img in product_images:
-                image = Image.open(img)
-                width, height = image.size
-                center_x = width // 2
-                center_y = height // 2
-
-                # Determine the desired size for the centered crop
-                desired_width = 255
-                desired_height = 241
-                half_width = desired_width // 2
-                half_height = desired_height // 2
-
-                # Calculate the cropping box coordinates
-                left = center_x - half_width
-                top = center_y - half_height
-                right = center_x + half_width
-                bottom = center_y + half_height
-
-                # Crop the image to the center
-                cropped_image = image.crop((left, top, right, bottom))
-                # Perform image processing (similar to create_product)
-
-                try:
-                    # Save the cropped image
-                    cropped_image_path = os.path.join(
-                        settings.MEDIA_ROOT,
-                        "images/product_images/",
-                        f"{uuid4().hex}.jpg",
-                    )
-                    cropped_image.save(cropped_image_path)
-
-                    ProductImage.objects.create(
-                        product=product, image=cropped_image_path
-                    ).save()
-                except (ValidationError, OSError) as e:
-                    return JsonResponse({'success': False, 'error_message': error_messages.INVALID_IMAGE})
-
+                cropped_image =crop_image(img)
+                image_name = f"images/product_images/{uuid4().hex}.jpg"
+                # Save the cropped image (default media file)
+                # cropped_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+                # cropped_image.save(cropped_image_path)
+                # ProductImage.objects.create(product=product, image=cropped_image_path).save()
+   
+                #save cropped image (s3)
+                # Save the cropped image to an in-memory file
+                in_memory_file = BytesIO()
+                cropped_image.save(in_memory_file, format='JPEG')
+                in_memory_file.seek(0)
+                # Upload the image to S3
+                upload_file_to_s3(data= in_memory_file, bucket=settings.AWS_STORAGE_BUCKET_NAME, object_name=image_name)
+                # Save the image URL to the database
+                ProductImage.objects.create(product=product, image=image_name).save()            
             return JsonResponse({'success': True})
 
     else:
@@ -272,16 +249,44 @@ def get_cart(request):
     cart = request.session.get("cart", {})
     cart_items = []
     total_price = 0
+    discount_amount = 0  # Initialize discount amount to zero
+    
     # Retrieve product details for items in the cart
     for item_id, item_data in cart.items():
         product = get_object_or_404(Product, pk=item_id)
         quantity = item_data["quantity"]
-        item_total_price = product.price * quantity
+        item_total_price = product.updated_price * quantity
         total_price += item_total_price
         cart_items.append(
             {"product": product, "quantity": quantity, "total_price": item_total_price}
         )
-    context = {"cart_items": cart_items, "total_price": total_price}
+    
+    # Check if a coupon code is applied
+    coupon_code = request.session.get('coupon_code')
+    if coupon_code:
+        try:
+            discount = Discount.objects.get(code=coupon_code, is_active=True)
+            # Calculate the discount amount based on the coupon
+            if discount.discount_type == "percentage":
+                discount_amount = total_price * discount.discount_value / 100
+            elif discount.discount_type == "fixed_amount":
+                discount_amount = min(discount.discount_value, total_price)
+                # request.session['discount_amount'] = discount_amount
+        except Discount.DoesNotExist:
+            # If the coupon code is invalid or inactive, remove it from the session
+            del request.session['coupon_code']
+            # Reset discount amount to zero
+            discount_amount = 0
+    request.session['discount_amount'] = int(discount_amount)
+    # Calculate the total price after applying the discount
+    grand_total = total_price - discount_amount
+    
+    context = {
+        "cart_items": cart_items,
+        "total_price": total_price,
+        "discount_amount": discount_amount,
+        "grand_total": grand_total,
+    }
 
     return render(request, "shop/cart.html", context)
 
@@ -305,38 +310,24 @@ def delete_cart_item(request, product_id):
 @login_required
 def update_wishlist_item(request, product_id):
     product_id_ = str(product_id)
-    wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
-    if product_id_ not in wishlist:
-        # Use dynamic keys for each product instead of 'product_id'
-        wishlist[product_id_] = product_id_
-
-    response = HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-    response.set_cookie("wishlist", json.dumps(wishlist), max_age=timedelta(days=30))
-    return response
+    product = get_object_or_404(Product,pk=product_id_)
+    if WishlistItem.objects.filter(user= request.user,product = product).exists():
+        pass
+    WishlistItem.objects.create(user= request.user,product = product).save()
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 @login_required
 def get_wishlist(request):
-    wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
-    wishlist_items = []
-
-    for key, value in wishlist.items():
-        product = get_object_or_404(Product, pk=value)
-        wishlist_items.append({"product": product})
-
+    wishlist_items = WishlistItem.objects.filter(user= request.user).all()
     return render(request, "shop/wishlist.html", {"wishlist_items": wishlist_items})
 
 
 @login_required
 def delete_wishlist_item(request, product_id):
-    wishlist = json.loads(request.COOKIES.get("wishlist", "{}"))
-
-    if str(product_id) in wishlist:
-        del wishlist[str(product_id)]
-
-    response = HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-    response.set_cookie("wishlist", json.dumps(wishlist), max_age=timedelta(days=30))
-    return response
+    product = get_object_or_404(Product,pk=product_id)
+    WishlistItem.objects.filter(user = request.user,product=product).first().delete()
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 @login_required
@@ -347,11 +338,11 @@ def checkout(request):
     cart = request.session.get("cart", {})
     cart_items = []
     total_price = 0
-
+    discount_amount = request.session.get('discount_amount', None)
     for item_id, item_data in cart.items():
         product = get_object_or_404(Product, pk=item_id)
         quantity = item_data["quantity"]
-        item_total_price = product.price * quantity
+        item_total_price = product.updated_price * quantity
         total_price += item_total_price
         cart_items.append(
             {
@@ -360,56 +351,74 @@ def checkout(request):
                 "total_price": item_total_price,
             }
         )
+
     if request.method == "POST":
-        # Assuming you have a form submission with necessary checkout details
+        selected_shipping_option = request.POST.get("selected_shipping_option")
+
         payment_method = request.POST.get("payment_method")
         address_id = request.POST.get("address")
-        address = Address.objects.filter(user=request.user,pk=address)
-        print(address.street_address)
-        # Check if payment method is cash on delivery
-        if payment_method == "cash":
+        address = get_object_or_404(Address, user=current_user, pk=address_id)
 
-            order = Order.objects.create(
-                payment_method = payment_method,
-                customer=request.user.customer,
-                total_amount=0,
-                status="pending",
-                shipping_address=Address.objects.filter(pk=request.POST.get("address")),
-                
-            )
-            total_amount = 0
-            for item_id, item_data in cart.items():
-                product = Product.objects.get(pk=item_id)
-                quantity = item_data["quantity"]
-                subtotal = product.price * quantity
-                total_amount += subtotal
+        order = Order.objects.create(
+            payment_method=payment_method,
+            customer=current_user.customer,
+            total_amount=0,  # Initially set to 0
+            status="pending",
+            shipping_address=address,
+        )
 
-                OrderItem.objects.create(
-                    order=order,
-                    product=product,
-                    quantity=quantity,
-                    subtotal=subtotal,
-                )
+        total_amount = 0
+        for item_id, item_data in cart.items():
+            product = get_object_or_404(Product, pk=item_id)
+            quantity = item_data["quantity"]
+            subtotal = product.updated_price * quantity
+            total_amount += subtotal
 
-                product.stock_quantity -= quantity
-                product.save()
-
-            order.total_amount = total_amount
-            order.save()
-
-            transaction = Transaction.objects.create(
+            OrderItem.objects.create(
                 order=order,
-                payment_method=payment_method,
-                amount_paid=0,
+                product=product,
+                quantity=quantity,
+                subtotal=subtotal,
             )
-            transaction.save()
-            order.payment_transaction = transaction.pk
-            order.save()
-            request.session["cart"] = {}
 
-            return redirect(reverse("view_confirmation_page"))
-        else:
-            return HttpResponse("Payment method not supported yet.")
+            product.stock_quantity -= quantity
+            product.save()
+
+        coupon_code = request.session.get('coupon_code', None)
+        # Check for the coupon code in the session
+        if coupon_code:
+            try:
+                discount = Discount.objects.get(code=coupon_code, is_active=True)
+                order.apply_discount(coupon_code)
+
+            except Discount.DoesNotExist:
+                pass
+
+        # Update the total amount of the order to be the grand total
+        if selected_shipping_option == 'standard':
+            grand_total = total_price - discount_amount
+        elif selected_shipping_option =='express':
+            grand_total = total_price - discount_amount + 35000
+        
+        order.total_amount = grand_total
+        order.save()
+
+
+        transaction = Transaction.objects.create(
+            order=order,
+            payment_method=payment_method,
+            amount_paid=0,
+        )
+        transaction.save()
+        order.payment_transaction = transaction.pk
+        order.save()
+
+        # Clear the cart and coupon code from the session
+        request.session["cart"] = {}
+        request.session.pop('coupon_code', None)
+
+        
+        return redirect(reverse("view_confirmation_page"))
 
     return render(
         request,
@@ -418,19 +427,10 @@ def checkout(request):
             "address_list": address_list,
             "cart_items": cart_items,
             "total_price": total_price,
+            'discount_amount': discount_amount
         },
     )
 
-
-def create_discount(request):
-    pass
-
-def apply_discount_view(request):
-    products_with_category_discount = Product.objects.filter(categories__discount__is_active=True)
-    # You can then use 'products_with_brand_discount' as needed
-    for product in products_with_category_discount:
-        print(product.product_name)
-    return render(request, 'shop/discount_applied.html')
 
 @login_required
 def create_comment_on_product(request, sku):
@@ -481,3 +481,17 @@ def create_brand(request):
             return JsonResponse({'success': True})
         return JsonResponse({'success': False, 'error_message': error_messages.MISSING_FIELDS})
     return render(request, "account/create_brand.html")
+
+
+@csrf_exempt
+def apply_coupon(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        coupon_code = data.get('coupon_code')
+        try:
+            discount = Discount.objects.get(code=coupon_code, is_active=True)
+            request.session['coupon_code'] = coupon_code
+            return JsonResponse({'success': True})
+        except Discount.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Invalid coupon code'})
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
